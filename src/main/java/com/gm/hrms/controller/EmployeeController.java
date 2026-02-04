@@ -10,4 +10,10 @@ public class EmployeeController {
     public String testApi() {
         return "HRMS Backend is Working 🚀";
     }
+
+    @GetMapping("/yashraj")
+    public String yashrajApi() {
+        return "Yashraj Backend is Pushed 🥳";
+    }
+
 }
