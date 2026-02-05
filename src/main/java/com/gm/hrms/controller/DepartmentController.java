@@ -1,84 +1,88 @@
 package com.gm.hrms.controller;
 
-import com.gm.hrms.dto.request.EmployeeRequestDTO;
-import com.gm.hrms.dto.request.EmployeeUpdateDTO;
+import com.gm.hrms.dto.request.DepartmentRequestDTO;
 import com.gm.hrms.payload.ApiResponse;
-import com.gm.hrms.service.EmployeeService;
+import com.gm.hrms.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("/api/departments")
 @RequiredArgsConstructor
-public class EmployeeController {
+public class DepartmentController {
 
-    private final EmployeeService service;
+    private final DepartmentService service;
 
+    //  CREATE
     @PostMapping
     public ResponseEntity<ApiResponse<?>> create(
-            @Valid @RequestBody EmployeeRequestDTO dto){
+            @Valid @RequestBody DepartmentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee created successfully")
-                        .data(service.create(dto))
+                        .message("Department created successfully")
+                        .data(service.createDepartment(dto))
                         .build()
         );
     }
 
-    @PatchMapping("/{id}")
+    //  UPDATE
+    @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
-            @RequestBody EmployeeUpdateDTO dto){
+            @Valid @RequestBody DepartmentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee updated successfully")
-                        .data(service.update(id, dto))
+                        .message("Department updated successfully")
+                        .data(service.updateDepartment(id, dto))
                         .build()
         );
     }
 
+    //  GET BY ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<?>> getById(
+            @PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee fetched successfully")
-                        .data(service.getById(id))
+                        .message("Department fetched successfully")
+                        .data(service.getDepartmentById(id))
                         .build()
         );
     }
 
+    //  GET ALL
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll(){
+    public ResponseEntity<ApiResponse<?>> getAll() {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employees fetched successfully")
-                        .data(service.getAll())
+                        .message("Departments fetched successfully")
+                        .data(service.getAllDepartments())
                         .build()
         );
     }
 
+    //  DELETE
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<?>> delete(
+            @PathVariable Long id) {
 
-        service.delete(id);
+        service.deleteDepartment(id);
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee deleted successfully")
+                        .message("Department deleted successfully")
                         .build()
         );
     }
-
-
 }
