@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Table(name = "employees")
@@ -60,4 +61,14 @@ public class Employee extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private RoleType role;
+
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    private EmployeeContact contact;
+
+    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    private EmployeeAddress address;
+
+    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
+    private List<EmployeeDocument> documents;
+
 }

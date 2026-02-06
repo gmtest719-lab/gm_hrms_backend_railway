@@ -1,10 +1,13 @@
 package com.gm.hrms.mapper;
 
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
+import com.gm.hrms.dto.response.EmployeeAddressResponseDTO;
+import com.gm.hrms.dto.response.EmployeeContactResponseDTO;
+import com.gm.hrms.dto.response.EmployeeDocumentResponseDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
-import com.gm.hrms.entity.Department;
-import com.gm.hrms.entity.Designation;
-import com.gm.hrms.entity.Employee;
+import com.gm.hrms.entity.*;
+
+import java.util.List;
 
 public class EmployeeMapper {
 
@@ -36,12 +39,59 @@ public class EmployeeMapper {
                 .firstName(e.getFirstName())
                 .lastName(e.getLastName())
                 .employeeCode(e.getEmployeeCode())
+
                 .departmentName(e.getDepartment().getName())
                 .designationName(e.getDesignation().getName())
+
                 .active(e.getActive())
                 .role(e.getRole())
+
+                .contact(mapContact(e.getContact()))
+                .address(mapAddress(e.getAddress()))
+                .documents(mapDocuments(e.getDocuments()))
+
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();
     }
+
+    private static EmployeeContactResponseDTO mapContact(EmployeeContact contact){
+
+        if(contact == null) return null;
+
+        return EmployeeContactResponseDTO.builder()
+                .personalEmail(contact.getPersonalEmail())
+                .officeEmail(contact.getOfficeEmail())
+                .personalPhone(contact.getPersonalPhone())
+                .emergencyPhone(contact.getEmergencyPhone())
+                .build();
+    }
+
+    private static EmployeeAddressResponseDTO mapAddress(EmployeeAddress address){
+
+        if(address == null) return null;
+
+        return EmployeeAddressResponseDTO.builder()
+                .currentAddress(address.getCurrentAddress())
+                .permanentAddress(address.getPermanentAddress())
+                .build();
+    }
+
+
+    private static List<EmployeeDocumentResponseDTO> mapDocuments(List<EmployeeDocument> docs){
+
+        if(docs == null) return List.of();
+
+        return docs.stream()
+                .map(d -> EmployeeDocumentResponseDTO.builder()
+                        .id(d.getId())
+                        .documentType(d.getDocumentType())
+                        .filePath(d.getFilePath())
+                        .build())
+                .toList();
+    }
+
+
+
+
 }
