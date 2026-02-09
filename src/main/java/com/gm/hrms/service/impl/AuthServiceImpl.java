@@ -21,7 +21,7 @@ public class AuthServiceImpl implements AuthService {
         EmployeeAuth auth = new EmployeeAuth();
 
         auth.setEmployee(employee);
-        auth.setUsername(employee.getEmployeeCode());
+        auth.setUsername(employee.getContact().getOfficeEmail());
         auth.setPasswordHash(passwordEncoder.encode(rawPassword));
         auth.setActive(true);
         auth.setFailedLoginAttempts(0);

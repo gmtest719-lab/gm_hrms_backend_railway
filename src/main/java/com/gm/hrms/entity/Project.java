@@ -2,11 +2,13 @@ package com.gm.hrms.entity;
 
 import com.gm.hrms.enums.ProjectStatus;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "projects")
+@Data
 public class Project {
 
     @Id
@@ -31,5 +33,5 @@ public class Project {
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
-    private ProjectStatus status; // Not Started / In Progress / Completed
+    private ProjectStatus status; // NOT_STARTED / IN_PROGRESS / COMPLETED /ON_HOLD
 }
