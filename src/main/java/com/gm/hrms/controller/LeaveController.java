@@ -14,6 +14,7 @@ public class LeaveController {
 
     private final LeaveService leaveService;
 
+    //  APPLY LEAVE
     @PostMapping("/apply/{employeeId}")
     public ResponseEntity<ApiResponse<?>> apply(
             @PathVariable Long employeeId,
@@ -28,6 +29,7 @@ public class LeaveController {
         );
     }
 
+    //  APPROVE LEAVE
     @PatchMapping("/approve/{leaveId}")
     public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long leaveId){
 
@@ -40,6 +42,7 @@ public class LeaveController {
         );
     }
 
+    //  REJECT LEAVE
     @PatchMapping("/reject/{leaveId}")
     public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long leaveId){
 
@@ -51,4 +54,44 @@ public class LeaveController {
                         .build()
         );
     }
+
+    //  CANCEL LEAVE (MISSING IN YOUR CODE)
+    @PatchMapping("/cancel/{leaveId}")
+    public ResponseEntity<ApiResponse<?>> cancel(@PathVariable Long leaveId){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Leave cancelled")
+                        .data(leaveService.cancel(leaveId))
+                        .build()
+        );
+    }
+
+    //  GET LEAVES BY EMPLOYEE (MISSING)
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<ApiResponse<?>> getByEmployee(@PathVariable Long employeeId){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Employee Leaves")
+                        .data(leaveService.getByEmployee(employeeId))
+                        .build()
+        );
+    }
+
+    //  GET ALL LEAVES (MISSING)
+    @GetMapping
+    public ResponseEntity<ApiResponse<?>> getAll(){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("All leaves")
+                        .data(leaveService.getAll())
+                        .build()
+        );
+    }
 }
+

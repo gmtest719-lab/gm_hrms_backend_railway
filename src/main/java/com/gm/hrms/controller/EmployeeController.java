@@ -22,7 +22,7 @@ public class EmployeeController {
     private final EmployeeService service;
     private final ObjectMapper objectMapper;
 
-    // ⭐ CREATE EMPLOYEE (Multipart)
+    //  CREATE EMPLOYEE (Multipart)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> createEmployee(
 
@@ -43,7 +43,7 @@ public class EmployeeController {
         );
     }
 
-    // ⭐ UPDATE EMPLOYEE (Multipart Support Added)
+    //  UPDATE EMPLOYEE (Multipart Support Added)
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> updateEmployee(
 
@@ -65,7 +65,7 @@ public class EmployeeController {
         );
     }
 
-    // ⭐ GET BY ID
+    //  GET BY ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
@@ -78,7 +78,7 @@ public class EmployeeController {
         );
     }
 
-    // ⭐ GET ALL
+    //  GET ALL
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getAll(){
 
@@ -91,7 +91,7 @@ public class EmployeeController {
         );
     }
 
-    // ⭐ DELETE
+    //  DELETE
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
 
