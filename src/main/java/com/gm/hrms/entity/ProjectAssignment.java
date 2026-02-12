@@ -1,9 +1,11 @@
 package com.gm.hrms.entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "project_assignments")
+@Data
 public class ProjectAssignment {
 
     @Id

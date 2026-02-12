@@ -1,11 +1,15 @@
 package com.gm.hrms.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalTime;
 
 @Entity
 @Table(name = "office_timings")
+@Getter
+@Setter
 public class OfficeTiming {
 
     @Id
