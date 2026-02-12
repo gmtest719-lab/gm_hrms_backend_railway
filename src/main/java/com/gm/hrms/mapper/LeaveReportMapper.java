@@ -1,6 +1,6 @@
 package com.gm.hrms.mapper;
 
-import com.gm.hrms.dto.request.LeaveReportDTO;
+import com.gm.hrms.dto.response.LeaveReportDTO;
 import com.gm.hrms.entity.LeaveApplication;
 import org.springframework.stereotype.Component;
 

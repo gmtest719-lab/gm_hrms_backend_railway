@@ -1,6 +1,6 @@
 package com.gm.hrms.mapper;
 
-import com.gm.hrms.dto.request.AttendanceReportDTO;
+import com.gm.hrms.dto.response.AttendanceReportDTO;
 import com.gm.hrms.entity.Attendance;
 import org.springframework.stereotype.Component;
 

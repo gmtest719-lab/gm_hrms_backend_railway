@@ -1,6 +1,6 @@
 package com.gm.hrms.service;
 
-import com.gm.hrms.dto.request.EmployeeAddressDTO;
+import com.gm.hrms.dto.response.EmployeeAddressDTO;
 import com.gm.hrms.entity.Employee;
 
 public interface EmployeeAddressService {

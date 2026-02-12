@@ -1,4 +1,4 @@
-package com.gm.hrms.dto.request;
+package com.gm.hrms.dto.response;
 
 import lombok.Data;
 

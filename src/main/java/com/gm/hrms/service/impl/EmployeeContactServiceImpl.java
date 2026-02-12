@@ -1,6 +1,6 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.dto.request.EmployeeContactDTO;
+import com.gm.hrms.dto.response.EmployeeContactDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.EmployeeContact;
 import com.gm.hrms.repository.EmployeeContactRepository;

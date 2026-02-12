@@ -1,7 +1,7 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.dto.request.LeaveMonthlyDTO;
-import com.gm.hrms.dto.request.LeaveReportDTO;
+import com.gm.hrms.dto.response.LeaveMonthlyDTO;
+import com.gm.hrms.dto.response.LeaveReportDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.LeaveApplication;
 import com.gm.hrms.enums.LeaveStatus;
