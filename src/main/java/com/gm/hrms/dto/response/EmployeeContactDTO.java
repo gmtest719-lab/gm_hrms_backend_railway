@@ -1,4 +1,4 @@
-package com.gm.hrms.dto.request;
+package com.gm.hrms.dto.response;
 
 import jakarta.validation.constraints.Email;
 import lombok.Data;

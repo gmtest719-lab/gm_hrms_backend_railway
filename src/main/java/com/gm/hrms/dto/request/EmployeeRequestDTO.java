@@ -1,5 +1,7 @@
 package com.gm.hrms.dto.request;
 
+import com.gm.hrms.dto.response.EmployeeAddressDTO;
+import com.gm.hrms.dto.response.EmployeeContactDTO;
 import com.gm.hrms.enums.RoleType;
 import jakarta.validation.constraints.*;
 import lombok.*;

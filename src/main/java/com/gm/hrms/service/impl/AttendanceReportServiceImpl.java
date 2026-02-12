@@ -1,7 +1,7 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.dto.request.AttendanceMonthlyDTO;
-import com.gm.hrms.dto.request.AttendanceReportDTO;
+import com.gm.hrms.dto.response.AttendanceMonthlyDTO;
+import com.gm.hrms.dto.response.AttendanceReportDTO;
 import com.gm.hrms.entity.Attendance;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.mapper.AttendanceReportMapper;

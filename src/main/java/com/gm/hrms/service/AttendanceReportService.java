@@ -1,7 +1,7 @@
 package com.gm.hrms.service;
 
-import com.gm.hrms.dto.request.AttendanceMonthlyDTO;
-import com.gm.hrms.dto.request.AttendanceReportDTO;
+import com.gm.hrms.dto.response.AttendanceMonthlyDTO;
+import com.gm.hrms.dto.response.AttendanceReportDTO;
 
 import java.time.LocalDate;
 import java.util.List;

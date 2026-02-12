@@ -1,7 +1,7 @@
 package com.gm.hrms.service;
 
-import com.gm.hrms.dto.request.LeaveMonthlyDTO;
-import com.gm.hrms.dto.request.LeaveReportDTO;
+import com.gm.hrms.dto.response.LeaveMonthlyDTO;
+import com.gm.hrms.dto.response.LeaveReportDTO;
 import com.gm.hrms.enums.LeaveStatus;
 
 import java.time.LocalDate;
