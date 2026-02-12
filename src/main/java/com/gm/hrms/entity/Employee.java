@@ -62,7 +62,7 @@ public class Employee extends BaseEntity {
     @Column(name = "role")
     private RoleType role;
 
-    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private EmployeeContact contact;
 
     @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)

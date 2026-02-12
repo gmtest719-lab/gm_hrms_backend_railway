@@ -6,6 +6,7 @@ import com.gm.hrms.dto.response.EmployeeResponseDTO;
 import com.gm.hrms.entity.Department;
 import com.gm.hrms.entity.Designation;
 import com.gm.hrms.entity.Employee;
+import com.gm.hrms.entity.EmployeeContact;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.EmployeeMapper;
@@ -56,13 +57,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = EmployeeMapper.toEntity(dto, dept, desig);
         employee = employeeRepository.save(employee);
 
-        //  Create Auth
-        authService.createAuthForEmployee(employee, dto.getPassword());
-
         //  Create Contact
         if(dto.getContact() != null){
-            employeeContactService.createContact(employee, dto.getContact());
+            EmployeeContact contact= employeeContactService.createContact(employee, dto.getContact());
+            employee.setContact(contact);
         }
+
+        //  Create Auth
+        authService.createAuthForEmployee(employee, dto.getPassword());
 
         //  Create Address
         if(dto.getAddress() != null){
