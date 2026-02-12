@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
-
 @Data
 public class EmployeeRequestDTO {
 
@@ -33,4 +32,15 @@ public class EmployeeRequestDTO {
 
     @NotNull(message = "Role required")
     private RoleType role;
+
+    //  AUTH INPUT
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    //  CONTACT
+    private EmployeeContactDTO contact;
+
+    //  ADDRESS
+    private EmployeeAddressDTO address;
 }

@@ -2,6 +2,7 @@ package com.gm.hrms.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
 @Table(
@@ -11,7 +12,12 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_auth_employee", columnList = "employee_id")
         }
 )
-public class EmployeeAuth {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EmployeeAuth extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
