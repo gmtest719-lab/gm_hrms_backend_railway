@@ -6,6 +6,7 @@ import com.gm.hrms.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,7 +16,8 @@ public class DepartmentController {
 
     private final DepartmentService service;
 
-    //  CREATE
+    //  CREATE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<?>> create(
             @Valid @RequestBody DepartmentRequestDTO dto) {
@@ -29,7 +31,8 @@ public class DepartmentController {
         );
     }
 
-    //  UPDATE
+    //  UPDATE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
@@ -44,7 +47,8 @@ public class DepartmentController {
         );
     }
 
-    //  GET BY ID
+    //  GET BY ID → Admin + HR
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(
             @PathVariable Long id) {
@@ -58,7 +62,8 @@ public class DepartmentController {
         );
     }
 
-    //  GET ALL
+    //  GET ALL → Admin + HR + Employee
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getAll() {
 
@@ -71,7 +76,8 @@ public class DepartmentController {
         );
     }
 
-    //  DELETE
+    //  DELETE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id) {
@@ -86,3 +92,4 @@ public class DepartmentController {
         );
     }
 }
+

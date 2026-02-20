@@ -1,11 +1,13 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.dto.request.ChangePasswordRequestDTO;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.EmployeeService;
 import org.springframework.http.MediaType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.http.ResponseEntity;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
@@ -22,13 +23,13 @@ public class EmployeeController {
     private final EmployeeService service;
     private final ObjectMapper objectMapper;
 
-    //  CREATE EMPLOYEE (Multipart)
+    // ================= ADMIN + HR =================
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> createEmployee(
-
             @RequestPart("employee") String employeeJson,
             @RequestPart(value = "documents", required = false) List<MultipartFile> documents
-
     ) throws Exception {
 
         EmployeeRequestDTO dto =
@@ -43,14 +44,14 @@ public class EmployeeController {
         );
     }
 
-    //  UPDATE EMPLOYEE (Multipart Support Added)
+    // ================= ADMIN + HR =================
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> updateEmployee(
-
             @PathVariable Long id,
             @RequestPart("employee") String employeeJson,
             @RequestPart(value = "documents", required = false) List<MultipartFile> documents
-
     ) throws Exception {
 
         EmployeeUpdateDTO dto =
@@ -65,20 +66,25 @@ public class EmployeeController {
         );
     }
 
-    //  GET BY ID
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
+    // ================= ADMIN ONLY =================
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+
+        service.delete(id);
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee fetched successfully")
-                        .data(service.getById(id))
+                        .message("Employee deleted (deactivated) successfully")
                         .build()
         );
     }
 
-    //  GET ALL
+    // ================= ADMIN + HR =================
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getAll(){
 
@@ -91,17 +97,22 @@ public class EmployeeController {
         );
     }
 
-    //  DELETE
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+    // ================= SELF ACCESS + ADMIN + HR =================
 
-        service.delete(id);
+    @PreAuthorize("hasAnyRole('ADMIN','HR') or #id == principal.employeeId")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Employee deleted successfully")
+                        .message("Employee fetched successfully")
+                        .data(service.getById(id))
                         .build()
         );
     }
+
+
+
+
 }

@@ -19,7 +19,7 @@ public class EmployeeAddress {
     private String permanentAddress;
 
     @OneToOne
-    @JoinColumn(name = "employee_id")
+    @JoinColumn(name = "employee_id", nullable = false)
     private Employee employee;
 }
 

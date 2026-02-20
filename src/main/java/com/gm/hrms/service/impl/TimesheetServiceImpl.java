@@ -27,8 +27,13 @@ public class TimesheetServiceImpl implements TimesheetService {
     private final EmployeeRepository employeeRepo;
     private final ProjectRepository projectRepo;
 
+    // ================= CREATE =================
     @Override
     public TimesheetResponseDTO create(Long employeeId, TimesheetRequestDTO dto) {
+
+        if (dto.getHours() < 8) {
+            throw new RuntimeException("Minimum 8 hours required");
+        }
 
         Employee emp = employeeRepo.findById(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
@@ -48,17 +53,24 @@ public class TimesheetServiceImpl implements TimesheetService {
         return TimesheetMapper.toResponse(repo.save(t));
     }
 
+    // ================= SUBMIT =================
     @Override
-    public TimesheetResponseDTO submit(Long timesheetId) {
+    public TimesheetResponseDTO submit(Long timesheetId, Long employeeId) {
 
         Timesheet t = repo.findById(timesheetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Timesheet not found"));
+
+        //  Ownership check
+        if (!t.getEmployee().getId().equals(employeeId)) {
+            throw new RuntimeException("You can submit only your own timesheet");
+        }
 
         t.setStatus(TimesheetStatus.SUBMITTED);
 
         return TimesheetMapper.toResponse(repo.save(t));
     }
 
+    // ================= APPROVE =================
     @Override
     public TimesheetResponseDTO approve(Long timesheetId) {
 
@@ -70,6 +82,7 @@ public class TimesheetServiceImpl implements TimesheetService {
         return TimesheetMapper.toResponse(repo.save(t));
     }
 
+    // ================= REJECT =================
     @Override
     public TimesheetResponseDTO reject(Long timesheetId) {
 
@@ -81,6 +94,7 @@ public class TimesheetServiceImpl implements TimesheetService {
         return TimesheetMapper.toResponse(repo.save(t));
     }
 
+    // ================= MY TIMESHEETS =================
     @Override
     public List<TimesheetResponseDTO> getByEmployee(Long employeeId) {
 
@@ -90,6 +104,7 @@ public class TimesheetServiceImpl implements TimesheetService {
                 .toList();
     }
 
+    // ================= ALL =================
     @Override
     public List<TimesheetResponseDTO> getAll() {
 

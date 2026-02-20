@@ -23,6 +23,8 @@ public class EmployeeAddressServiceImpl implements EmployeeAddressService {
         address.setCurrentAddress(dto.getCurrentAddress());
         address.setPermanentAddress(dto.getPermanentAddress());
 
+        employee.setAddress(address);
+
         addressRepository.save(address);
     }
 
@@ -34,6 +36,8 @@ public class EmployeeAddressServiceImpl implements EmployeeAddressService {
                         .orElse(new EmployeeAddress());
 
         address.setEmployee(employee);
+
+        employee.setAddress(address);
 
         if(dto.getCurrentAddress() != null){
             address.setCurrentAddress(dto.getCurrentAddress());

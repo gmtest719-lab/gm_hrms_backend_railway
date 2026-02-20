@@ -65,7 +65,12 @@ public class Employee extends BaseEntity {
     @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private EmployeeContact contact;
 
-    @OneToOne(mappedBy = "employee", fetch = FetchType.LAZY)
+    @OneToOne(
+            mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
+    )
     private EmployeeAddress address;
 
     @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)

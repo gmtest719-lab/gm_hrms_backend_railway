@@ -5,6 +5,9 @@ import com.gm.hrms.dto.response.LeaveResponseDTO;
 
 import java.util.List;
 
+
+
+
 public interface LeaveService {
 
     LeaveResponseDTO applyLeave(Long employeeId, LeaveApplyRequestDTO dto);
@@ -13,7 +16,7 @@ public interface LeaveService {
 
     LeaveResponseDTO reject(Long leaveId);
 
-    LeaveResponseDTO cancel(Long leaveId);
+    LeaveResponseDTO cancel(Long leaveId, Long employeeId);
 
     List<LeaveResponseDTO> getByEmployee(Long employeeId);
 

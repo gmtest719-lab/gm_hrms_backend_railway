@@ -11,66 +11,182 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //  Resource Not Found
+    //  RESOURCE NOT FOUND
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotFound(
             ResourceNotFoundException ex) {
 
-        ApiError error = ApiError.builder()
-                .errorCode(ErrorCode.RESOURCE_NOT_FOUND.name())
-                .errorMessage(ex.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return new ResponseEntity<>(
-                ApiResponse.builder()
-                        .success(false)
-                        .message("Resource not found")
-                        .error(error)
-                        .build(),
-                HttpStatus.NOT_FOUND
+        return buildResponse(
+                ErrorCode.RESOURCE_NOT_FOUND,
+                ex.getMessage(),
+                HttpStatus.NOT_FOUND,
+                null
         );
     }
 
-    //  Duplicate Resource
+    //  DUPLICATE RESOURCE
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ApiResponse<Object>> handleDuplicate(
             DuplicateResourceException ex) {
 
-        ApiError error = ApiError.builder()
-                .errorCode(ErrorCode.DUPLICATE_RESOURCE.name())
-                .errorMessage(ex.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return new ResponseEntity<>(
-                ApiResponse.builder()
-                        .success(false)
-                        .message("Duplicate resource")
-                        .error(error)
-                        .build(),
-                HttpStatus.CONFLICT
+        return buildResponse(
+                ErrorCode.DUPLICATE_RESOURCE,
+                ex.getMessage(),
+                HttpStatus.CONFLICT,
+                null
         );
     }
 
-    //  Validation Errors (@Valid)
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidRequest(InvalidRequestException ex){
+
+        return buildResponse(
+                ErrorCode.BAD_REQUEST,
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST,
+                null
+        );
+    }
+
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadCredentials(Exception ex){
+
+        return buildResponse(
+                ErrorCode.UNAUTHORIZED,
+                "Invalid username or password",
+                HttpStatus.UNAUTHORIZED,
+                null
+        );
+    }
+
+
+
+    //  VALIDATION ERROR
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Object>> handleValidation(
             MethodArgumentNotValidException ex) {
 
-        Map<String, String> validationErrors = new HashMap<>();
+        Map<String,String> validationErrors = new HashMap<>();
 
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                validationErrors.put(error.getField(), error.getDefaultMessage())
+        ex.getBindingResult().getFieldErrors().forEach(err ->
+                validationErrors.put(err.getField(), err.getDefaultMessage())
         );
 
-        ApiError apiError = ApiError.builder()
-                .errorCode(ErrorCode.VALIDATION_FAILED.name())
-                .errorMessage("Validation failed")
+        return buildResponse(
+                ErrorCode.VALIDATION_FAILED,
+                "Validation failed",
+                HttpStatus.BAD_REQUEST,
+                validationErrors
+        );
+    }
+
+    //  401 UNAUTHORIZED (Token Missing / Invalid)
+    @ExceptionHandler(org.springframework.security.authentication.AuthenticationCredentialsNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorized(Exception ex){
+
+        return buildResponse(
+                ErrorCode.UNAUTHORIZED,
+                "Authentication required",
+                HttpStatus.UNAUTHORIZED,
+                null
+        );
+    }
+
+    //  403 ACCESS DENIED
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(Exception ex){
+
+        return buildResponse(
+                ErrorCode.FORBIDDEN,
+                "Access denied",
+                HttpStatus.FORBIDDEN,
+                null
+        );
+    }
+
+    //  404 API NOT FOUND
+    @ExceptionHandler(org.springframework.web.servlet.NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handle404(Exception ex){
+
+        return buildResponse(
+                ErrorCode.NOT_FOUND,
+                "API endpoint not found",
+                HttpStatus.NOT_FOUND,
+                null
+        );
+    }
+
+    //  405 METHOD NOT ALLOWED
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMethodNotAllowed(Exception ex){
+
+        return buildResponse(
+                ErrorCode.METHOD_NOT_ALLOWED,
+                "HTTP method not allowed for this endpoint",
+                HttpStatus.METHOD_NOT_ALLOWED,
+                null
+        );
+    }
+
+    //  INVALID JWT TOKEN
+    @ExceptionHandler(io.jsonwebtoken.JwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwt(Exception ex){
+
+        return buildResponse(
+                ErrorCode.UNAUTHORIZED,
+                "Invalid or malformed token",
+                HttpStatus.UNAUTHORIZED,
+                null
+        );
+    }
+    @ExceptionHandler(TokenNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTokenNotFound(TokenNotFoundException ex) {
+        return buildResponse(
+                ErrorCode.UNAUTHORIZED,
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED,
+                null
+        );
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTokenExpired(TokenExpiredException ex) {
+        return buildResponse(
+                ErrorCode.UNAUTHORIZED,
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED,
+                null
+        );
+    }
+
+
+    //  GENERIC FALLBACK (500)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
+
+        return buildResponse(
+                ErrorCode.INTERNAL_SERVER_ERROR,
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                null
+        );
+    }
+
+
+    //  COMMON BUILDER METHOD (ENTERPRISE CLEAN CODE)
+    private ResponseEntity<ApiResponse<Object>> buildResponse(
+            ErrorCode code,
+            String message,
+            HttpStatus status,
+            Map<String,String> validationErrors){
+
+        ApiError error = ApiError.builder()
+                .errorCode(code.name())
+                .errorMessage(message)
                 .validationErrors(validationErrors)
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -78,30 +194,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(
                 ApiResponse.builder()
                         .success(false)
-                        .message("Validation error")
-                        .error(apiError)
-                        .build(),
-                HttpStatus.BAD_REQUEST
-        );
-    }
-
-    //  Generic Exception
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGeneral(Exception ex) {
-
-        ApiError error = ApiError.builder()
-                .errorCode(ErrorCode.INTERNAL_SERVER_ERROR.name())
-                .errorMessage(ex.getMessage())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return new ResponseEntity<>(
-                ApiResponse.builder()
-                        .success(false)
-                        .message("Something went wrong")
+                        .message(message)
                         .error(error)
                         .build(),
-                HttpStatus.INTERNAL_SERVER_ERROR
+                status
         );
     }
+
+
+
 }

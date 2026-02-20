@@ -31,24 +31,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final EmployeeRepository employeeRepo;
     private final OfficeTimingRepository officeTimingRepo;
 
-    //  CLOCK IN
+    // ================= CLOCK IN =================
     @Override
     public AttendanceResponseDTO clockIn(Long employeeId) {
 
-        Employee emp = employeeRepo.findById(employeeId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Employee not found"));
+        Employee emp = getEmployee(employeeId);
 
         LocalDate today = LocalDate.now();
 
-        // Prevent multiple clock-in same day
-        if(attendanceRepo.findByEmployeeIdAndDate(employeeId, today).isPresent()){
+        // Prevent multiple clock-in
+        if (attendanceRepo.findByEmployeeIdAndDate(employeeId, today).isPresent()) {
             throw new RuntimeException("Already clocked in today");
         }
 
-        OfficeTiming timing = officeTimingRepo.findFirstByOrderByIdAsc()
-                .orElseThrow(() ->
-                        new RuntimeException("Office timing not configured"));
+        OfficeTiming timing = getOfficeTiming();
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -70,7 +66,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         );
     }
 
-    //  BREAK IN
+    // ================= BREAK IN =================
     @Override
     public AttendanceResponseDTO breakIn(Long employeeId) {
 
@@ -86,7 +82,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         return AttendanceMapper.toResponse(attendance);
     }
 
-    //  BREAK OUT
+    // ================= BREAK OUT =================
     @Override
     public AttendanceResponseDTO breakOut(Long employeeId) {
 
@@ -94,8 +90,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         AttendanceBreak br =
                 breakRepo.findTopByAttendanceIdAndBreakOutIsNull(attendance.getId())
-                        .orElseThrow(() ->
-                                new RuntimeException("Break not started"));
+                        .orElseThrow(() -> new RuntimeException("Break not started"));
 
         br.setBreakOut(LocalDateTime.now());
 
@@ -104,7 +99,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         return AttendanceMapper.toResponse(attendance);
     }
 
-    //  CLOCK OUT
+    // ================= CLOCK OUT =================
     @Override
     public AttendanceResponseDTO clockOut(Long employeeId) {
 
@@ -131,17 +126,35 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendance.setTotalBreakMinutes((int) breakMinutes);
         attendance.setTotalWorkingMinutes((int) workingMinutes);
 
-        // Half Day Rule (Example < 4 Hours)
-        if(workingMinutes < 240){
+        //  Half Day Rule (< 4 hours)
+        if (workingMinutes < 240) {
             attendance.setHalfDay(true);
+        }
+
+        // ================= LATE LOGIC =================
+        if (attendance.getLateIn() != null && attendance.getLateIn()) {
+
+            LocalDate startOfMonth = attendance.getDate().withDayOfMonth(1);
+            LocalDate endOfMonth = attendance.getDate();
+
+            long lateCount = attendanceRepo
+                    .countByEmployeeIdAndLateInTrueAndDateBetween(
+                            employeeId,
+                            startOfMonth,
+                            endOfMonth
+                    );
+
+            // Every 3 late = 1 half day
+            if (lateCount % 3 == 0) {
+                attendance.setHalfDay(true);
+            }
         }
 
         return AttendanceMapper.toResponse(
                 attendanceRepo.save(attendance)
         );
     }
-
-    //  GET TODAY ATTENDANCE
+    // ================= TODAY =================
     @Override
     public AttendanceResponseDTO getToday(Long employeeId) {
         return AttendanceMapper.toResponse(
@@ -149,16 +162,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         );
     }
 
-    //  PRIVATE HELPER
-    private Attendance getTodayAttendance(Long employeeId){
-
-        return attendanceRepo
-                .findByEmployeeIdAndDate(employeeId, LocalDate.now())
-                .orElseThrow(() ->
-                        new RuntimeException("Not clocked in today"));
-    }
-
-    // get all attendance
+    // ================= GET ALL =================
     @Override
     public List<AttendanceResponseDTO> getAll() {
 
@@ -168,9 +172,14 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .toList();
     }
 
-    //Get By Employee
+    // ================= GET BY EMPLOYEE =================
     @Override
     public List<AttendanceResponseDTO> getByEmployee(Long employeeId) {
+
+        // Optional safety check
+        if (!employeeRepo.existsById(employeeId)) {
+            throw new ResourceNotFoundException("Employee not found");
+        }
 
         return attendanceRepo.findByEmployeeId(employeeId)
                 .stream()
@@ -178,7 +187,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .toList();
     }
 
-    // Get By Date Range
+    // ================= DATE RANGE =================
     @Override
     public List<AttendanceResponseDTO> getByDateRange(
             LocalDate start,
@@ -190,4 +199,27 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .toList();
     }
 
+    // ================= HELPER METHODS =================
+
+    private Attendance getTodayAttendance(Long employeeId) {
+
+        return attendanceRepo
+                .findByEmployeeIdAndDate(employeeId, LocalDate.now())
+                .orElseThrow(() ->
+                        new RuntimeException("Not clocked in today"));
+    }
+
+    private Employee getEmployee(Long employeeId) {
+
+        return employeeRepo.findById(employeeId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Employee not found"));
+    }
+
+    private OfficeTiming getOfficeTiming() {
+
+        return officeTimingRepo.findFirstByOrderByIdAsc()
+                .orElseThrow(() ->
+                        new RuntimeException("Office timing not configured"));
+    }
 }

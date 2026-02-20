@@ -19,7 +19,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)
             throws UsernameNotFoundException {
 
-        EmployeeAuth auth = employeeAuthRepository.findByUsername(username)
+        EmployeeAuth auth = employeeAuthRepository.findByUsernameWithEmployee(username)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found"));
 

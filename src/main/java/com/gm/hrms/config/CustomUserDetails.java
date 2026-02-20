@@ -13,6 +13,14 @@ public class CustomUserDetails implements UserDetails {
 
     private final EmployeeAuth employeeAuth;
 
+    public Long getEmployeeId() {
+        return employeeAuth.getEmployee().getId();
+    }
+
+    public String getRole() {
+        return employeeAuth.getEmployee().getRole().name();
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
 
@@ -49,6 +57,10 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
-    @Override public boolean isCredentialsNonExpired() { return true; }
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
 }
+
 

@@ -23,29 +23,35 @@ public class EmployeeAuth extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 1–1 mapping with Employee
+    //  1–1 mapping with Employee
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false, unique = true)
     private Employee employee;
 
-    // Login identifier (office email)
+    //  Login identifier (office email)
     @Column(nullable = false, unique = true)
     private String username;
 
-    // BCrypt / Argon2 hashed password
+    //  BCrypt hashed password
     @Column(nullable = false)
     private String passwordHash;
 
-    // Account status
+    //  Account status
     @Column(nullable = false)
     private Boolean active = true;
 
-    // Security controls
+    //  Security controls
+    @Column(name = "failed_login_attempts")
     private Integer failedLoginAttempts = 0;
 
-    @Column(nullable = false)
+    @Column(name = "account_locked", nullable = false)
     private Boolean accountLocked = false;
 
-    // Audit snapshot (not full logs)
+    //  Session Tracking (ENTERPRISE )
+    @Column(name = "is_logged_in", nullable = false)
+    private Boolean isLoggedIn = false;
+
+    //  Audit
+    @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 }

@@ -76,6 +76,13 @@ AND YEAR(a.date)=:year
     List<Attendance> findMonthly(int month, int year);
 
 
+    long countByEmployeeIdAndLateInTrueAndDateBetween(
+            Long employeeId,
+            LocalDate start,
+            LocalDate end
+    );
+
+
 
 }
 

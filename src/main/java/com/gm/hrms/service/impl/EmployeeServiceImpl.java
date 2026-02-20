@@ -14,6 +14,7 @@ import com.gm.hrms.repository.DepartmentRepository;
 import com.gm.hrms.repository.DesignationRepository;
 import com.gm.hrms.repository.EmployeeRepository;
 import com.gm.hrms.service.*;
+import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeContactService employeeContactService;
     private final EmployeeAddressService employeeAddressService;
     private final EmployeeDocumentService  employeeDocumentService;
+    private final EmailService emailService;
 
 
 
@@ -63,8 +65,18 @@ public class EmployeeServiceImpl implements EmployeeService {
             employee.setContact(contact);
         }
 
-        //  Create Auth
-        authService.createAuthForEmployee(employee, dto.getPassword());
+        // Generate password
+        String rawPassword = PasswordGenerator.generatePassword(8);
+
+// Create Auth
+        authService.createAuthForEmployee(employee, rawPassword);
+
+// Send email
+        emailService.sendCredentials(
+                employee.getContact().getOfficeEmail(),
+                employee.getFirstName(),
+                rawPassword
+        );
 
         //  Create Address
         if(dto.getAddress() != null){
@@ -160,7 +172,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee e = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        employeeRepository.delete(e);
+        e.setActive(false); //  mark inactive
+
+        employeeRepository.save(e);
     }
 }
 

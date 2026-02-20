@@ -9,7 +9,7 @@ public interface TimesheetService {
 
     TimesheetResponseDTO create(Long employeeId, TimesheetRequestDTO dto);
 
-    TimesheetResponseDTO submit(Long timesheetId);
+    TimesheetResponseDTO submit(Long timesheetId, Long employeeId);
 
     TimesheetResponseDTO approve(Long timesheetId);
 

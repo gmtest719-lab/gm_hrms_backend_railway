@@ -27,6 +27,7 @@ public class LeaveServiceImpl implements LeaveService {
     private final EmployeeRepository employeeRepo;
     private final LeaveTypeRepository leaveTypeRepo;
 
+    // ================= APPLY =================
     @Override
     public LeaveResponseDTO applyLeave(Long employeeId, LeaveApplyRequestDTO dto) {
 
@@ -41,6 +42,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .endDate(dto.getEndDate())
                 .reason(dto.getReason())
                 .status(LeaveStatus.PENDING)
+                .cancelled(false)
                 .employee(emp)
                 .leaveType(leaveType)
                 .build();
@@ -48,6 +50,7 @@ public class LeaveServiceImpl implements LeaveService {
         return LeaveMapper.toResponse(leaveRepo.save(leave));
     }
 
+    // ================= APPROVE =================
     @Override
     public LeaveResponseDTO approve(Long leaveId) {
 
@@ -59,6 +62,7 @@ public class LeaveServiceImpl implements LeaveService {
         return LeaveMapper.toResponse(leaveRepo.save(leave));
     }
 
+    // ================= REJECT =================
     @Override
     public LeaveResponseDTO reject(Long leaveId) {
 
@@ -70,11 +74,17 @@ public class LeaveServiceImpl implements LeaveService {
         return LeaveMapper.toResponse(leaveRepo.save(leave));
     }
 
+    // ================= CANCEL =================
     @Override
-    public LeaveResponseDTO cancel(Long leaveId) {
+    public LeaveResponseDTO cancel(Long leaveId, Long employeeId) {
 
         LeaveApplication leave = leaveRepo.findById(leaveId)
                 .orElseThrow(() -> new ResourceNotFoundException("Leave not found"));
+
+        // ✅ SECURITY CHECK
+        if (!leave.getEmployee().getId().equals(employeeId)) {
+            throw new RuntimeException("You can cancel only your own leave");
+        }
 
         leave.setStatus(LeaveStatus.CANCELLED);
         leave.setCancelled(true);
@@ -82,6 +92,7 @@ public class LeaveServiceImpl implements LeaveService {
         return LeaveMapper.toResponse(leaveRepo.save(leave));
     }
 
+    // ================= MY LEAVES =================
     @Override
     public List<LeaveResponseDTO> getByEmployee(Long employeeId) {
 
@@ -91,6 +102,7 @@ public class LeaveServiceImpl implements LeaveService {
                 .toList();
     }
 
+    // ================= ALL =================
     @Override
     public List<LeaveResponseDTO> getAll() {
 
