@@ -22,26 +22,29 @@ public class JwtService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshExpiration;
 
-    // ================= SIGN KEY =================
-
     private Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     // ================= ACCESS TOKEN =================
+    public String generateToken(String username, String role) {
 
-    public String generateToken(String username) {
-        return buildToken(username, accessExpiration);
+        Date now = new Date();
+
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", role)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + accessExpiration))
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     // ================= REFRESH TOKEN =================
-
     public String generateRefreshToken(String username) {
         return buildToken(username, refreshExpiration);
     }
-
-    // ================= TOKEN BUILDER =================
 
     private String buildToken(String username, long expiration) {
 
@@ -55,13 +58,14 @@ public class JwtService {
                 .compact();
     }
 
-    // ================= EXTRACT USERNAME =================
-
+    // ================= EXTRACTION =================
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    // ================= VALIDATE TOKEN =================
+    public String extractRole(String token) {
+        return extractAllClaims(token).get("role", String.class);
+    }
 
     public boolean isTokenValid(String token, String username) {
         try {
@@ -72,10 +76,7 @@ public class JwtService {
         }
     }
 
-    // ================= CLAIMS =================
-
     private Claims extractAllClaims(String token) {
-
         return Jwts.parserBuilder()
                 .setSigningKey(getSignKey())
                 .build()

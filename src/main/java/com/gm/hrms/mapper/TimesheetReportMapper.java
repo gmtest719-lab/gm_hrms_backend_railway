@@ -12,10 +12,10 @@ public class TimesheetReportMapper {
         return TimesheetReportDTO.builder()
                 .timesheetId(t.getId())
                 .employeeId(t.getEmployee().getId())
-                .employeeName(
-                        t.getEmployee().getFirstName() + " " +
-                                t.getEmployee().getLastName()
-                )
+//                .employeeName(
+//                        t.getEmployee().getFirstName() + " " +
+//                                t.getEmployee().getLastName()
+//                )
                 .projectId(t.getProject().getId())
                 .projectName(t.getProject().getProjectName())
                 .workDate(t.getWorkDate())

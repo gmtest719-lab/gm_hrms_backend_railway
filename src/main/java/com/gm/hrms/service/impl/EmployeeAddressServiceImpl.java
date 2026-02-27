@@ -1,8 +1,11 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.dto.response.EmployeeAddressDTO;
+import com.gm.hrms.dto.request.EmployeeAddressRequestDTO;
+import com.gm.hrms.dto.response.EmployeeAddressResponseDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.EmployeeAddress;
+import com.gm.hrms.exception.ResourceNotFoundException;
+import com.gm.hrms.mapper.EmployeeAddressMapper;
 import com.gm.hrms.repository.EmployeeAddressRepository;
 import com.gm.hrms.service.EmployeeAddressService;
 import lombok.RequiredArgsConstructor;
@@ -12,43 +15,33 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EmployeeAddressServiceImpl implements EmployeeAddressService {
 
-    private final EmployeeAddressRepository addressRepository;
+    private final EmployeeAddressRepository repository;
 
     @Override
-    public void createAddress(Employee employee, EmployeeAddressDTO dto) {
+    public EmployeeAddressResponseDTO saveOrUpdate(
+            Employee employee,
+            EmployeeAddressRequestDTO dto) {
 
-        EmployeeAddress address = new EmployeeAddress();
+        EmployeeAddress address = repository.findByEmployeeId(employee.getId())
+                .orElse(null);
 
-        address.setEmployee(employee);
-        address.setCurrentAddress(dto.getCurrentAddress());
-        address.setPermanentAddress(dto.getPermanentAddress());
+        if (address == null) {
+            address = EmployeeAddressMapper.toEntity(dto, employee);
+        } else {
+            EmployeeAddressMapper.patchEntity(address, dto);
+        }
 
-        employee.setAddress(address);
+        repository.save(address);
 
-        addressRepository.save(address);
+        return EmployeeAddressMapper.toResponse(address);
     }
 
     @Override
-    public void updateAddress(Employee employee, EmployeeAddressDTO dto) {
+    public EmployeeAddressResponseDTO getAddress(Employee employee) {
 
-        EmployeeAddress address =
-                addressRepository.findByEmployee(employee)
-                        .orElse(new EmployeeAddress());
+        EmployeeAddress address = repository.findByEmployeeId(employee.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
-        address.setEmployee(employee);
-
-        employee.setAddress(address);
-
-        if(dto.getCurrentAddress() != null){
-            address.setCurrentAddress(dto.getCurrentAddress());
-        }
-
-        if(dto.getPermanentAddress() != null){
-            address.setPermanentAddress(dto.getPermanentAddress());
-        }
-
-        addressRepository.save(address);
+        return EmployeeAddressMapper.toResponse(address);
     }
-
-
 }

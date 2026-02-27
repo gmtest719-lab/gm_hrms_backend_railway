@@ -28,7 +28,7 @@ public class TimesheetController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Timesheet saved as draft")
-                        .data(service.create(user.getEmployeeId(), dto))
+                        .data(service.create(user.getUserId(), dto))
                         .build()
         );
     }
@@ -44,7 +44,7 @@ public class TimesheetController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Timesheet submitted")
-                        .data(service.submit(timesheetId, user.getEmployeeId()))
+                        .data(service.submit(timesheetId, user.getUserId()))
                         .build()
         );
     }
@@ -85,7 +85,7 @@ public class TimesheetController {
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .data(service.getByEmployee(user.getEmployeeId()))
+                        .data(service.getByEmployee(user.getUserId()))
                         .build()
         );
     }

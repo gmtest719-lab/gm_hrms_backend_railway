@@ -113,7 +113,7 @@ public class LeaveReportServiceImpl implements LeaveReportService {
 
         return LeaveMonthlyDTO.builder()
                 .employeeId(e.getId())
-                .employeeName(e.getFirstName()+" "+e.getLastName())
+//                .employeeName(e.getFirstName()+" "+e.getLastName())
                 .totalLeaves(list.size())
                 .approvedLeaves((int) list.stream()
                         .filter(l->l.getStatus()==LeaveStatus.APPROVED).count())

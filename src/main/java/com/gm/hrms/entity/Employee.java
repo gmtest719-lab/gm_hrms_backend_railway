@@ -4,7 +4,6 @@ import com.gm.hrms.enums.RoleType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -20,35 +19,8 @@ public class Employee extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "first_name")
-    private String firstName;
-
-    @Column(name = "last_name")
-    private String lastName;
-
-    @Column(name = "gender")
-    private String gender;
-
-    @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth;
-
     @Column(nullable = false, unique = true, name = "employee_code")
     private String employeeCode;
-
-    @Column(name = "date_of_joining")
-    private LocalDate dateOfJoining;
-
-    @Column(name = "year_of_experience")
-    private Integer yearOfExperience;
-
-    @Column(name = "employment_type")
-    private String employmentType;
-
-    @Column(name = "is_active")
-    private Boolean active;
-
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
@@ -62,18 +34,36 @@ public class Employee extends BaseEntity {
     @Column(name = "role")
     private RoleType role;
 
-    @OneToOne(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private EmployeeContact contact;
+    // REPORTING MANAGER (SELF RELATION)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporting_manager_id")
+    private Employee reportingManager;
 
-    @OneToOne(
-            mappedBy = "employee",
+    // ================= MODULES =================
+
+    // Employment Module
+    @OneToOne(mappedBy = "employee",
             cascade = CascadeType.ALL,
             orphanRemoval = true,
-            fetch = FetchType.LAZY
-    )
+            fetch = FetchType.LAZY)
+    private EmployeeEmployment employment;
+
+    // Bank Module
+    @OneToOne(mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private BankLegalDetails bankLegalDetails;
+
+    // Address Module
+    @OneToOne(mappedBy = "employee",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
     private EmployeeAddress address;
 
-    @OneToMany(mappedBy = "employee", fetch = FetchType.LAZY)
-    private List<EmployeeDocument> documents;
-
+    // LINK TO ROOT IDENTITY
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personal_information_id", nullable = false)
+    private PersonalInformation personalInformation;
 }

@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_refresh_token", columnList = "token")
         }
 )
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,20 +19,18 @@ import java.time.LocalDateTime;
 @Builder
 public class RefreshToken extends BaseEntity {
 
-    @Id   // CORRECT JPA ID
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Token Value
     @Column(nullable = false, unique = true, length = 500)
     private String token;
 
-    // Expiry Time
     @Column(nullable = false)
     private LocalDateTime expiryDate;
 
-    // Relation
+    // 🔥 CHANGE HERE
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_auth_id", nullable = false)
-    private EmployeeAuth employeeAuth;
+    @JoinColumn(name = "user_auth_id", nullable = false)
+    private UserAuth userAuth;
 }

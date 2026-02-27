@@ -3,24 +3,19 @@ package com.gm.hrms.service;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
-import org.springframework.web.multipart.MultipartFile;
+import com.gm.hrms.dto.response.UserCreateResponseDTO;
 
 import java.util.List;
 
 public interface EmployeeService {
 
-    // CREATE
-    EmployeeResponseDTO create(EmployeeRequestDTO dto,List<MultipartFile> documents);
+    UserCreateResponseDTO create(EmployeeRequestDTO dto, Long personalInformationId);
 
-    // UPDATE
-    EmployeeResponseDTO update(Long id, EmployeeUpdateDTO dto,List<MultipartFile> documents);
+    EmployeeResponseDTO update(Long personalInformationId, EmployeeUpdateDTO dto);
 
-    // GET BY ID
-    EmployeeResponseDTO getById(Long id);
+    EmployeeResponseDTO getById(Long personalInformationId);
 
-    // GET ALL
     List<EmployeeResponseDTO> getAll();
 
-    // DELETE
-    void delete(Long id);
+    void delete(Long personalInformationId);
 }

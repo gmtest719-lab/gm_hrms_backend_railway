@@ -30,7 +30,7 @@ public class LeaveController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Leave applied successfully")
-                        .data(leaveService.applyLeave(user.getEmployeeId(), dto))
+                        .data(leaveService.applyLeave(user.getUserId(), dto))
                         .build()
         );
     }
@@ -45,7 +45,7 @@ public class LeaveController {
                 ApiResponse.builder()
                         .success(true)
                         .message("My leaves")
-                        .data(leaveService.getByEmployee(user.getEmployeeId()))
+                        .data(leaveService.getByEmployee(user.getUserId()))
                         .build()
         );
     }
@@ -61,7 +61,7 @@ public class LeaveController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Leave cancelled")
-                        .data(leaveService.cancel(leaveId, user.getEmployeeId()))
+                        .data(leaveService.cancel(leaveId, user.getUserId()))
                         .build()
         );
     }

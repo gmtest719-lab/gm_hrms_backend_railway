@@ -1,6 +1,6 @@
 package com.gm.hrms.entity;
 
-import com.gm.hrms.mapper.TimesheetStatus;
+import com.gm.hrms.enums.TimesheetStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

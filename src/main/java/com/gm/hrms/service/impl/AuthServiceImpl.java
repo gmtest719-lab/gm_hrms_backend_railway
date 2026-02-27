@@ -1,22 +1,21 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.config.CustomUserDetails;
 import com.gm.hrms.config.JwtService;
 import com.gm.hrms.dto.request.ChangePasswordRequestDTO;
 import com.gm.hrms.dto.request.LoginRequestDTO;
 import com.gm.hrms.dto.response.LoginResponseDTO;
-import com.gm.hrms.entity.Employee;
-import com.gm.hrms.entity.EmployeeAuth;
+import com.gm.hrms.entity.PersonalInformation;
+import com.gm.hrms.entity.UserAuth;
+import com.gm.hrms.enums.RoleType;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.LoginMapper;
-import com.gm.hrms.repository.EmployeeAuthRepository;
+import com.gm.hrms.repository.UserAuthRepository;
 import com.gm.hrms.service.AuthService;
 import com.gm.hrms.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,9 +25,10 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class AuthServiceImpl implements AuthService {
 
-    private final EmployeeAuthRepository authRepository;
+    private final UserAuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -37,17 +37,26 @@ public class AuthServiceImpl implements AuthService {
     // ================= CREATE AUTH =================
 
     @Override
-    public void createAuthForEmployee(Employee employee, String rawPassword) {
+    public void createAuthForPerson(PersonalInformation person,
+                                    RoleType role,
+                                    String rawPassword) {
 
-        EmployeeAuth auth = new EmployeeAuth();
+        String username = username(person);
 
-        auth.setEmployee(employee);
-        auth.setUsername(employee.getContact().getOfficeEmail());
-        auth.setPasswordHash(passwordEncoder.encode(rawPassword));
-        auth.setActive(true);
-        auth.setAccountLocked(false);
-        auth.setFailedLoginAttempts(0);
-        auth.setIsLoggedIn(false);
+        if (authRepository.existsByUsername(username)) {
+            throw new InvalidRequestException("Username already exists");
+        }
+
+        UserAuth auth = UserAuth.builder()
+                .personalInformation(person)
+                .username(username)
+                .passwordHash(passwordEncoder.encode(rawPassword))
+                .role(role)
+                .active(true)
+                .accountLocked(false)
+                .failedLoginAttempts(0)
+                .isLoggedIn(false)
+                .build();
 
         authRepository.save(auth);
     }
@@ -57,59 +66,55 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public LoginResponseDTO login(LoginRequestDTO request) {
 
-        Authentication authentication = authenticationManager.authenticate(
+        authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
                         request.getPassword()
                 )
         );
 
-        CustomUserDetails user =
-                (CustomUserDetails) authentication.getPrincipal();
+        UserAuth auth = authRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        String username = user.getUsername();
+        if (!auth.getActive()) {
+            throw new InvalidRequestException("Account inactive");
+        }
 
-        EmployeeAuth auth = authRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Auth user not found"));
+        String accessToken = jwtService.generateToken(
+                auth.getUsername(),
+                auth.getRole().name()
+        );
 
-        // Generate tokens
-        String accessToken = jwtService.generateToken(username);
-        String refreshToken = jwtService.generateRefreshToken(username);
+        String refreshToken = jwtService.generateRefreshToken(auth.getUsername());
 
-        // Save refresh token in DB
-        refreshTokenService.deleteByAuth(auth); // remove old
+        refreshTokenService.deleteByAuth(auth);
         refreshTokenService.create(auth, refreshToken);
 
-        // Update login flags
         auth.setIsLoggedIn(true);
         auth.setLastLoginAt(LocalDateTime.now());
-        authRepository.save(auth);
 
         return LoginMapper.toResponse(accessToken, refreshToken, auth);
     }
 
-    // ================= REFRESH TOKEN =================
+    // ================= REFRESH =================
 
-    @Transactional
     @Override
     public LoginResponseDTO refreshToken(String refreshToken) {
 
-        // Verify from DB + expiry
         var refreshEntity = refreshTokenService.verify(refreshToken);
+        UserAuth auth = refreshEntity.getUserAuth();
 
-        EmployeeAuth auth = refreshEntity.getEmployeeAuth();
-
-        if(Boolean.FALSE.equals(auth.getIsLoggedIn())){
-            throw new RuntimeException("User logged out. Please login again");
+        if (!auth.getIsLoggedIn()) {
+            throw new InvalidRequestException("User logged out");
         }
 
-        String username = auth.getUsername();
+        String newAccessToken = jwtService.generateToken(
+                auth.getUsername(),
+                auth.getRole().name()
+        );
 
-        // Generate new tokens
-        String newAccessToken = jwtService.generateToken(username);
-        String newRefreshToken = jwtService.generateRefreshToken(username);
+        String newRefreshToken = jwtService.generateRefreshToken(auth.getUsername());
 
-        // Rotate refresh token
         refreshTokenService.deleteByAuth(auth);
         refreshTokenService.create(auth, newRefreshToken);
 
@@ -118,56 +123,51 @@ public class AuthServiceImpl implements AuthService {
 
     // ================= LOGOUT =================
 
-    @Transactional
     @Override
     public void logout(String refreshToken) {
 
         var refreshEntity = refreshTokenService.verify(refreshToken);
-
-        EmployeeAuth auth = refreshEntity.getEmployeeAuth();
+        UserAuth auth = refreshEntity.getUserAuth();
 
         auth.setIsLoggedIn(false);
-        authRepository.save(auth);
-
-        // Delete refresh token
         refreshTokenService.deleteByAuth(auth);
     }
 
+    // ================= CHANGE PASSWORD =================
 
-    @Transactional
     @Override
     public void changePassword(ChangePasswordRequestDTO request) {
 
         String username = SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getName();
-        EmployeeAuth auth = authRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found"));
 
-        // Verify old password
+        UserAuth auth = authRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         if (!passwordEncoder.matches(request.getOldPassword(), auth.getPasswordHash())) {
-            throw new InvalidRequestException("Old password is incorrect");
+            throw new InvalidRequestException("Old password incorrect");
         }
 
-        // Validate new password
-        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+        if (request.getNewPassword().length() < 6) {
             throw new InvalidRequestException("Password must be at least 6 characters");
         }
 
-        // Prevent same password reuse (optional but good practice)
-        if (passwordEncoder.matches(request.getNewPassword(), auth.getPasswordHash())) {
-            throw new InvalidRequestException("New password cannot be same as old password");
-        }
-
-        // Update password
         auth.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
-        authRepository.save(auth);
-
-        // Invalidate old refresh tokens
         refreshTokenService.deleteByAuth(auth);
     }
 
+    // ================= USERNAME RESOLVER =================
 
+    private String username(PersonalInformation person) {
 
+        if (person.getContact() != null &&
+                person.getContact().getOfficeEmail() != null &&
+                !person.getContact().getOfficeEmail().isBlank()) {
+
+            return person.getContact().getOfficeEmail();
+        }
+
+        return person.getContact().getPersonalEmail();
+    }
 }

@@ -28,7 +28,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Clock-in successful")
-                        .data(attendanceService.clockIn(user.getEmployeeId()))
+                        .data(attendanceService.clockIn(user.getUserId()))
                         .build()
         );
     }
@@ -41,7 +41,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Clock-out successful")
-                        .data(attendanceService.clockOut(user.getEmployeeId()))
+                        .data(attendanceService.clockOut(user.getUserId()))
                         .build()
         );
     }
@@ -54,7 +54,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Break-in recorded")
-                        .data(attendanceService.breakIn(user.getEmployeeId()))
+                        .data(attendanceService.breakIn(user.getUserId()))
                         .build()
         );
     }
@@ -67,7 +67,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Break-out recorded")
-                        .data(attendanceService.breakOut(user.getEmployeeId()))
+                        .data(attendanceService.breakOut(user.getUserId()))
                         .build()
         );
     }
@@ -80,7 +80,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("My attendance fetched")
-                        .data(attendanceService.getByEmployee(user.getEmployeeId()))
+                        .data(attendanceService.getByEmployee(user.getUserId()))
                         .build()
         );
     }
@@ -93,7 +93,7 @@ public class AttendanceController {
                 ApiResponse.builder()
                         .success(true)
                         .message("Today's attendance")
-                        .data(attendanceService.getToday(user.getEmployeeId()))
+                        .data(attendanceService.getToday(user.getUserId()))
                         .build()
         );
     }

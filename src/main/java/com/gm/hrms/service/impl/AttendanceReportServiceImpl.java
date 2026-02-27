@@ -104,7 +104,7 @@ public class AttendanceReportServiceImpl implements AttendanceReportService {
 
         return AttendanceMonthlyDTO.builder()
                 .employeeId(e.getId())
-                .employeeName(e.getFirstName()+" "+e.getLastName())
+//                .employeeName(e.getFirstName()+" "+e.getLastName())
                 .totalDays(list.size())
                 .presentDays((int) list.stream().filter(a->a.getClockIn()!=null).count())
                 .lateDays((int) list.stream().filter(a->Boolean.TRUE.equals(a.getLateIn())).count())

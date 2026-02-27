@@ -17,7 +17,7 @@ public class ProjectAssignmentMapper {
                 .projectId(pa.getProject().getId())
                 .projectName(pa.getProject().getProjectName())
                 .employeeId(pa.getEmployee().getId())
-                .employeeName(pa.getEmployee().getFirstName() + " " + pa.getEmployee().getLastName())
+//                .employeeName(pa.getEmployee().getFirstName() + " " + pa.getEmployee().getLastName())
                 .roleInProject(pa.getRoleInProject())
                 .build();
     }

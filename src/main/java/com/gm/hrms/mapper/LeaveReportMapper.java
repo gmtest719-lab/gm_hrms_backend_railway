@@ -12,10 +12,10 @@ public class LeaveReportMapper {
         return LeaveReportDTO.builder()
                 .leaveId(leave.getId())
                 .employeeId(leave.getEmployee().getId())
-                .employeeName(
-                        leave.getEmployee().getFirstName() + " " +
-                                leave.getEmployee().getLastName()
-                )
+//                .employeeName(
+//                        leave.getEmployee().getFirstName() + " " +
+//                                leave.getEmployee().getLastName()
+//                )
                 .departmentName(
                         leave.getEmployee().getDepartment().getName()
                 )

@@ -1,4 +1,4 @@
-package com.gm.hrms.mapper;
+package com.gm.hrms.enums;
 
 public enum TimesheetStatus {
 

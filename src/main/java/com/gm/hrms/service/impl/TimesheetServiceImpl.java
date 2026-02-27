@@ -7,7 +7,7 @@ import com.gm.hrms.entity.Project;
 import com.gm.hrms.entity.Timesheet;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.TimesheetMapper;
-import com.gm.hrms.mapper.TimesheetStatus;
+import com.gm.hrms.enums.TimesheetStatus;
 import com.gm.hrms.repository.EmployeeRepository;
 import com.gm.hrms.repository.ProjectRepository;
 import com.gm.hrms.repository.TimesheetRepository;

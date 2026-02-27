@@ -1,5 +1,6 @@
 package com.gm.hrms.service.impl;
 
+import com.gm.hrms.dto.request.EmployeeContactRequestDTO;
 import com.gm.hrms.dto.response.    EmployeeContactDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.EmployeeContact;
@@ -15,7 +16,7 @@ public class EmployeeContactServiceImpl implements EmployeeContactService {
     private final EmployeeContactRepository contactRepository;
 
     @Override
-    public EmployeeContact createContact(Employee employee, EmployeeContactDTO dto) {
+    public EmployeeContact createContact(Employee employee, EmployeeContactRequestDTO dto) {
 
         EmployeeContact contact = new EmployeeContact();
 
@@ -27,12 +28,12 @@ public class EmployeeContactServiceImpl implements EmployeeContactService {
 
         EmployeeContact saved = contactRepository.save(contact);
 
-        employee.setContact(saved);
+//        employee.setContact(saved);
 
         return saved;
     }
     @Override
-    public EmployeeContact updateContact(Employee employee, EmployeeContactDTO dto) {
+    public EmployeeContact updateContact(Employee employee, EmployeeContactRequestDTO dto) {
 
         EmployeeContact contact =
                 contactRepository.findByEmployee(employee)

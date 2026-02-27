@@ -1,118 +1,89 @@
 package com.gm.hrms.controller;
 
-import com.gm.hrms.dto.request.ChangePasswordRequestDTO;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
+import com.gm.hrms.dto.response.EmployeeResponseDTO;
+import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.EmployeeService;
-import org.springframework.http.MediaType;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
+
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
 public class EmployeeController {
 
     private final EmployeeService service;
-    private final ObjectMapper objectMapper;
 
-    // ================= ADMIN + HR =================
-
+    // ================= UPDATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<?>> createEmployee(
-            @RequestPart("employee") String employeeJson,
-            @RequestPart(value = "documents", required = false) List<MultipartFile> documents
-    ) throws Exception {
-
-        EmployeeRequestDTO dto =
-                objectMapper.readValue(employeeJson, EmployeeRequestDTO.class);
-
-        return ResponseEntity.ok(
-                ApiResponse.builder()
-                        .success(true)
-                        .message("Employee created successfully")
-                        .data(service.create(dto, documents))
-                        .build()
-        );
-    }
-
-    // ================= ADMIN + HR =================
-
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<?>> updateEmployee(
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<EmployeeResponseDTO>> update(
             @PathVariable Long id,
-            @RequestPart("employee") String employeeJson,
-            @RequestPart(value = "documents", required = false) List<MultipartFile> documents
-    ) throws Exception {
+            @Valid @RequestBody EmployeeUpdateDTO dto) {
 
-        EmployeeUpdateDTO dto =
-                objectMapper.readValue(employeeJson, EmployeeUpdateDTO.class);
+        EmployeeResponseDTO response = service.update(id, dto);
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<EmployeeResponseDTO>builder()
                         .success(true)
                         .message("Employee updated successfully")
-                        .data(service.update(id, dto, documents))
+                        .data(response)
                         .build()
         );
     }
 
-    // ================= ADMIN ONLY =================
+    // ================= GET BY ID =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<EmployeeResponseDTO>> getById(
+            @PathVariable Long id) {
 
+        EmployeeResponseDTO response = service.getById(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.<EmployeeResponseDTO>builder()
+                        .success(true)
+                        .message("Employee fetched successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    // ================= GET ALL =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<EmployeeResponseDTO>>> getAll() {
+
+        List<EmployeeResponseDTO> response = service.getAll();
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<EmployeeResponseDTO>>builder()
+                        .success(true)
+                        .message("Employees fetched successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<Void>builder()
                         .success(true)
-                        .message("Employee deleted (deactivated) successfully")
+                        .message("Employee deactivated successfully")
                         .build()
         );
     }
-
-    // ================= ADMIN + HR =================
-
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll(){
-
-        return ResponseEntity.ok(
-                ApiResponse.builder()
-                        .success(true)
-                        .message("Employees fetched successfully")
-                        .data(service.getAll())
-                        .build()
-        );
-    }
-
-    // ================= SELF ACCESS + ADMIN + HR =================
-
-    @PreAuthorize("hasAnyRole('ADMIN','HR') or #id == principal.employeeId")
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
-
-        return ResponseEntity.ok(
-                ApiResponse.builder()
-                        .success(true)
-                        .message("Employee fetched successfully")
-                        .data(service.getById(id))
-                        .build()
-        );
-    }
-
-
-
-
 }

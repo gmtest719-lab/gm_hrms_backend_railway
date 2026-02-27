@@ -1,6 +1,6 @@
 package com.gm.hrms.dto.response;
 
-import com.gm.hrms.mapper.TimesheetStatus;
+import com.gm.hrms.enums.TimesheetStatus;
 import lombok.Builder;
 import lombok.Data;
 

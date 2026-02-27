@@ -11,10 +11,10 @@ public class AttendanceReportMapper {
 
         return AttendanceReportDTO.builder()
                 .employeeId(a.getEmployee().getId())
-                .employeeName(
-                        a.getEmployee().getFirstName() + " " +
-                                a.getEmployee().getLastName()
-                )
+//                .employeeName(
+//                        a.getEmployee().getFirstName() + " " +
+//                                a.getEmployee().getLastName()
+//                )
                 .departmentName(
                         a.getEmployee().getDepartment().getName()
                 )

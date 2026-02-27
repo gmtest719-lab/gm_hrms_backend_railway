@@ -100,7 +100,7 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
 
         return TimesheetMonthlyDTO.builder()
                 .employeeId(e.getId())
-                .employeeName(e.getFirstName()+" "+e.getLastName())
+//                .employeeName(e.getFirstName()+" "+e.getLastName())
                 .totalEntries(list.size())
                 .totalHours(
                         list.stream()

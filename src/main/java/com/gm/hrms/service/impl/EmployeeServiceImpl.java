@@ -3,22 +3,20 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
-import com.gm.hrms.entity.Department;
-import com.gm.hrms.entity.Designation;
-import com.gm.hrms.entity.Employee;
-import com.gm.hrms.entity.EmployeeContact;
-import com.gm.hrms.exception.DuplicateResourceException;
+import com.gm.hrms.dto.response.UserCreateResponseDTO;
+import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.EmployeeStatus;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.EmployeeMapper;
 import com.gm.hrms.repository.DepartmentRepository;
 import com.gm.hrms.repository.DesignationRepository;
 import com.gm.hrms.repository.EmployeeRepository;
+import com.gm.hrms.repository.PersonalInformationRepository;
 import com.gm.hrms.service.*;
 import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,150 +29,250 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final DesignationRepository designationRepository;
     private final AuthService authService;
-    private final EmployeeContactService employeeContactService;
     private final EmployeeAddressService employeeAddressService;
-    private final EmployeeDocumentService  employeeDocumentService;
     private final EmailService emailService;
+    private final EmployeeEmploymentService employeeEmploymentService;
+    private final EmployeeBankDetailsService employeeBankDetailsService;
+    private final PersonalInformationRepository personalInformationRepository;
 
-
+    // =====================================================
+    // ================= CREATE EMPLOYEE ===================
+    // =====================================================
 
     @Override
-    @Transactional
-    public EmployeeResponseDTO create(EmployeeRequestDTO dto,
-                                      List<MultipartFile> documents) {
+    public UserCreateResponseDTO create(EmployeeRequestDTO dto,
+                                        Long personalInformationId) {
 
-        //  Duplicate Check
-        if(employeeRepository.existsByEmployeeCode(dto.getEmployeeCode())){
-            throw new DuplicateResourceException("Employee code already exists");
-        }
-
-        //  Fetch Relations
+        //  Fetch Department & Designation
         Department dept = departmentRepository.findById(dto.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
         Designation desig = designationRepository.findById(dto.getDesignationId())
                 .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
 
-        //  Create Employee
-        Employee employee = EmployeeMapper.toEntity(dto, dept, desig);
-        employee = employeeRepository.save(employee);
-
-        //  Create Contact
-        if(dto.getContact() != null){
-            EmployeeContact contact= employeeContactService.createContact(employee, dto.getContact());
-            employee.setContact(contact);
+        // 2️⃣ Reporting Manager (Optional)
+        Employee reportingManager = null;
+        if (dto.getReportingManagerId() != null) {
+            reportingManager = employeeRepository.findById(dto.getReportingManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Reporting manager not found"));
         }
 
-        // Generate password
+        // 🔥 3️⃣ FETCH PERSONAL INFORMATION
+        PersonalInformation person =
+                personalInformationRepository.findById(personalInformationId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Personal information not found"));
+
+        // 4️⃣ Generate Employee Code
+        String autoCode = generateEmployeeCode();
+
+        // 5️⃣ Create Employee Core
+        Employee employee = EmployeeMapper.toEntity(
+                dto,
+                dept,
+                desig,
+                reportingManager,
+                autoCode
+        );
+
+        // 🔥 VERY IMPORTANT LINE
+        employee.setPersonalInformation(person);
+
+        employee = employeeRepository.save(employee);
+
+        // =====================================================
+        // 🔐 AUTH CREATION
+        // =====================================================
+
         String rawPassword = PasswordGenerator.generatePassword(8);
 
-// Create Auth
-        authService.createAuthForEmployee(employee, rawPassword);
-
-// Send email
-        emailService.sendCredentials(
-                employee.getContact().getOfficeEmail(),
-                employee.getFirstName(),
+        authService.createAuthForPerson(
+                person, // use person directly
+                employee.getRole(),
                 rawPassword
         );
 
-        //  Create Address
-        if(dto.getAddress() != null){
-            employeeAddressService.createAddress(employee, dto.getAddress());
+        emailService.sendCredentials(
+                username(person),
+                autoCode,
+                rawPassword
+        );
+
+        // =====================================================
+        // HR MODULES
+        // =====================================================
+
+        if (dto.getEmployment() != null) {
+            employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
         }
 
-        //  Create Documents
-        if(documents != null && !documents.isEmpty()){
-            employeeDocumentService.saveDocuments(employee, documents);
+        if (dto.getBankDetails() != null) {
+            employeeBankDetailsService.saveOrUpdate(employee, dto.getBankDetails());
         }
 
-        //  Return Response
-        return EmployeeMapper.toResponse(employee);
+        if (dto.getAddress() != null) {
+            employeeAddressService.saveOrUpdate(employee, dto.getAddress());
+        }
+
+        return UserCreateResponseDTO.builder()
+                .personalInformationId(person.getId())
+                .employeeId(employee.getId())
+                .employeeCode(employee.getEmployeeCode())
+                .fullName(
+                        person.getFirstName() + " " + person.getLastName()
+                )
+                .role(employee.getRole())
+                .departmentName(dept.getName())
+                .active(person.getActive())
+                .createdAt(employee.getCreatedAt())
+                .build();
     }
-
+    // =====================================================
+    // ================= UPDATE EMPLOYEE ===================
+    // =====================================================
 
     @Override
-    @Transactional
-    public EmployeeResponseDTO update(Long id,
-                                      EmployeeUpdateDTO dto,
-                                      List<MultipartFile> documents){
+    public EmployeeResponseDTO update(Long id, EmployeeUpdateDTO dto) {
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        if(dto.getFirstName()!=null){
-            employee.setFirstName(dto.getFirstName());
-        }
+        PersonalInformation person = employee.getPersonalInformation();
 
-        if(dto.getLastName()!=null){
-            employee.setLastName(dto.getLastName());
-        }
+        // =====================================================
+        // 🔹 PERSONAL INFORMATION UPDATE
+        // =====================================================
 
-        if(dto.getEmployeeCode()!=null){
-            employee.setEmployeeCode(dto.getEmployeeCode());
-        }
+        if (dto.getFirstName() != null)
+            person.setFirstName(dto.getFirstName());
 
-        if(dto.getDepartmentId()!=null){
+        if (dto.getMiddleName() != null)
+            person.setMiddleName(dto.getMiddleName());
+
+        if (dto.getLastName() != null)
+            person.setLastName(dto.getLastName());
+
+        if (dto.getGender() != null)
+            person.setGender(dto.getGender());
+
+        if (dto.getDateOfBirth() != null)
+            person.setDateOfBirth(dto.getDateOfBirth());
+
+        if (dto.getMaritalStatus() != null)
+            person.setMaritalStatus(dto.getMaritalStatus());
+
+        if (dto.getSpouseOrParentName() != null)
+            person.setSpouseOrParentName(dto.getSpouseOrParentName());
+
+        if (dto.getActive() != null)
+            person.setActive(dto.getActive());
+
+        // =====================================================
+        // 🔹 EMPLOYEE CORE UPDATE
+        // =====================================================
+
+        if (dto.getDepartmentId() != null) {
             Department dept = departmentRepository.findById(dto.getDepartmentId())
                     .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
             employee.setDepartment(dept);
         }
 
-        if(dto.getDesignationId()!=null){
+        if (dto.getDesignationId() != null) {
             Designation desig = designationRepository.findById(dto.getDesignationId())
                     .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
             employee.setDesignation(desig);
         }
 
-        if(dto.getRole()!=null){
+        if (dto.getRole() != null)
             employee.setRole(dto.getRole());
+
+        // =====================================================
+        // 🔹 REPORTING MANAGER UPDATE
+        // =====================================================
+
+        if (dto.getReportingManagerId() != null) {
+            Employee reportingManager = employeeRepository
+                    .findById(dto.getReportingManagerId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Reporting manager not found"));
+
+            employee.setReportingManager(reportingManager);
         }
 
-        if(dto.getContact() != null){
-            employeeContactService.updateContact(employee, dto.getContact());
+        // =====================================================
+        // 🔹 HR MODULES UPDATE
+        // =====================================================
+
+        if (dto.getEmployment() != null) {
+            employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
         }
 
-        if(dto.getAddress() != null){
-            employeeAddressService.updateAddress(employee, dto.getAddress());
+        if (dto.getBankDetails() != null) {
+            employeeBankDetailsService.saveOrUpdate(employee, dto.getBankDetails());
         }
 
-
-        //  Documents Update (Optional)
-        if(documents != null && !documents.isEmpty()){
-            employeeDocumentService.saveDocuments(employee, documents);
+        if (dto.getAddress() != null) {
+            employeeAddressService.saveOrUpdate(employee, dto.getAddress());
         }
 
         return EmployeeMapper.toResponse(employee);
     }
 
+    // =====================================================
+    // ================= FETCH METHODS =====================
+    // =====================================================
 
     @Override
+    @Transactional(readOnly = true)
     public EmployeeResponseDTO getById(Long id) {
-
-        Employee e = employeeRepository.findById(id)
+        return employeeRepository.findById(id)
+                .map(EmployeeMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
-
-        return EmployeeMapper.toResponse(e);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getAll() {
-
         return employeeRepository.findAll()
                 .stream()
                 .map(EmployeeMapper::toResponse)
                 .toList();
     }
 
+    // =====================================================
+    // ================= SOFT DELETE =======================
+    // =====================================================
+
     @Override
     public void delete(Long id) {
 
-        Employee e = employeeRepository.findById(id)
+        Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        e.setActive(false); //  mark inactive
+        if (employee.getEmployment() != null) {
+            employee.getEmployment().setEmployeeStatus(EmployeeStatus.INACTIVE);
+        }
+    }
 
-        employeeRepository.save(e);
+    // =====================================================
+    // ================= CODE GENERATOR ====================
+    // =====================================================
+
+    private String generateEmployeeCode() {
+        Long count = employeeRepository.count() + 1;
+        return String.format("GMEP%03d", count);
+    }
+
+
+
+    private String username(PersonalInformation person) {
+
+        if (person.getContact() != null &&
+                person.getContact().getOfficeEmail() != null &&
+                !person.getContact().getOfficeEmail().isBlank()) {
+
+            return person.getContact().getOfficeEmail();
+        }
+
+        return person.getContact().getPersonalEmail();
     }
 }
-

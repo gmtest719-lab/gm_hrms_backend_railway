@@ -1,6 +1,6 @@
 package com.gm.hrms.service.impl;
 
-import com.gm.hrms.entity.EmployeeAuth;
+import com.gm.hrms.entity.UserAuth;
 import com.gm.hrms.entity.RefreshToken;
 import com.gm.hrms.exception.TokenExpiredException;
 import com.gm.hrms.exception.TokenNotFoundException;
@@ -18,20 +18,18 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final RefreshTokenRepository repository;
 
-    // ================= CREATE =================
     @Override
-    public RefreshToken create(EmployeeAuth auth, String token) {
+    public RefreshToken create(UserAuth auth, String token) {
 
         RefreshToken refresh = RefreshToken.builder()
                 .token(token)
                 .expiryDate(LocalDateTime.now().plusDays(7))
-                .employeeAuth(auth)
+                .userAuth(auth)  // 🔥 changed
                 .build();
 
         return repository.save(refresh);
     }
 
-    // ================= VERIFY =================
     @Override
     @Transactional
     public RefreshToken verify(String token) {
@@ -48,10 +46,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return refresh;
     }
 
-    // ================= DELETE =================
     @Override
     @Transactional
-    public void deleteByAuth(EmployeeAuth auth) {
-        repository.deleteByEmployeeAuth(auth);
+    public void deleteByAuth(UserAuth auth) {
+        repository.deleteByUserAuth(auth); // 🔥 changed
     }
 }

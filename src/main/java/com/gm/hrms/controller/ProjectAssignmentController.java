@@ -70,7 +70,7 @@ public class ProjectAssignmentController {
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .data(assignmentService.getProjectsByEmployee(user.getEmployeeId()))
+                        .data(assignmentService.getProjectsByEmployee(user.getUserId()))
                         .build()
         );
     }

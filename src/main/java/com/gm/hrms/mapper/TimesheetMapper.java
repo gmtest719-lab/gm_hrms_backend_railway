@@ -15,10 +15,10 @@ public class TimesheetMapper {
                 .hours(t.getHours())
                 .description(t.getDescription())
                 .status(t.getStatus())
-                .employeeName(
-                        t.getEmployee().getFirstName() + " " +
-                                t.getEmployee().getLastName()
-                )
+//                .employeeName(
+//                        t.getEmployee().getFirstName() + " " +
+//                                t.getEmployee().getLastName()
+//                )
                 .projectName(t.getProject().getProjectName())
                 .createdAt(t.getCreatedAt())
                 .updatedAt(t.getUpdatedAt())

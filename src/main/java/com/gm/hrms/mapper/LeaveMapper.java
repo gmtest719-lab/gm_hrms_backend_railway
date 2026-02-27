@@ -15,9 +15,9 @@ public class LeaveMapper {
                 .status(leave.getStatus())
                 .cancelled(leave.getCancelled())
                 .employeeId(leave.getEmployee().getId())
-                .employeeName(
-                        leave.getEmployee().getFirstName() + " " +
-                                leave.getEmployee().getLastName())
+//                .employeeName(
+//                        leave.getEmployee().getFirstName() + " " +
+//                                leave.getEmployee().getLastName())
                 .leaveTypeName(leave.getLeaveType().getName())
                 .build();
     }
