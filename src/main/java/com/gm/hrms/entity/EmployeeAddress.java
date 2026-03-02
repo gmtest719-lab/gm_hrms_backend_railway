@@ -45,6 +45,6 @@ public class EmployeeAddress {
     private Boolean sameAsCurrent;
 
     @OneToOne
-    @JoinColumn(name = "employee_id", nullable = false, unique = true)
-    private Employee employee;
+    @JoinColumn(name = "personal_information_id", nullable = false, unique = true)
+    private PersonalInformation personalInformation;
 }

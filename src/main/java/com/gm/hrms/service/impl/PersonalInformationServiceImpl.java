@@ -9,6 +9,8 @@ import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.PersonalInformationMapper;
 import com.gm.hrms.repository.PersonContactRepository;
 import com.gm.hrms.repository.PersonalInformationRepository;
+import com.gm.hrms.service.EmployeeAddressService;
+import com.gm.hrms.service.EmployeeBankDetailsService;
 import com.gm.hrms.service.PersonalInformationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,10 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
 
     private final PersonalInformationRepository personalInformationRepository;
     private final PersonContactRepository contactRepository;
+    private final EmployeeAddressService employeeAddressService;
+    private final EmployeeBankDetailsService employeeBankDetailsService;
+
+
 
     // ================= CREATE =================
 
@@ -45,6 +51,14 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
                 PersonalInformationMapper.toEntity(dto);
 
         personalInformation = personalInformationRepository.save(personalInformation);
+
+        if (dto.getBankDetails() != null) {
+            employeeBankDetailsService.saveOrUpdate(personalInformation, dto.getBankDetails());
+        }
+
+        if (dto.getAddress() != null) {
+            employeeAddressService.saveOrUpdate(personalInformation, dto.getAddress());
+        }
 
         // 4️⃣ Create Contact
         PersonalInformationContact contact =
@@ -100,6 +114,14 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
             if (contactRepository.existsByPersonalEmail(dto.getOfficeEmail())) {
                 throw new DuplicateResourceException("Office email already exists");
             }
+        }
+
+        if (dto.getBankDetails() != null) {
+            employeeBankDetailsService.saveOrUpdate(personalInformation, dto.getBankDetails());
+        }
+
+        if (dto.getAddress() != null) {
+            employeeAddressService.saveOrUpdate(personalInformation, dto.getAddress());
         }
 
         //  PATCH CONTACT USING MAPPER

@@ -29,10 +29,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final DepartmentRepository departmentRepository;
     private final DesignationRepository designationRepository;
     private final AuthService authService;
-    private final EmployeeAddressService employeeAddressService;
     private final EmailService emailService;
     private final EmployeeEmploymentService employeeEmploymentService;
-    private final EmployeeBankDetailsService employeeBankDetailsService;
     private final PersonalInformationRepository personalInformationRepository;
 
     // =====================================================
@@ -106,18 +104,12 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
         }
 
-        if (dto.getBankDetails() != null) {
-            employeeBankDetailsService.saveOrUpdate(employee, dto.getBankDetails());
-        }
 
-        if (dto.getAddress() != null) {
-            employeeAddressService.saveOrUpdate(employee, dto.getAddress());
-        }
 
         return UserCreateResponseDTO.builder()
                 .personalInformationId(person.getId())
-                .employeeId(employee.getId())
-                .employeeCode(employee.getEmployeeCode())
+                .id(employee.getId())
+                .code(employee.getEmployeeCode())
                 .fullName(
                         person.getFirstName() + " " + person.getLastName()
                 )
@@ -206,13 +198,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
         }
 
-        if (dto.getBankDetails() != null) {
-            employeeBankDetailsService.saveOrUpdate(employee, dto.getBankDetails());
-        }
 
-        if (dto.getAddress() != null) {
-            employeeAddressService.saveOrUpdate(employee, dto.getAddress());
-        }
 
         return EmployeeMapper.toResponse(employee);
     }

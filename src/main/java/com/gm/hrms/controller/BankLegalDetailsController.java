@@ -19,17 +19,17 @@ public class BankLegalDetailsController {
     private final BankLegalDetailsService service;
 
     //  ADMIN / HR can update
-    @PostMapping("/{employeeId}")
+    @PostMapping("/{personalInformationId}")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     public ResponseEntity<ApiResponse<?>> saveOrUpdate(
-            @PathVariable Long employeeId,
+            @PathVariable Long personalInformationId,
             @Valid @RequestBody BankLegalDetailsRequestDTO requestDTO) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
                         .message("Bank details saved successfully")
-                        .data(service.saveOrUpdate(employeeId, requestDTO))
+                        .data(service.saveOrUpdate(personalInformationId, requestDTO))
                         .build()
         );
     }

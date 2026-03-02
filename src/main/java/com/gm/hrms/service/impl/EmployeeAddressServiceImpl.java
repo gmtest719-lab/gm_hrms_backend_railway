@@ -4,6 +4,7 @@ import com.gm.hrms.dto.request.EmployeeAddressRequestDTO;
 import com.gm.hrms.dto.response.EmployeeAddressResponseDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.EmployeeAddress;
+import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.EmployeeAddressMapper;
 import com.gm.hrms.repository.EmployeeAddressRepository;
@@ -19,14 +20,14 @@ public class EmployeeAddressServiceImpl implements EmployeeAddressService {
 
     @Override
     public EmployeeAddressResponseDTO saveOrUpdate(
-            Employee employee,
+            PersonalInformation personalInformation,
             EmployeeAddressRequestDTO dto) {
 
-        EmployeeAddress address = repository.findByEmployeeId(employee.getId())
+        EmployeeAddress address = repository.findByPersonalInformationId(personalInformation.getId())
                 .orElse(null);
 
         if (address == null) {
-            address = EmployeeAddressMapper.toEntity(dto, employee);
+            address = EmployeeAddressMapper.toEntity(dto, personalInformation);
         } else {
             EmployeeAddressMapper.patchEntity(address, dto);
         }
@@ -37,9 +38,9 @@ public class EmployeeAddressServiceImpl implements EmployeeAddressService {
     }
 
     @Override
-    public EmployeeAddressResponseDTO getAddress(Employee employee) {
+    public EmployeeAddressResponseDTO getAddress(PersonalInformation personalInformation) {
 
-        EmployeeAddress address = repository.findByEmployeeId(employee.getId())
+        EmployeeAddress address = repository.findByPersonalInformationId(personalInformation.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
         return EmployeeAddressMapper.toResponse(address);

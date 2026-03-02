@@ -1,6 +1,7 @@
 package com.gm.hrms.dto.request;
 
 import com.gm.hrms.enums.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -50,4 +51,10 @@ public class PersonalInformationRequestDTO {
     @Email(message = "Invalid email format")
     @NotBlank(message = "Office email is required")
     private String officeEmail;
+
+    @Valid
+    private EmployeeAddressRequestDTO address;
+
+    @Valid
+    private EmployeeBankDetailsRequestDTO bankDetails;
 }

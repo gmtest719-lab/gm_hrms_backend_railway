@@ -14,5 +14,5 @@ public class UserCreateRequestDTO {
     // Optional modules
     private EmployeeRequestDTO employee;
 //    private InternRequestDTO intern;
-//    private TraineeRequestDTO trainee; // future
+    private TraineeRequestDTO trainee; // future
 }

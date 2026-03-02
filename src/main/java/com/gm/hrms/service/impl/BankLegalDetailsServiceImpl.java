@@ -4,10 +4,11 @@ import com.gm.hrms.dto.request.BankLegalDetailsRequestDTO;
 import com.gm.hrms.dto.response.BankLegalDetailsResponseDTO;
 import com.gm.hrms.entity.BankLegalDetails;
 import com.gm.hrms.entity.Employee;
+import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.BankLegalDetailsMapper;
 import com.gm.hrms.repository.BankLegalDetailsRepository;
-import com.gm.hrms.repository.EmployeeRepository;
+import com.gm.hrms.repository.PersonalInformationRepository;
 import com.gm.hrms.service.BankLegalDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,21 +18,21 @@ import org.springframework.stereotype.Service;
 public class BankLegalDetailsServiceImpl implements BankLegalDetailsService {
 
     private final BankLegalDetailsRepository repository;
-    private final EmployeeRepository employeeRepository;
+    private final PersonalInformationRepository personalInformationRepository;
 
     @Override
     public BankLegalDetailsResponseDTO saveOrUpdate(
-            Long employeeId,
+            Long personalInformationId,
             BankLegalDetailsRequestDTO dto) {
 
-        Employee employee = employeeRepository.findById(employeeId)
+        PersonalInformation personalInformation = personalInformationRepository.findById(personalInformationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        BankLegalDetails details = repository.findByEmployeeId(employeeId)
+        BankLegalDetails details = repository.findByPersonalInformationId(personalInformationId)
                 .orElse(null);
 
         if (details == null) {
-            details = BankLegalDetailsMapper.toEntity(dto, employee);
+            details = BankLegalDetailsMapper.toEntity(dto, personalInformation);
         } else {
             BankLegalDetailsMapper.updateEntity(details, dto);
         }
@@ -42,9 +43,9 @@ public class BankLegalDetailsServiceImpl implements BankLegalDetailsService {
     }
 
     @Override
-    public BankLegalDetailsResponseDTO getMyDetails(Long employeeId) {
+    public BankLegalDetailsResponseDTO getMyDetails(Long personalInformationId) {
 
-        BankLegalDetails details = repository.findByEmployeeId(employeeId)
+        BankLegalDetails details = repository.findByPersonalInformationId(personalInformationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bank details not found"));
 
         return BankLegalDetailsMapper.toResponse(details);

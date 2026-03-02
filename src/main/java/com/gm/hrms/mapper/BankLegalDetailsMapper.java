@@ -4,13 +4,14 @@ import com.gm.hrms.dto.request.BankLegalDetailsRequestDTO;
 import com.gm.hrms.dto.response.BankLegalDetailsResponseDTO;
 import com.gm.hrms.entity.BankLegalDetails;
 import com.gm.hrms.entity.Employee;
+import com.gm.hrms.entity.PersonalInformation;
 
 public class BankLegalDetailsMapper {
 
     // Convert Request DTO → Entity
     public static BankLegalDetails toEntity(
             BankLegalDetailsRequestDTO dto,
-            Employee employee) {
+            PersonalInformation personalInformation) {
 
         return BankLegalDetails.builder()
                 .bankName(dto.getBankName())
@@ -20,7 +21,7 @@ public class BankLegalDetailsMapper {
                 .aadhaarNumber(dto.getAadhaarNumber())
                 .uanNumber(dto.getUanNumber())
                 .esicNumber(dto.getEsicNumber())
-                .employee(employee)
+                .personalInformation(personalInformation)
                 .build();
     }
 

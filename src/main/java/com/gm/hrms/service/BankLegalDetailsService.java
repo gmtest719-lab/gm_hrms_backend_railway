@@ -6,8 +6,8 @@ import com.gm.hrms.dto.response.BankLegalDetailsResponseDTO;
 public interface BankLegalDetailsService {
 
     BankLegalDetailsResponseDTO saveOrUpdate(
-            Long employeeId,
+            Long personalInformationId,
             BankLegalDetailsRequestDTO requestDTO);
 
-    BankLegalDetailsResponseDTO getMyDetails(Long employeeId);
+    BankLegalDetailsResponseDTO getMyDetails(Long personalInformationId);
 }

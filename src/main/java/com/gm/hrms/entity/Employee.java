@@ -48,19 +48,6 @@ public class Employee extends BaseEntity {
             fetch = FetchType.LAZY)
     private EmployeeEmployment employment;
 
-    // Bank Module
-    @OneToOne(mappedBy = "employee",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    private BankLegalDetails bankLegalDetails;
-
-    // Address Module
-    @OneToOne(mappedBy = "employee",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    private EmployeeAddress address;
 
     // LINK TO ROOT IDENTITY
     @ManyToOne(fetch = FetchType.LAZY)

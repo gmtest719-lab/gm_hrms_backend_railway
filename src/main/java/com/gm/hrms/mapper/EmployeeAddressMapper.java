@@ -6,15 +6,16 @@ import com.gm.hrms.dto.response.EmployeeAddressResponseDTO;
 import com.gm.hrms.entity.Address;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.EmployeeAddress;
+import com.gm.hrms.entity.PersonalInformation;
 
 public class EmployeeAddressMapper {
 
     public static EmployeeAddress toEntity(
             EmployeeAddressRequestDTO dto,
-            Employee employee) {
+            PersonalInformation personalInformation) {
 
         EmployeeAddress entity = new EmployeeAddress();
-        entity.setEmployee(employee);
+        entity.setPersonalInformation(personalInformation);
 
         updateEntity(entity, dto);
 

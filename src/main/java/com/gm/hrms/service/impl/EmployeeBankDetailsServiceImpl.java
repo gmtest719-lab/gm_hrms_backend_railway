@@ -2,7 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.EmployeeBankDetailsRequestDTO;
 import com.gm.hrms.entity.BankLegalDetails;
-import com.gm.hrms.entity.Employee;
+import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.repository.BankLegalDetailsRepository;
 import com.gm.hrms.service.EmployeeBankDetailsService;
 import lombok.RequiredArgsConstructor;
@@ -16,14 +16,14 @@ public class EmployeeBankDetailsServiceImpl
     private final BankLegalDetailsRepository repository;
 
     @Override
-    public void saveOrUpdate(Employee employee,
+    public void saveOrUpdate(PersonalInformation personalInformation,
                              EmployeeBankDetailsRequestDTO dto) {
 
         BankLegalDetails bank =
-                repository.findByEmployee(employee)
+                repository.findByPersonalInformation(personalInformation)
                         .orElse(new BankLegalDetails());
 
-        bank.setEmployee(employee);
+        bank.setPersonalInformation(personalInformation);
 
         if (dto.getBankName() != null)
             bank.setBankName(dto.getBankName());

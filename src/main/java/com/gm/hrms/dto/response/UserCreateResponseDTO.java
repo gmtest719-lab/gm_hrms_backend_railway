@@ -12,9 +12,9 @@ public class UserCreateResponseDTO {
 
     private Long personalInformationId;  // 🔥 system identity
 
-    private Long employeeId;             // module id (nullable for intern/trainee)
+    private Long id;             // module id (nullable for intern/trainee)
 
-    private String employeeCode;
+    private String code;
 
     private String fullName;
 

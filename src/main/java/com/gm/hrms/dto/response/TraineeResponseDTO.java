@@ -9,10 +9,11 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class EmployeeResponseDTO {
+public class TraineeResponseDTO {
 
+    // ===== IDENTIFIERS =====
     private Long personalInformationId;
-    private Long employeeId;
+    private Long traineeId;
 
     // ===== PERSONAL =====
     private String firstName;
@@ -24,19 +25,21 @@ public class EmployeeResponseDTO {
     private String spouseOrParentName;
     private Boolean active;
 
-    // ===== EMPLOYEE =====
-    private String employeeCode;
+    // ===== TRAINEE CORE =====
+    private String traineeCode;
     private String departmentName;
     private String designationName;
-    private String reportingManagerName;
     private RoleType role;
+    private Double stipend;
+    private TraineeStatus status;
 
     // ===== MODULES =====
     private EmployeeContactResponseDTO contact;
-    private EmployeeEmploymentResponseDTO employment;
     private EmployeeBankDetailsResponseDTO bankDetails;
     private EmployeeAddressResponseDTO address;
 
+    private TraineeWorkDetailsResponseDTO workDetails;
+    private TraineeEducationResponseDTO educationDetails;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

@@ -34,6 +34,6 @@ public class BankLegalDetails {
     private String esicNumber;
 
     @OneToOne
-    @JoinColumn(name = "employee_id", nullable = false, unique = true)
-    private Employee employee;
+    @JoinColumn(name = "personal_information_id", nullable = false, unique = true)
+    private PersonalInformation personalInformation;
 }

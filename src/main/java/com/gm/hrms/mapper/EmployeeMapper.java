@@ -32,7 +32,12 @@ public class EmployeeMapper {
         PersonalInformation p = e.getPersonalInformation();
         PersonalInformationContact contact =
                 p != null ? p.getContact() : null;
+        EmployeeAddress address =
+                p != null ? p.getAddress() : null;
 
+        BankLegalDetails bankLegalDetails =
+
+        p != null ? p.getBankLegalDetails() : null;
         return EmployeeResponseDTO.builder()
 
                 // ===== IDS =====
@@ -69,8 +74,8 @@ public class EmployeeMapper {
 
                 // ===== MODULES =====
                 .employment(mapEmployment(e.getEmployment()))
-                .bankDetails(mapBank(e.getBankLegalDetails()))
-                .address(mapAddress(e.getAddress()))
+                .bankDetails(mapBank(bankLegalDetails))
+                .address(mapAddress(address))
 
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
@@ -79,7 +84,7 @@ public class EmployeeMapper {
 
     // ================= CONTACT =================
 
-    private static EmployeeContactResponseDTO mapContact(
+     static EmployeeContactResponseDTO mapContact(
             PersonalInformationContact contact) {
 
         if (contact == null) return null;
@@ -112,7 +117,7 @@ public class EmployeeMapper {
 
     // ================= BANK =================
 
-    private static EmployeeBankDetailsResponseDTO mapBank(BankLegalDetails bank) {
+     static EmployeeBankDetailsResponseDTO mapBank(BankLegalDetails bank) {
 
         if (bank == null) return null;
 

@@ -65,4 +65,20 @@ public class PersonalInformation extends BaseEntity {
             orphanRemoval = true,
             fetch = FetchType.LAZY)
     private PersonalInformationContact contact;
+
+
+    // Bank Module
+    @OneToOne(mappedBy = "personalInformation",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private BankLegalDetails bankLegalDetails;
+
+    // Address Module
+    @OneToOne(mappedBy = "personalInformation",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private EmployeeAddress address;
+
 }

@@ -27,13 +27,6 @@ public class EmployeeRequestDTO {
     private Long reportingManagerId;
 
     @Valid
-    private EmployeeAddressRequestDTO address;
-
-    @Valid
     private EmployeeEmploymentRequestDTO employment;
-
-    @Valid
-    private EmployeeBankDetailsRequestDTO bankDetails;
-
 
 }
