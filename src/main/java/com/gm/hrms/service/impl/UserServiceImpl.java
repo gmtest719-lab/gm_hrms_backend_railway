@@ -17,7 +17,7 @@ public class UserServiceImpl implements UserService {
 
     private final PersonalInformationService personalService;
     private final EmployeeService employeeService;
-//    private final InternService internService;
+    private final InternService internService;
     private final TraineeService traineeService;
 
     @Override
@@ -44,13 +44,13 @@ public class UserServiceImpl implements UserService {
             }
 
             case INTERN -> {
-//                if (dto.getIntern() == null)
-//                    throw new InvalidRequestException("Intern data required");
-//
-//                return internService.create(
-//                        dto.getIntern(),
-//                        person.getId()
-//                );
+                if (dto.getIntern() == null)
+                    throw new InvalidRequestException("Intern data required");
+
+                return internService.create(
+                        dto.getIntern(),
+                        person.getId()
+                );
             }
 
             case TRAINEE -> {
