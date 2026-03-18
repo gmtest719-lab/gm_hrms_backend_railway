@@ -33,6 +33,8 @@ public class BankLegalDetails {
 
     private String esicNumber;
 
+    private String pfNumber;
+
     @OneToOne
     @JoinColumn(name = "personal_information_id", nullable = false, unique = true)
     private PersonalInformation personalInformation;

@@ -1,116 +1,160 @@
 package com.gm.hrms.service.impl;
 
+import com.gm.hrms.dto.request.TimesheetEntryDTO;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
 import com.gm.hrms.dto.response.TimesheetResponseDTO;
-import com.gm.hrms.entity.Employee;
-import com.gm.hrms.entity.Project;
-import com.gm.hrms.entity.Timesheet;
-import com.gm.hrms.exception.ResourceNotFoundException;
-import com.gm.hrms.mapper.TimesheetMapper;
+import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.TimesheetStatus;
-import com.gm.hrms.repository.EmployeeRepository;
-import com.gm.hrms.repository.ProjectRepository;
-import com.gm.hrms.repository.TimesheetRepository;
+import com.gm.hrms.mapper.TimesheetMapper;
+import com.gm.hrms.repository.*;
 import com.gm.hrms.service.TimesheetService;
+import com.gm.hrms.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class TimesheetServiceImpl implements TimesheetService {
 
-    private final TimesheetRepository repo;
-    private final EmployeeRepository employeeRepo;
-    private final ProjectRepository projectRepo;
+    private final TimesheetRepository timesheetRepository;
+    private final PersonalInformationRepository personRepository;
+    private final ProjectRepository projectRepository;
 
-    // ================= CREATE =================
     @Override
-    public TimesheetResponseDTO create(Long employeeId, TimesheetRequestDTO dto) {
+    public TimesheetResponseDTO createOrUpdateTimesheet(TimesheetRequestDTO request){
 
-        if (dto.getHours() < 8) {
-            throw new RuntimeException("Minimum 8 hours required");
+        PersonalInformation person =
+                personRepository.findById(request.getPersonId())
+                        .orElseThrow(() -> new RuntimeException("Person not found"));
+
+        Timesheet timesheet =
+                timesheetRepository.findByPerson_IdAndWorkDate(
+                        request.getPersonId(),
+                        request.getWorkDate()
+                ).orElse(
+                        Timesheet.builder()
+                                .person(person)
+                                .workDate(request.getWorkDate())
+                                .entries(new ArrayList<>())
+                                .status(TimesheetStatus.DRAFT)
+                                .build()
+                );
+
+        timesheet.getEntries().clear();
+
+        int totalMinutes = 0;
+
+        for(TimesheetEntryDTO entryDTO : request.getEntries()){
+
+            Project project =
+                    projectRepository.findById(entryDTO.getProjectId())
+                            .orElseThrow(() -> new RuntimeException("Project not found"));
+
+            int minutes = TimeUtil.toMinutes(entryDTO.getWorkedTime());
+
+            totalMinutes += minutes;
+
+            TimesheetEntry entry =
+                    TimesheetEntry.builder()
+                            .timesheet(timesheet)
+                            .project(project)
+                            .workedMinutes(minutes)
+                            .taskName(entryDTO.getTaskName())
+                            .description(entryDTO.getDescription())
+                            .build();
+
+            timesheet.getEntries().add(entry);
         }
 
-        Employee emp = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
-
-        Project project = projectRepo.findById(dto.getProjectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
-
-        Timesheet t = Timesheet.builder()
-                .employee(emp)
-                .project(project)
-                .workDate(dto.getWorkDate())
-                .hours(dto.getHours())
-                .description(dto.getDescription())
-                .status(TimesheetStatus.DRAFT)
-                .build();
-
-        return TimesheetMapper.toResponse(repo.save(t));
-    }
-
-    // ================= SUBMIT =================
-    @Override
-    public TimesheetResponseDTO submit(Long timesheetId, Long employeeId) {
-
-        Timesheet t = repo.findById(timesheetId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timesheet not found"));
-
-        //  Ownership check
-        if (!t.getEmployee().getId().equals(employeeId)) {
-            throw new RuntimeException("You can submit only your own timesheet");
+        // validation
+        if(totalMinutes > 480){
+            throw new RuntimeException("Daily work hours cannot exceed 8 hours");
         }
 
-        t.setStatus(TimesheetStatus.SUBMITTED);
+        timesheet.setTotalMinutes(totalMinutes);
 
-        return TimesheetMapper.toResponse(repo.save(t));
+        Timesheet saved = timesheetRepository.save(timesheet);
+
+        return TimesheetMapper.toResponse(saved);
     }
 
-    // ================= APPROVE =================
     @Override
-    public TimesheetResponseDTO approve(Long timesheetId) {
+    public TimesheetResponseDTO submitTimesheet(Long timesheetId){
 
-        Timesheet t = repo.findById(timesheetId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timesheet not found"));
+        Timesheet timesheet = timesheetRepository.findById(timesheetId)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
 
-        t.setStatus(TimesheetStatus.APPROVED);
+        timesheet.setStatus(TimesheetStatus.SUBMITTED);
+        timesheet.setSubmittedAt(LocalDateTime.now());
 
-        return TimesheetMapper.toResponse(repo.save(t));
+        return TimesheetMapper.toResponse(timesheetRepository.save(timesheet));
     }
 
-    // ================= REJECT =================
     @Override
-    public TimesheetResponseDTO reject(Long timesheetId) {
+    public TimesheetResponseDTO approveTimesheet(Long timesheetId){
 
-        Timesheet t = repo.findById(timesheetId)
-                .orElseThrow(() -> new ResourceNotFoundException("Timesheet not found"));
+        Timesheet timesheet = timesheetRepository.findById(timesheetId)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
 
-        t.setStatus(TimesheetStatus.REJECTED);
+        timesheet.setStatus(TimesheetStatus.APPROVED);
+        timesheet.setApprovedAt(LocalDateTime.now());
 
-        return TimesheetMapper.toResponse(repo.save(t));
+        return TimesheetMapper.toResponse(timesheetRepository.save(timesheet));
     }
 
-    // ================= MY TIMESHEETS =================
     @Override
-    public List<TimesheetResponseDTO> getByEmployee(Long employeeId) {
+    public TimesheetResponseDTO rejectTimesheet(Long timesheetId){
 
-        return repo.findByEmployeeId(employeeId)
+        Timesheet timesheet = timesheetRepository.findById(timesheetId)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
+
+        timesheet.setStatus(TimesheetStatus.REJECTED);
+
+        return TimesheetMapper.toResponse(timesheetRepository.save(timesheet));
+    }
+
+    @Override
+    public TimesheetResponseDTO getTimesheetById(Long id){
+
+        Timesheet timesheet = timesheetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
+
+        return TimesheetMapper.toResponse(timesheet);
+    }
+
+    @Override
+    public TimesheetResponseDTO getByPersonAndDate(Long personId, String date){
+
+        Timesheet timesheet = timesheetRepository
+                .findByPerson_IdAndWorkDate(
+                        personId,
+                        LocalDate.parse(date)
+                )
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
+
+        return TimesheetMapper.toResponse(timesheet);
+    }
+
+    @Override
+    public List<TimesheetResponseDTO> getAllTimesheets(){
+
+        return timesheetRepository.findAll()
                 .stream()
                 .map(TimesheetMapper::toResponse)
                 .toList();
     }
-
-    // ================= ALL =================
     @Override
-    public List<TimesheetResponseDTO> getAll() {
+    public void deleteTimesheet(Long id){
 
-        return repo.findAll()
-                .stream()
-                .map(TimesheetMapper::toResponse)
-                .toList();
+        Timesheet timesheet = timesheetRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Timesheet not found"));
+
+        timesheetRepository.delete(timesheet);
     }
+
 }

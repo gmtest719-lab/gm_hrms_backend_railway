@@ -4,12 +4,11 @@ import com.gm.hrms.dto.request.InternRequestDTO;
 import com.gm.hrms.dto.request.InternUpdateDTO;
 import com.gm.hrms.dto.response.InternResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
-import com.gm.hrms.entity.Department;
-import com.gm.hrms.entity.Designation;
-import com.gm.hrms.entity.Intern;
-import com.gm.hrms.entity.PersonalInformation;
-import com.gm.hrms.enums.InternStatus;
+import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.InternShipType;
 import com.gm.hrms.enums.RoleType;
+import com.gm.hrms.enums.Status;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.InternMapper;
 import com.gm.hrms.repository.*;
@@ -18,8 +17,11 @@ import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,8 +29,6 @@ import java.util.List;
 public class InternServiceImpl implements InternService {
 
     private final InternRepository internRepository;
-    private final DepartmentRepository departmentRepository;
-    private final DesignationRepository designationRepository;
     private final PersonalInformationRepository personalRepository;
 
     private final AuthService authService;
@@ -39,28 +39,47 @@ public class InternServiceImpl implements InternService {
     private final InternCollegeService collegeService;
     private final InternshipDetailsService internshipService;
     private final InternMentorService mentorService;
+    private final PersonalDocumentService documentService;
+    private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
+
+
     @Override
     public UserCreateResponseDTO create(
             InternRequestDTO dto,
             Long personalId) {
 
-        Department dept = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-
-        Designation desig = designationRepository.findById(dto.getDesignationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
 
         PersonalInformation person = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not found"));
 
         Intern intern = new Intern();
         intern.setInternCode(generateCode());
-        intern.setDepartment(dept);
-        intern.setDesignation(desig);
         intern.setPersonalInformation(person);
-        intern.setStatus(dto.getStatus());
 
         intern = internRepository.save(intern);
+
+        // ================= SAVE COLLEGE =================
+
+
+
+        if (dto.getCollegeDetails() != null) {
+            collegeService.saveOrUpdate(intern, dto.getCollegeDetails());
+        }
+
+        // ================= SAVE INTERNSHIP =================
+
+        if (dto.getInternshipDetails() != null) {
+            internshipService.saveOrUpdate(intern, dto.getInternshipDetails());
+        }
+
+        // ================= SAVE MENTOR =================
+
+        if (dto.getMentorDetails() != null) {
+            mentorService.saveOrUpdate(intern, dto.getMentorDetails());
+        }
+
+        // ================= AUTH =================
 
         String rawPassword = PasswordGenerator.generatePassword(8);
 
@@ -75,64 +94,92 @@ public class InternServiceImpl implements InternService {
         return UserCreateResponseDTO.builder()
                 .personalInformationId(person.getId())
                 .id(intern.getId())
+                .active(person.getActive())
+                .departmentName(person.getWorkProfile().getDepartment().getName())
+                .fullName(person.getFirstName() + " "+ person.getMiddleName()+ " " + person.getLastName())
                 .code(intern.getInternCode())
                 .role(RoleType.INTERN)
-                .departmentName(dept.getName())
                 .createdAt(intern.getCreatedAt())
                 .build();
     }
 
     @Override
-    public InternResponseDTO update(Long id, InternUpdateDTO dto) {
+    public InternResponseDTO update(
+            Long id,
+            String internJson,
+            MultipartFile profileImage,
+            Map<String, MultipartFile> documents,
+            Map<String, String> reasons
+    ) throws Exception {
 
+        // ================= PARSE =================
+        InternUpdateDTO dto =
+                objectMapper.readValue(internJson, InternUpdateDTO.class);
+
+        // ================= FETCH =================
         Intern intern = internRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Intern not found"));
 
         PersonalInformation p = intern.getPersonalInformation();
 
-        // ================= PERSONAL (DELEGATED) =================
+        // ================= PROFILE IMAGE =================
+        if (profileImage != null && !profileImage.isEmpty()) {
 
+            String path = fileStorageService.save(profileImage);
+            p.setProfileImageUrl(path);
+        }
+
+        // ================= PERSONAL =================
         if (dto.getPersonalInformation() != null) {
+
             personalInformationService.update(
                     p.getId(),
                     dto.getPersonalInformation()
             );
         }
 
-        // ================= CORE =================
+        // ================= INTERN CODE =================
+        if (dto.getInternCode() != null &&
+                !dto.getInternCode().equals(intern.getInternCode())) {
 
-        if (dto.getInternCode() != null)
+            if (dto.getInternCode().trim().isEmpty()) {
+                throw new InvalidRequestException("Intern code cannot be blank");
+            }
+
+            boolean exists =
+                    internRepository.existsByInternCodeAndIdNot(dto.getInternCode(), id);
+
+            if (exists) {
+                throw new InvalidRequestException(
+                        "Intern code already exists: " + dto.getInternCode()
+                );
+            }
+
             intern.setInternCode(dto.getInternCode());
-
-        if (dto.getDepartmentId() != null) {
-            Department dept = departmentRepository.findById(dto.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-            intern.setDepartment(dept);
         }
-
-        if (dto.getDesignationId() != null) {
-            Designation desig = designationRepository.findById(dto.getDesignationId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
-            intern.setDesignation(desig);
-        }
-
-        if (dto.getStatus() != null)
-            intern.setStatus(dto.getStatus());
 
         // ================= COLLEGE =================
-
         if (dto.getCollegeDetails() != null)
             collegeService.saveOrUpdate(intern, dto.getCollegeDetails());
 
         // ================= INTERNSHIP =================
-
         if (dto.getInternshipDetails() != null)
             internshipService.saveOrUpdate(intern, dto.getInternshipDetails());
 
         // ================= MENTOR =================
-
         if (dto.getMentorDetails() != null)
             mentorService.saveOrUpdate(intern, dto.getMentorDetails());
+
+        // ================= DOCUMENT =================
+        if (documents != null || reasons != null) {
+
+            documentService.updateDocuments(
+                    p.getId(),
+                    p.getEmploymentType(),
+                    documents,
+                    reasons
+            );
+        }
 
         return InternMapper.toResponse(intern);
     }
@@ -162,11 +209,13 @@ public class InternServiceImpl implements InternService {
         Intern intern = internRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Intern not found"));
 
-        intern.setStatus(InternStatus.INACTIVE);
+        PersonalInformation person = intern.getPersonalInformation();
 
-        // optional: also deactivate personal
-        intern.getPersonalInformation().setActive(false);
+        if (person != null && person.getWorkProfile() != null) {
+            person.getWorkProfile().setStatus(Status.INACTIVE);
+        }
     }
+
 
     private String generateCode() {
         Long count = internRepository.count() + 1;

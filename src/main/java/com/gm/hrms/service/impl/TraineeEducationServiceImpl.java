@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.TraineeEducationRequestDTO;
 import com.gm.hrms.entity.Trainee;
 import com.gm.hrms.entity.TraineeEducationDetails;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.repository.TraineeEducationRepository;
 import com.gm.hrms.service.TraineeEducationService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,24 @@ public class TraineeEducationServiceImpl implements TraineeEducationService {
                         .orElse(new TraineeEducationDetails());
 
         education.setTrainee(trainee);
+
+        // ================= VALIDATION =================
+
+        // HSC < Bachelor
+        if (dto.getHscYear() != null && dto.getBachelorYear() != null &&
+                dto.getBachelorYear() < dto.getHscYear()) {
+
+            throw new InvalidRequestException("Bachelor year cannot be before HSC year");
+        }
+
+        // Bachelor < Master
+        if (dto.getBachelorYear() != null && dto.getMasterYear() != null &&
+                dto.getMasterYear() < dto.getBachelorYear()) {
+
+            throw new InvalidRequestException("Master year cannot be before Bachelor year");
+        }
+
+        // ================= SET =================
 
         if (dto.getHscCompletion() != null)
             education.setHscCompletion(dto.getHscCompletion());

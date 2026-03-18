@@ -4,6 +4,8 @@ import com.gm.hrms.dto.request.InternInternshipRequestDTO;
 import com.gm.hrms.entity.Intern;
 import com.gm.hrms.entity.InternInternshipDetails;
 import com.gm.hrms.entity.InternshipDomain;
+import com.gm.hrms.enums.InternShipType;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.repository.InternInternshipRepository;
 import com.gm.hrms.repository.InternshipDomainRepository;
@@ -32,11 +34,15 @@ public class InternshipDetailsServiceImpl implements InternshipDetailsService {
 
         details.setIntern(intern);
 
+        // ================= DOMAIN =================
+
         if (dto.getDomainId() != null) {
             InternshipDomain domain = domainRepository.findById(dto.getDomainId())
                     .orElseThrow(() -> new ResourceNotFoundException("Internship domain not found"));
             details.setDomain(domain);
         }
+
+        // ================= DATES =================
 
         if (dto.getStartDate() != null)
             details.setStartDate(dto.getStartDate());
@@ -44,11 +50,39 @@ public class InternshipDetailsServiceImpl implements InternshipDetailsService {
         if (dto.getEndDate() != null)
             details.setEndDate(dto.getEndDate());
 
-        if (dto.getShiftTiming() != null)
-            details.setShiftTiming(dto.getShiftTiming());
+        // ✅ Date validation
+        if (dto.getStartDate() != null && dto.getEndDate() != null &&
+                dto.getEndDate().isBefore(dto.getStartDate())) {
 
-        if (dto.getMode() != null)
-            details.setMode(dto.getMode());
+            throw new InvalidRequestException("End date cannot be before start date");
+        }
+
+        // ================= TRAINING PERIOD =================
+
+        if (dto.getTrainingPeriodMonths() != null)
+            details.setTrainingPeriodMonths(dto.getTrainingPeriodMonths());
+
+        // ================= INTERNSHIP TYPE =================
+
+        InternShipType type = dto.getInternshipType() != null
+                ? dto.getInternshipType()
+                : details.getInternshipType();
+
+        // ================= STIPEND VALIDATION =================
+
+        if (type == InternShipType.PAID &&
+                (dto.getStipend() == null && details.getStipend() == null)) {
+
+            throw new InvalidRequestException("Stipend is required for paid internship");
+        }
+
+        // ================= SET VALUES =================
+
+        if (dto.getStipend() != null)
+            details.setStipend(dto.getStipend());
+
+        if (dto.getInternshipType() != null)
+            details.setInternshipType(dto.getInternshipType());
 
         repository.save(details);
     }

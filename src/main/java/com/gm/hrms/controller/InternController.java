@@ -6,9 +6,14 @@ import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.InternService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/interns")
@@ -18,12 +23,26 @@ public class InternController {
     private final InternService service;
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    @PatchMapping("/{id}")
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<InternResponseDTO>> update(
-            @PathVariable Long id,
-            @Valid @RequestBody InternUpdateDTO dto) {
 
-        InternResponseDTO response = service.update(id, dto);
+            @PathVariable Long id,
+
+            @RequestParam("intern") String internJson,
+
+            @RequestParam(required = false)
+            MultipartFile profileImage,
+
+            @RequestParam(required = false)
+            Map<String, MultipartFile> documents,
+
+            @RequestParam(required = false)
+            Map<String, String> reasons
+
+    ) throws Exception {
+
+        InternResponseDTO response =
+                service.update(id, internJson, profileImage, documents, reasons);
 
         return ResponseEntity.ok(
                 ApiResponse.<InternResponseDTO>builder()

@@ -8,11 +8,15 @@ import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/employees")
@@ -22,13 +26,27 @@ public class EmployeeController {
     private final EmployeeService service;
 
     // ================= UPDATE =================
+    @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<EmployeeResponseDTO>> update(
-            @PathVariable Long id,
-            @Valid @RequestBody EmployeeUpdateDTO dto) {
 
-        EmployeeResponseDTO response = service.update(id, dto);
+            @PathVariable Long id,
+
+            @RequestParam("employee") String employeeJson,
+
+            @RequestParam(required = false)
+            MultipartFile profileImage,
+
+            @RequestParam(required = false)
+            Map<String, MultipartFile> documents,
+
+            @RequestParam(required = false)
+            Map<String, String> reasons
+
+    ) throws Exception {
+
+        EmployeeResponseDTO response =
+                service.update(id, employeeJson, profileImage, documents, reasons);
 
         return ResponseEntity.ok(
                 ApiResponse.<EmployeeResponseDTO>builder()
@@ -38,7 +56,6 @@ public class EmployeeController {
                         .build()
         );
     }
-
     // ================= GET BY ID =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")

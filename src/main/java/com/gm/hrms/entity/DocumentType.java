@@ -10,9 +10,9 @@ import java.util.Set;
 @Table(name = "document_types")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class DocumentType extends BaseEntity {
 
     @Id
@@ -22,18 +22,16 @@ public class DocumentType extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @ElementCollection(targetClass = ApplicableType.class)
+    // UNIQUE KEY USED IN FILE UPLOAD
+    @Column(nullable = false, unique = true)
+    private String key;
+
+    @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
-    @CollectionTable(
-            name = "document_type_applicable",
-            joinColumns = @JoinColumn(name = "document_type_id")
-    )
-    @Column(name = "applicable_type")
+    @CollectionTable(name = "document_type_applicable")
     private Set<ApplicableType> applicableTypes;
 
-    @Column(nullable = false)
-    private Boolean mandatory = false;
+    private Boolean mandatory;
 
-    @Column(nullable = false)
-    private Boolean active = true;
+    private Boolean active;
 }

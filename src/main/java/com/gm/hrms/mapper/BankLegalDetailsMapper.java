@@ -3,7 +3,6 @@ package com.gm.hrms.mapper;
 import com.gm.hrms.dto.request.BankLegalDetailsRequestDTO;
 import com.gm.hrms.dto.response.BankLegalDetailsResponseDTO;
 import com.gm.hrms.entity.BankLegalDetails;
-import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.PersonalInformation;
 
 public class BankLegalDetailsMapper {
@@ -21,6 +20,7 @@ public class BankLegalDetailsMapper {
                 .aadhaarNumber(dto.getAadhaarNumber())
                 .uanNumber(dto.getUanNumber())
                 .esicNumber(dto.getEsicNumber())
+                .pfNumber(dto.getPfNumber())
                 .personalInformation(personalInformation)
                 .build();
     }
@@ -34,6 +34,7 @@ public class BankLegalDetailsMapper {
         entity.setAccountNumber(dto.getAccountNumber());
         entity.setIfscCode(dto.getIfscCode());
         entity.setPanNumber(dto.getPanNumber());
+        entity.setPfNumber(entity.getPfNumber());
         entity.setAadhaarNumber(dto.getAadhaarNumber());
         entity.setUanNumber(dto.getUanNumber());
         entity.setEsicNumber(dto.getEsicNumber());

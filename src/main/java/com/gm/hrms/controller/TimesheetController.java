@@ -1,13 +1,10 @@
 package com.gm.hrms.controller;
 
-import com.gm.hrms.config.CustomUserDetails;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.TimesheetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,89 +14,104 @@ public class TimesheetController {
 
     private final TimesheetService service;
 
-    // ================= EMPLOYEE: CREATE (DRAFT) =================
     @PostMapping
-    @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<ApiResponse<?>> create(
-            @AuthenticationPrincipal CustomUserDetails user,
-            @RequestBody TimesheetRequestDTO dto){
+    public ResponseEntity<ApiResponse<?>> createOrUpdate(
+            @RequestBody TimesheetRequestDTO request){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("Timesheet saved as draft")
-                        .data(service.create(user.getUserId(), dto))
+                        .message("Timesheet saved")
+                        .data(service.createOrUpdateTimesheet(request))
                         .build()
         );
     }
 
-    // ================= EMPLOYEE: SUBMIT =================
-    @PatchMapping("/submit/{timesheetId}")
-    @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<ApiResponse<?>> submit(
-            @PathVariable Long timesheetId,
-            @AuthenticationPrincipal CustomUserDetails user){
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<ApiResponse<?>> submit(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
                         .message("Timesheet submitted")
-                        .data(service.submit(timesheetId, user.getUserId()))
+                        .data(service.submitTimesheet(id))
                         .build()
         );
     }
 
-    // ================= ADMIN / HR =================
-    @PatchMapping("/approve/{timesheetId}")
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long timesheetId){
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
                         .message("Timesheet approved")
-                        .data(service.approve(timesheetId))
+                        .data(service.approveTimesheet(id))
                         .build()
         );
     }
 
-    @PatchMapping("/reject/{timesheetId}")
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long timesheetId){
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
                         .message("Timesheet rejected")
-                        .data(service.reject(timesheetId))
+                        .data(service.rejectTimesheet(id))
                         .build()
         );
     }
 
-    // ================= EMPLOYEE: MY TIMESHEETS =================
-    @GetMapping("/my")
-    @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<ApiResponse<?>> getMy(
-            @AuthenticationPrincipal CustomUserDetails user){
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .data(service.getByEmployee(user.getUserId()))
+                        .message("Timesheet fetched")
+                        .data(service.getTimesheetById(id))
                         .build()
         );
     }
 
-    // ================= ADMIN / HR =================
+    @GetMapping("/person/{personId}/date/{date}")
+    public ResponseEntity<ApiResponse<?>> getByPersonAndDate(
+            @PathVariable Long personId,
+            @PathVariable String date){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet fetched")
+                        .data(service.getByPersonAndDate(personId, date))
+                        .build()
+        );
+    }
+
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     public ResponseEntity<ApiResponse<?>> getAll(){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .data(service.getAll())
+                        .message("Timesheets fetched")
+                        .data(service.getAllTimesheets())
                         .build()
         );
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+
+        service.deleteTimesheet(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet deleted")
+                        .build()
+        );
+    }
+
 }

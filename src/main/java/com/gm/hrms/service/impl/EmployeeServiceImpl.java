@@ -5,11 +5,10 @@ import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
-import com.gm.hrms.enums.EmployeeStatus;
+import com.gm.hrms.enums.Status;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.EmployeeMapper;
-import com.gm.hrms.repository.DepartmentRepository;
-import com.gm.hrms.repository.DesignationRepository;
 import com.gm.hrms.repository.EmployeeRepository;
 import com.gm.hrms.repository.PersonalInformationRepository;
 import com.gm.hrms.service.*;
@@ -17,8 +16,11 @@ import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,14 +28,14 @@ import java.util.List;
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
-    private final DepartmentRepository departmentRepository;
-    private final DesignationRepository designationRepository;
     private final AuthService authService;
     private final EmailService emailService;
     private final EmployeeEmploymentService employeeEmploymentService;
     private final PersonalInformationRepository personalInformationRepository;
     private final PersonalInformationService personalInformationService;
-
+    private final PersonalDocumentService documentService;
+    private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
 
     // =====================================================
     // ================= CREATE EMPLOYEE ===================
@@ -43,51 +45,28 @@ public class EmployeeServiceImpl implements EmployeeService {
     public UserCreateResponseDTO create(EmployeeRequestDTO dto,
                                         Long personalInformationId) {
 
-        //  Fetch Department & Designation
-        Department dept = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-
-        Designation desig = designationRepository.findById(dto.getDesignationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
-
-        // 2️⃣ Reporting Manager (Optional)
-        Employee reportingManager = null;
-        if (dto.getReportingManagerId() != null) {
-            reportingManager = employeeRepository.findById(dto.getReportingManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Reporting manager not found"));
-        }
-
-        // 🔥 3️⃣ FETCH PERSONAL INFORMATION
         PersonalInformation person =
                 personalInformationRepository.findById(personalInformationId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException("Personal information not found"));
 
-        // 4️⃣ Generate Employee Code
         String autoCode = generateEmployeeCode();
 
-        // 5️⃣ Create Employee Core
         Employee employee = EmployeeMapper.toEntity(
                 dto,
-                dept,
-                desig,
-                reportingManager,
                 autoCode
         );
 
-        // 🔥 VERY IMPORTANT LINE
         employee.setPersonalInformation(person);
 
         employee = employeeRepository.save(employee);
 
-        // =====================================================
-        // 🔐 AUTH CREATION
-        // =====================================================
+        // AUTH CREATION
 
         String rawPassword = PasswordGenerator.generatePassword(8);
 
         authService.createAuthForPerson(
-                person, // use person directly
+                person,
                 employee.getRole(),
                 rawPassword
         );
@@ -98,15 +77,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                 rawPassword
         );
 
-        // =====================================================
-        // HR MODULES
-        // =====================================================
+        // HR MODULE
 
         if (dto.getEmployment() != null) {
             employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
         }
-
-
 
         return UserCreateResponseDTO.builder()
                 .personalInformationId(person.getId())
@@ -116,149 +91,106 @@ public class EmployeeServiceImpl implements EmployeeService {
                         person.getFirstName() + " " + person.getLastName()
                 )
                 .role(employee.getRole())
-                .departmentName(dept.getName())
                 .active(person.getActive())
                 .createdAt(employee.getCreatedAt())
                 .build();
     }
+
     // =====================================================
     // ================= UPDATE EMPLOYEE ===================
     // =====================================================
 
-
     @Override
-    public EmployeeResponseDTO update(Long id, EmployeeUpdateDTO dto) {
+    public EmployeeResponseDTO update(
+            Long id,
+            String employeeJson,
+            MultipartFile profileImage,
+            Map<String, MultipartFile> documents,
+            Map<String, String> reasons
+    ) throws Exception {
+
+        // ================= PARSE =================
+
+        EmployeeUpdateDTO dto =
+                objectMapper.readValue(employeeJson, EmployeeUpdateDTO.class);
+
+        // ================= FETCH =================
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         PersonalInformation person = employee.getPersonalInformation();
 
-        // ================= PERSONAL (DELEGATED) =================
+        // ================= PROFILE IMAGE =================
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+
+            String imagePath = fileStorageService.save(profileImage);
+
+            person.setProfileImageUrl(imagePath);
+        }
+
+        // ================= PERSONAL UPDATE =================
 
         if (dto.getPersonalInformation() != null) {
+
             personalInformationService.update(
                     person.getId(),
                     dto.getPersonalInformation()
             );
         }
 
-        // ================= EMPLOYEE CORE =================
+        // ================= EMPLOYEE CODE =================
 
-        if (dto.getEmployeeCode() != null)
+        if (dto.getEmployeeCode() != null &&
+                !dto.getEmployeeCode().equals(employee.getEmployeeCode())) {
+
+            if (dto.getEmployeeCode().trim().isEmpty()) {
+                throw new InvalidRequestException("Employee code cannot be blank");
+            }
+
+            boolean exists = employeeRepository
+                    .existsByEmployeeCodeAndIdNot(dto.getEmployeeCode(), id);
+
+            if (exists) {
+                throw new InvalidRequestException(
+                        "Employee code already exists: " + dto.getEmployeeCode()
+                );
+            }
+
             employee.setEmployeeCode(dto.getEmployeeCode());
-
-        if (dto.getDepartmentId() != null) {
-            Department dept = departmentRepository.findById(dto.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-            employee.setDepartment(dept);
         }
 
-        if (dto.getDesignationId() != null) {
-            Designation desig = designationRepository.findById(dto.getDesignationId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
-            employee.setDesignation(desig);
-        }
-
-        if (dto.getRole() != null)
-            employee.setRole(dto.getRole());
-
-        if (dto.getReportingManagerId() != null) {
-            Employee reportingManager = employeeRepository
-                    .findById(dto.getReportingManagerId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Reporting manager not found"));
-
-            employee.setReportingManager(reportingManager);
-        }
-
-        // ================= EMPLOYMENT MODULE =================
+        // ================= EMPLOYMENT =================
 
         if (dto.getEmployment() != null) {
-            employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
+
+            if (dto.getEmployment().getCtc() != null &&
+                    dto.getEmployment().getCtc() <= 0) {
+
+                throw new InvalidRequestException("CTC must be greater than 0");
+            }
+
+            employeeEmploymentService.saveOrUpdate(
+                    employee,
+                    dto.getEmployment()
+            );
+        }
+
+        // ================= DOCUMENT UPDATE =================
+
+        if (documents != null || reasons != null) {
+
+            documentService.updateDocuments(
+                    person.getId(),
+                    person.getEmploymentType(),
+                    documents,
+                    reasons
+            );
         }
 
         return EmployeeMapper.toResponse(employee);
     }
-
-
-//    public EmployeeResponseDTO update(Long id, EmployeeUpdateDTO dto) {
-//
-//        Employee employee = employeeRepository.findById(id)
-//                .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
-//
-//        PersonalInformation person = employee.getPersonalInformation();
-//
-//        // =====================================================
-//        // 🔹 PERSONAL INFORMATION UPDATE
-//        // =====================================================
-//
-//        if (dto.getFirstName() != null)
-//            person.setFirstName(dto.getFirstName());
-//
-//        if (dto.getMiddleName() != null)
-//            person.setMiddleName(dto.getMiddleName());
-//
-//        if (dto.getLastName() != null)
-//            person.setLastName(dto.getLastName());
-//
-//        if (dto.getGender() != null)
-//            person.setGender(dto.getGender());
-//
-//        if (dto.getDateOfBirth() != null)
-//            person.setDateOfBirth(dto.getDateOfBirth());
-//
-//        if (dto.getMaritalStatus() != null)
-//            person.setMaritalStatus(dto.getMaritalStatus());
-//
-//        if (dto.getSpouseOrParentName() != null)
-//            person.setSpouseOrParentName(dto.getSpouseOrParentName());
-//
-//        if (dto.getActive() != null)
-//            person.setActive(dto.getActive());
-//
-//        // =====================================================
-//        // 🔹 EMPLOYEE CORE UPDATE
-//        // =====================================================
-//
-//        if (dto.getDepartmentId() != null) {
-//            Department dept = departmentRepository.findById(dto.getDepartmentId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-//            employee.setDepartment(dept);
-//        }
-//
-//        if (dto.getDesignationId() != null) {
-//            Designation desig = designationRepository.findById(dto.getDesignationId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
-//            employee.setDesignation(desig);
-//        }
-//
-//        if (dto.getRole() != null)
-//            employee.setRole(dto.getRole());
-//
-//        // =====================================================
-//        // 🔹 REPORTING MANAGER UPDATE
-//        // =====================================================
-//
-//        if (dto.getReportingManagerId() != null) {
-//            Employee reportingManager = employeeRepository
-//                    .findById(dto.getReportingManagerId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("Reporting manager not found"));
-//
-//            employee.setReportingManager(reportingManager);
-//        }
-//
-//        // =====================================================
-//        // 🔹 HR MODULES UPDATE
-//        // =====================================================
-//
-//        if (dto.getEmployment() != null) {
-//            employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
-//        }
-//
-//
-//
-//        return EmployeeMapper.toResponse(employee);
-//    }
 
     // =====================================================
     // ================= FETCH METHODS =====================
@@ -291,8 +223,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
-        if (employee.getEmployment() != null) {
-            employee.getEmployment().setEmployeeStatus(EmployeeStatus.INACTIVE);
+        PersonalInformation person = employee.getPersonalInformation();
+
+        if (person != null && person.getWorkProfile() != null) {
+            person.getWorkProfile().setStatus(Status.INACTIVE);
         }
     }
 
@@ -304,8 +238,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         Long count = employeeRepository.count() + 1;
         return String.format("GMEP%03d", count);
     }
-
-
 
     private String username(PersonalInformation person) {
 

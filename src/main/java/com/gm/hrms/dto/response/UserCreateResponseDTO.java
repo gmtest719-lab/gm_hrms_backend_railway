@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 public class UserCreateResponseDTO {
 
-    private Long personalInformationId;  // 🔥 system identity
+    private Long personalInformationId;  //  system identity
 
     private Long id;             // module id (nullable for intern/trainee)
 

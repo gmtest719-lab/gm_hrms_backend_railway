@@ -12,16 +12,17 @@ public class TimesheetReportDTO {
 
     private Long timesheetId;
 
-    private Long employeeId;
-    private String employeeName;
+    private Long personId;
+
+    private String personName;
 
     private Long projectId;
+
     private String projectName;
 
     private LocalDate workDate;
 
-    private Double hours;
-    private String description;
-    private TimesheetStatus status;
+    private String workedTime;
 
+    private TimesheetStatus status;
 }

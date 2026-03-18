@@ -1,5 +1,6 @@
 package com.gm.hrms.entity;
 
+import com.gm.hrms.enums.InternShipType;
 import com.gm.hrms.enums.WorkMode;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,8 +28,10 @@ public class InternInternshipDetails extends BaseEntity {
 
     private LocalDate startDate;
     private LocalDate endDate;
-    private String shiftTiming;
+
+    private Integer trainingPeriodMonths;
+    private Double stipend;
 
     @Enumerated(EnumType.STRING)
-    private WorkMode mode;
+    private InternShipType internshipType;
 }

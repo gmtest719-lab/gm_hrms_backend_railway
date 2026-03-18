@@ -40,20 +40,10 @@ public class EmployeeEmploymentServiceImpl implements EmployeeEmploymentService 
         if (dto.getPreviousCompanyNames() != null)
             employment.setPreviousCompanyNames(dto.getPreviousCompanyNames());
 
-        if (dto.getWorkMode() != null)
-            employment.setWorkMode(dto.getWorkMode());
-
-        if (dto.getEmployeeStatus() != null)
-            employment.setEmployeeStatus(dto.getEmployeeStatus());
 
         if (dto.getNoticePeriod() != null)
             employment.setNoticePeriod(dto.getNoticePeriod());
 
-        if (dto.getShiftTiming() != null)
-            employment.setShiftTiming(dto.getShiftTiming());
-
-        if (dto.getBranchName() != null)
-            employment.setBranchName(dto.getBranchName());
 
         repository.save(employment);
     }
@@ -76,11 +66,7 @@ public class EmployeeEmploymentServiceImpl implements EmployeeEmploymentService 
                 .yearOfExperience(employment.getYearOfExperience())
                 .ctc(employment.getCtc())
                 .previousCompanyNames(employment.getPreviousCompanyNames())
-                .workMode(employment.getWorkMode())
-                .employeeStatus(employment.getEmployeeStatus())
                 .noticePeriod(employment.getNoticePeriod())
-                .shiftTiming(employment.getShiftTiming())
-                .branchName(employment.getBranchName())
                 .build();
     }
 }

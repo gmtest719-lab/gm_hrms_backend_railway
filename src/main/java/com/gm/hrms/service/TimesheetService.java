@@ -7,15 +7,20 @@ import java.util.List;
 
 public interface TimesheetService {
 
-    TimesheetResponseDTO create(Long employeeId, TimesheetRequestDTO dto);
+    TimesheetResponseDTO createOrUpdateTimesheet(TimesheetRequestDTO request);
 
-    TimesheetResponseDTO submit(Long timesheetId, Long employeeId);
+    TimesheetResponseDTO submitTimesheet(Long timesheetId);
 
-    TimesheetResponseDTO approve(Long timesheetId);
+    TimesheetResponseDTO approveTimesheet(Long timesheetId);
 
-    TimesheetResponseDTO reject(Long timesheetId);
+    TimesheetResponseDTO rejectTimesheet(Long timesheetId);
 
-    List<TimesheetResponseDTO> getByEmployee(Long employeeId);
+    TimesheetResponseDTO getTimesheetById(Long id);
 
-    List<TimesheetResponseDTO> getAll();
+    TimesheetResponseDTO getByPersonAndDate(Long personId, String date);
+
+    List<TimesheetResponseDTO> getAllTimesheets();
+
+    void deleteTimesheet(Long id);
+
 }

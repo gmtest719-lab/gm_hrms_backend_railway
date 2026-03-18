@@ -1,6 +1,5 @@
 package com.gm.hrms.entity;
 
-import com.gm.hrms.enums.InternStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,18 +17,10 @@ public class Intern extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String internCode;
 
-    @ManyToOne
-    private Department department;
-
-    @ManyToOne
-    private Designation designation;
-
     @OneToOne
     @JoinColumn(name = "personal_information_id")
     private PersonalInformation personalInformation;
 
-    @Enumerated(EnumType.STRING)
-    private InternStatus status;
 
     @OneToOne(mappedBy = "intern", cascade = CascadeType.ALL)
     private InternCollegeDetails collegeDetails;

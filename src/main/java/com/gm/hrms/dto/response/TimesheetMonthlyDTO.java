@@ -7,9 +7,12 @@ import lombok.Data;
 @Builder
 public class TimesheetMonthlyDTO {
 
-    private Long employeeId;
-    private String employeeName;
+    private Long personId;
 
-    private Double totalHours;
+    private String personName;
+
     private Integer totalEntries;
+
+    private String totalTime; // HH:mm format
+
 }

@@ -1,5 +1,6 @@
 package com.gm.hrms.dto.response;
 
+import com.gm.hrms.enums.InternShipType;
 import com.gm.hrms.enums.WorkMode;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,9 @@ public class InternInternshipResponseDTO {
     private LocalDate endDate;
     private String shiftTiming;
     private WorkMode mode;
+
+    private Integer trainingPeriodMonths;
+    private String branchName;
+    private Double stipend;
+    private InternShipType internshipType;
 }

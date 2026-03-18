@@ -17,10 +17,6 @@ public class EmployeeEmploymentResponseDTO {
 
     private List<String> previousCompanyNames;
 
-    private WorkMode workMode;
-    private EmployeeStatus employeeStatus;
-
     private Integer noticePeriod;
-    private String shiftTiming;
-    private String branchName;
+
 }

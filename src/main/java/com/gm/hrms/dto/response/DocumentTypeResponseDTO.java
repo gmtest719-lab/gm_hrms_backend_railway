@@ -12,6 +12,7 @@ public class DocumentTypeResponseDTO {
 
     private Long id;
     private String name;
+    private String key;
     private Set<ApplicableType> applicableTypes;
     private Boolean mandatory;
     private Boolean active;

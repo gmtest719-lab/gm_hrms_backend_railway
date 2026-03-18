@@ -1,8 +1,6 @@
 package com.gm.hrms.mapper;
 
-import com.gm.hrms.dto.response.TraineeEducationResponseDTO;
-import com.gm.hrms.dto.response.TraineeResponseDTO;
-import com.gm.hrms.dto.response.TraineeWorkDetailsResponseDTO;
+import com.gm.hrms.dto.response.*;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.RoleType;
 
@@ -13,84 +11,57 @@ public class TraineeMapper {
     public static TraineeResponseDTO toResponse(Trainee trainee) {
 
         PersonalInformation p = trainee.getPersonalInformation();
+        WorkProfile wp = p != null ? p.getWorkProfile() : null;
 
-        return TraineeResponseDTO.builder()
-
-                // ===== IDENTIFIERS =====
-                .personalInformationId(p.getId())
+        TraineeResponseDTO dto = TraineeResponseDTO.builder()
                 .traineeId(trainee.getId())
-
-                // ===== PERSONAL =====
-                .firstName(p.getFirstName())
-                .middleName(p.getMiddleName())
-                .lastName(p.getLastName())
-                .gender(p.getGender())
-                .dateOfBirth(p.getDateOfBirth())
-                .maritalStatus(p.getMaritalStatus())
-                .spouseOrParentName(p.getSpouseOrParentName())
-                .active(p.getActive())
-
-                // ===== CORE =====
                 .traineeCode(trainee.getTraineeCode())
-                .departmentName(
-                        trainee.getDepartment() != null
-                                ? trainee.getDepartment().getName()
-                                : null
-                )
-                .designationName(
-                        trainee.getDesignation() != null
-                                ? trainee.getDesignation().getName()
-                                : null
-                )
                 .role(RoleType.TRAINEE)
                 .stipend(trainee.getStipend())
-                .status(trainee.getStatus())
-
-                // ===== CONTACT =====
-                .contact(
-                        p.getContact() != null
-                                ? EmployeeMapper.mapContact(p.getContact())
-                                : null
-                )
-
-                // ===== BANK =====
-                .bankDetails(
-                        p.getBankLegalDetails() != null
-                                ? EmployeeMapper.mapBank(p.getBankLegalDetails())
-                                : null
-                )
-
-                // ===== ADDRESS =====
-                .address(
-                        p.getAddress() != null
-                                ? EmployeeAddressMapper.toResponse(p.getAddress())
-                                : null
-                )
-
-                // ===== NORMALIZED TABLES =====
-                .workDetails(mapWork(trainee.getWorkDetails()))
-                .educationDetails(mapEducation(trainee.getEducationDetails()))
-
                 .createdAt(trainee.getCreatedAt())
                 .updatedAt(trainee.getUpdatedAt())
                 .build();
+
+        //  COMMON
+        BaseUserMapper.mapCommon(dto, p);
+
+        //  ROLE SPECIFIC
+        dto.setWorkDetails(mapWork(trainee.getWorkDetails(), wp));
+        dto.setEducationDetails(mapEducation(trainee.getEducationDetails()));
+
+        return dto;
     }
 
-    private static TraineeWorkDetailsResponseDTO mapWork(TraineeWorkDetails w) {
+    // ================= WORK =================
+    private static TraineeWorkDetailsResponseDTO mapWork(
+            TraineeWorkDetails w,
+            WorkProfile wp
+    ) {
+
         if (w == null) return null;
 
         return TraineeWorkDetailsResponseDTO.builder()
-                .branchName(w.getBranchName())
+                .branchName(
+                        wp != null && wp.getBranch() != null
+                                ? wp.getBranch().getBranchName()
+                                : null
+                )
                 .trainingPeriodMonths(w.getTrainingPeriodMonths())
-                .internshipStartDate(w.getInternshipStartDate())
-                .internshipEndDate(w.getInternshipEndDate())
-                .trainingShiftTime(w.getTrainingShiftTime())
-                .workMode(w.getWorkMode())
-                .workingType(w.getWorkingType())
+                .trainingStartDate(w.getTrainingStartDate())
+                .trainingEndDate(w.getTrainingEndDate())
+                .trainingShiftTime(
+                        wp != null && wp.getShift() != null
+                                ? wp.getShift().getShiftName()
+                                : null
+                )
+                .workMode(wp != null ? wp.getWorkMode() : null)
+                .workingType(wp != null ? wp.getWorkingType() : null)
                 .build();
     }
 
+    // ================= EDUCATION =================
     private static TraineeEducationResponseDTO mapEducation(TraineeEducationDetails e) {
+
         if (e == null) return null;
 
         return TraineeEducationResponseDTO.builder()

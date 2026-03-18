@@ -22,22 +22,12 @@ public class Employee extends BaseEntity {
     @Column(nullable = false, unique = true, name = "employee_code")
     private String employeeCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "designation_id")
-    private Designation designation;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private RoleType role;
 
-    // REPORTING MANAGER (SELF RELATION)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporting_manager_id")
-    private Employee reportingManager;
 
     // ================= MODULES =================
 

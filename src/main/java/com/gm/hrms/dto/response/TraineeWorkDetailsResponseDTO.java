@@ -15,8 +15,8 @@ public class TraineeWorkDetailsResponseDTO {
     private String branchName;
     private Integer trainingPeriodMonths;
 
-    private LocalDate internshipStartDate;
-    private LocalDate internshipEndDate;
+    private LocalDate trainingStartDate;
+    private LocalDate trainingEndDate;
 
     private String trainingShiftTime;
 

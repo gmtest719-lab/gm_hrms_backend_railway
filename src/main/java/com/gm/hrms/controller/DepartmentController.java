@@ -16,7 +16,7 @@ public class DepartmentController {
 
     private final DepartmentService service;
 
-    //  CREATE → Admin Only
+    // CREATE → Admin Only
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<?>> create(
@@ -31,12 +31,12 @@ public class DepartmentController {
         );
     }
 
-    //  UPDATE → Admin Only
+    // UPDATE → Admin Only
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
-            @Valid @RequestBody DepartmentRequestDTO dto) {
+            @RequestBody DepartmentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -47,7 +47,7 @@ public class DepartmentController {
         );
     }
 
-    //  GET BY ID → Admin + HR
+    // GET BY ID → Admin + HR
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(
@@ -62,7 +62,7 @@ public class DepartmentController {
         );
     }
 
-    //  GET ALL → Admin + HR + Employee
+    // GET ALL → Admin + HR + Employee
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping
     public ResponseEntity<ApiResponse<?>> getAll() {
@@ -76,7 +76,7 @@ public class DepartmentController {
         );
     }
 
-    //  DELETE → Admin Only
+    // DELETE → Admin Only
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
@@ -92,4 +92,3 @@ public class DepartmentController {
         );
     }
 }
-

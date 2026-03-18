@@ -24,4 +24,5 @@ public class BankLegalDetailsRequestDTO {
 
     private String uanNumber;
     private String esicNumber;
+    private String pfNumber;
 }

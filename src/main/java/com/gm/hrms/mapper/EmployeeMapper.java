@@ -9,96 +9,52 @@ public class EmployeeMapper {
     private EmployeeMapper() {}
 
     // ================= CREATE =================
-
-    public static Employee toEntity(EmployeeRequestDTO dto,
-                                    Department dept,
-                                    Designation desig,
-                                    Employee reportingManager,
-                                    String autoCode) {
-
+    public static Employee toEntity(EmployeeRequestDTO dto, String autoCode) {
         return Employee.builder()
                 .employeeCode(autoCode)
-                .department(dept)
-                .designation(desig)
                 .role(dto.getRole())
-                .reportingManager(reportingManager)
                 .build();
     }
 
     // ================= RESPONSE =================
-
     public static EmployeeResponseDTO toResponse(Employee e) {
 
         PersonalInformation p = e.getPersonalInformation();
-        PersonalInformationContact contact =
-                p != null ? p.getContact() : null;
-        EmployeeAddress address =
-                p != null ? p.getAddress() : null;
+        WorkProfile wp = p != null ? p.getWorkProfile() : null;
 
-        BankLegalDetails bankLegalDetails =
-
-        p != null ? p.getBankLegalDetails() : null;
-        return EmployeeResponseDTO.builder()
-
-                // ===== IDS =====
-                .personalInformationId(p != null ? p.getId() : null)
+        EmployeeResponseDTO dto = EmployeeResponseDTO.builder()
                 .employeeId(e.getId())
-
-                // ===== PERSONAL =====
-                .firstName(p != null ? p.getFirstName() : null)
-                .middleName(p != null ? p.getMiddleName() : null)
-                .lastName(p != null ? p.getLastName() : null)
-                .gender(p != null ? p.getGender() : null)
-                .dateOfBirth(p != null ? p.getDateOfBirth() : null)
-                .maritalStatus(p != null ? p.getMaritalStatus() : null)
-                .spouseOrParentName(p != null ? p.getSpouseOrParentName() : null)
-                .active(p != null ? p.getActive() : null)
-
-                // ===== EMPLOYEE CORE =====
                 .employeeCode(e.getEmployeeCode())
-                .departmentName(
-                        e.getDepartment() != null ? e.getDepartment().getName() : null
-                )
-                .designationName(
-                        e.getDesignation() != null ? e.getDesignation().getName() : null
-                )
-                .reportingManagerName(
-                        e.getReportingManager() != null
-                                ? e.getReportingManager().getEmployeeCode()
-                                : null
-                )
                 .role(e.getRole())
-
-                // ===== CONTACT =====
-                .contact(mapContact(contact))
-
-                // ===== MODULES =====
-                .employment(mapEmployment(e.getEmployment()))
-                .bankDetails(mapBank(bankLegalDetails))
-                .address(mapAddress(address))
-
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();
-    }
 
-    // ================= CONTACT =================
+        //  COMMON
+        BaseUserMapper.mapCommon(dto, p);
 
-     static EmployeeContactResponseDTO mapContact(
-            PersonalInformationContact contact) {
+        //  ROLE SPECIFIC
+        dto.setBranchName(
+                wp != null && wp.getBranch() != null
+                        ? wp.getBranch().getBranchName()
+                        : null
+        );
 
-        if (contact == null) return null;
+        dto.setShiftTiming(
+                wp != null && wp.getShift() != null
+                        ? wp.getShift().getShiftName()
+                        : null
+        );
 
-        return EmployeeContactResponseDTO.builder()
-                .personalPhone(contact.getPersonalPhone())
-                .emergencyPhone(contact.getEmergencyPhone())
-                .personalEmail(contact.getPersonalEmail())
-                .officeEmail(contact.getOfficeEmail())
-                .build();
+        dto.setWorkMode(wp != null ? wp.getWorkMode() : null);
+        dto.setWorkingType(wp != null ? wp.getWorkingType() : null);
+
+        dto.setEmployment(mapEmployment(e.getEmployment()));
+
+        return dto;
     }
 
     // ================= EMPLOYMENT =================
-
     private static EmployeeEmploymentResponseDTO mapEmployment(EmployeeEmployment emp) {
 
         if (emp == null) return null;
@@ -107,37 +63,8 @@ public class EmployeeMapper {
                 .dateOfJoining(emp.getDateOfJoining())
                 .yearOfExperience(emp.getYearOfExperience())
                 .ctc(emp.getCtc())
-                .workMode(emp.getWorkMode())
-                .employeeStatus(emp.getEmployeeStatus())
                 .noticePeriod(emp.getNoticePeriod())
-                .shiftTiming(emp.getShiftTiming())
-                .branchName(emp.getBranchName())
+                .previousCompanyNames(emp.getPreviousCompanyNames())
                 .build();
-    }
-
-    // ================= BANK =================
-
-     static EmployeeBankDetailsResponseDTO mapBank(BankLegalDetails bank) {
-
-        if (bank == null) return null;
-
-        return EmployeeBankDetailsResponseDTO.builder()
-                .bankName(bank.getBankName())
-                .accountNumber(bank.getAccountNumber())
-                .ifscCode(bank.getIfscCode())
-                .panNumber(bank.getPanNumber())
-                .aadhaarNumber(bank.getAadhaarNumber())
-                .uanNumber(bank.getUanNumber())
-                .esicNumber(bank.getEsicNumber())
-                .build();
-    }
-
-    // ================= ADDRESS =================
-
-    private static EmployeeAddressResponseDTO mapAddress(EmployeeAddress address) {
-
-        if (address == null) return null;
-
-        return EmployeeAddressMapper.toResponse(address);
     }
 }

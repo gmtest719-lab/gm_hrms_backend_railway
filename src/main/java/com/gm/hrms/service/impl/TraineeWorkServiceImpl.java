@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.TraineeWorkDetailsRequestDTO;
 import com.gm.hrms.entity.Trainee;
 import com.gm.hrms.entity.TraineeWorkDetails;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.repository.TraineeWorkRepository;
 import com.gm.hrms.service.TraineeWorkService;
 import lombok.RequiredArgsConstructor;
@@ -26,26 +27,25 @@ public class TraineeWorkServiceImpl implements TraineeWorkService {
 
         work.setTrainee(trainee);
 
-        if (dto.getBranchName() != null)
-            work.setBranchName(dto.getBranchName());
+        // ================= VALIDATION =================
+
+        if (dto.getTrainingStartDate() != null &&
+                dto.getTrainingEndDate() != null &&
+                dto.getTrainingEndDate().isBefore(dto.getTrainingStartDate())) {
+
+            throw new InvalidRequestException("Training end date cannot be before start date");
+        }
+
+        // ================= SET =================
 
         if (dto.getTrainingPeriodMonths() != null)
             work.setTrainingPeriodMonths(dto.getTrainingPeriodMonths());
 
-        if (dto.getInternshipStartDate() != null)
-            work.setInternshipStartDate(dto.getInternshipStartDate());
+        if (dto.getTrainingStartDate() != null)
+            work.setTrainingStartDate(dto.getTrainingStartDate());
 
-        if (dto.getInternshipEndDate() != null)
-            work.setInternshipEndDate(dto.getInternshipEndDate());
-
-        if (dto.getTrainingShiftTime() != null)
-            work.setTrainingShiftTime(dto.getTrainingShiftTime());
-
-        if (dto.getWorkMode() != null)
-            work.setWorkMode(dto.getWorkMode());
-
-        if (dto.getWorkingType() != null)
-            work.setWorkingType(dto.getWorkingType());
+        if (dto.getTrainingEndDate() != null)
+            work.setTrainingEndDate(dto.getTrainingEndDate());
 
         repository.save(work);
     }

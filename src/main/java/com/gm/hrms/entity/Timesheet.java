@@ -5,18 +5,15 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(
         name = "timesheets",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_timesheet_employee_project_date",
-                        columnNames = {
-                                "employee_id",
-                                "project_id",
-                                "work_date"
-                        }
+                        columnNames = {"person_id","work_date"}
                 )
         }
 )
@@ -31,36 +28,27 @@ public class Timesheet extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    //  Work Date
-    @Column(name = "work_date", nullable = false)
     private LocalDate workDate;
 
-    //  Hours Worked
-    @Column(nullable = false)
-    private Double hours;
+    private Integer totalMinutes;
 
-    //  Work Description
-    @Column(length = 1000)
-    private String description;
-
-    //  Status
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TimesheetStatus status = TimesheetStatus.DRAFT;
+    private TimesheetStatus status;
 
-    //  Approval Info
-    @Column(name = "approved_by")
+    private LocalDateTime submittedAt;
+
     private Long approvedBy;
 
-    @Column(name = "approved_at")
-    private LocalDate approvedAt;
+    private LocalDateTime approvedAt;
 
-    //  Relations
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "person_id")
+    private PersonalInformation person;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "project_id")
-    private Project project;
+    @OneToMany(
+            mappedBy = "timesheet",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<TimesheetEntry> entries;
 }

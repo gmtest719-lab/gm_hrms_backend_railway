@@ -16,13 +16,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/document-types")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class DocumentTypeController {
 
     private final DocumentTypeService service;
 
-    //  Create
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> create(
             @Valid @RequestBody DocumentTypeRequestDTO dto) {
 
@@ -35,11 +34,11 @@ public class DocumentTypeController {
         );
     }
 
-    //  PATCH Update (Partial)
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> update(
             @PathVariable Long id,
-            @RequestBody DocumentTypeRequestDTO dto) {
+            @Valid @RequestBody DocumentTypeRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<DocumentTypeResponseDTO>builder()
@@ -50,8 +49,8 @@ public class DocumentTypeController {
         );
     }
 
-    //  Soft Delete
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
@@ -64,7 +63,6 @@ public class DocumentTypeController {
         );
     }
 
-    //  Get All Active
     @GetMapping
     public ResponseEntity<ApiResponse<List<DocumentTypeResponseDTO>>> getAll() {
 
@@ -77,7 +75,6 @@ public class DocumentTypeController {
         );
     }
 
-    //  Get By ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> getById(
             @PathVariable Long id) {
@@ -91,15 +88,14 @@ public class DocumentTypeController {
         );
     }
 
-    //  Get By Applicable Type
-    @GetMapping("/applicable/{type}")
+    @GetMapping("/type/{type}")
     public ResponseEntity<ApiResponse<List<DocumentTypeResponseDTO>>> getByApplicableType(
             @PathVariable ApplicableType type) {
 
         return ResponseEntity.ok(
                 ApiResponse.<List<DocumentTypeResponseDTO>>builder()
                         .success(true)
-                        .message("Filtered document types fetched successfully")
+                        .message("Document types fetched successfully")
                         .data(service.getByApplicableType(type))
                         .build()
         );

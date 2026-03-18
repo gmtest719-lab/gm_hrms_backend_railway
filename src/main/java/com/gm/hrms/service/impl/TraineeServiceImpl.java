@@ -4,25 +4,23 @@ import com.gm.hrms.dto.request.TraineeRequestDTO;
 import com.gm.hrms.dto.request.TraineeUpdateDTO;
 import com.gm.hrms.dto.response.TraineeResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
-import com.gm.hrms.entity.Department;
-import com.gm.hrms.entity.Designation;
-import com.gm.hrms.entity.PersonalInformation;
-import com.gm.hrms.entity.Trainee;
+import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.RoleType;
-import com.gm.hrms.enums.TraineeStatus;
+import com.gm.hrms.enums.Status;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.TraineeMapper;
-import com.gm.hrms.repository.DepartmentRepository;
-import com.gm.hrms.repository.DesignationRepository;
-import com.gm.hrms.repository.PersonalInformationRepository;
-import com.gm.hrms.repository.TraineeRepository;
+import com.gm.hrms.repository.*;
 import com.gm.hrms.service.*;
 import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,24 +28,27 @@ import java.util.List;
 public class TraineeServiceImpl implements TraineeService {
 
     private final TraineeRepository traineeRepository;
-    private final DepartmentRepository departmentRepository;
-    private final DesignationRepository designationRepository;
     private final PersonalInformationRepository personalRepository;
+
     private final AuthService authService;
     private final EmailService emailService;
+
     private final TraineeWorkService traineeWorkService;
     private final TraineeEducationService traineeEducationService;
+
+    private final PersonalInformationService personalInformationService;
+    private final PersonalDocumentService documentService;
+    private final ObjectMapper objectMapper;
+    private final FileStorageService fileStorageService;
+
+    // =====================================================
+    // ================= CREATE =============================
+    // =====================================================
 
     @Override
     public UserCreateResponseDTO create(
             TraineeRequestDTO dto,
             Long personalInformationId) {
-
-        Department dept = departmentRepository.findById(dto.getDepartmentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-
-        Designation desig = designationRepository.findById(dto.getDesignationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
 
         PersonalInformation person = personalRepository.findById(personalInformationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not found"));
@@ -56,19 +57,22 @@ public class TraineeServiceImpl implements TraineeService {
 
         Trainee trainee = new Trainee();
         trainee.setTraineeCode(traineeCode);
-        trainee.setDepartment(dept);
-        trainee.setDesignation(desig);
         trainee.setStipend(dto.getStipend());
-        trainee.setStatus(dto.getStatus());
         trainee.setPersonalInformation(person);
 
         trainee = traineeRepository.save(trainee);
 
-        // 🔥🔥🔥 THIS WAS MISSING
-        traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
-        traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
+        if (dto.getStipend() != null && dto.getStipend() < 0) {
+            throw new InvalidRequestException("Stipend cannot be negative");
+        }
+        // WORK + EDUCATION
+        if (dto.getWorkDetails() != null)
+            traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
 
-        // 🔐 PASSWORD GENERATION
+        if (dto.getEducationDetails() != null)
+            traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
+
+        // AUTH
         String rawPassword = PasswordGenerator.generatePassword(8);
 
         authService.createAuthForPerson(
@@ -88,55 +92,114 @@ public class TraineeServiceImpl implements TraineeService {
                 .code(traineeCode)
                 .id(trainee.getId())
                 .fullName(person.getFirstName() + " " + person.getLastName())
-                .departmentName(dept.getName())
+                .departmentName(
+                        person.getWorkProfile() != null &&
+                                person.getWorkProfile().getDepartment() != null
+                                ? person.getWorkProfile().getDepartment().getName()
+                                : null
+                )
                 .role(RoleType.TRAINEE)
                 .active(person.getActive())
                 .createdAt(trainee.getCreatedAt())
                 .build();
     }
 
+    // =====================================================
+    // ================= UPDATE =============================
+    // =====================================================
 
     @Override
-    public TraineeResponseDTO update(Long id, TraineeUpdateDTO dto) {
+    public TraineeResponseDTO update(
+            Long id,
+            String traineeJson,
+            MultipartFile profileImage,
+            Map<String, MultipartFile> documents,
+            Map<String, String> reasons
+    ) throws Exception {
 
+        // ================= PARSE =================
+        TraineeUpdateDTO dto =
+                objectMapper.readValue(traineeJson, TraineeUpdateDTO.class);
+
+        // ================= FETCH =================
         Trainee trainee = traineeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trainee not found"));
 
         PersonalInformation p = trainee.getPersonalInformation();
 
-        if (dto.getFirstName() != null)
-            p.setFirstName(dto.getFirstName());
+        // ================= PROFILE IMAGE =================
+        if (profileImage != null && !profileImage.isEmpty()) {
 
-        if (dto.getLastName() != null)
-            p.setLastName(dto.getLastName());
-
-        if (dto.getActive() != null)
-            p.setActive(dto.getActive());
-
-        if (dto.getDepartmentId() != null) {
-            Department d = departmentRepository.findById(dto.getDepartmentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
-            trainee.setDepartment(d);
+            String path = fileStorageService.save(profileImage);
+            p.setProfileImageUrl(path);
         }
 
-        if (dto.getDesignationId() != null) {
-            Designation d = designationRepository.findById(dto.getDesignationId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Designation not found"));
-            trainee.setDesignation(d);
+        // ================= PERSONAL =================
+        if (dto.getPersonalInformation() != null) {
+
+            personalInformationService.update(
+                    p.getId(),
+                    dto.getPersonalInformation()
+            );
         }
 
-        if (dto.getStipend() != null)
+        // ================= TRAINEE CODE =================
+        if (dto.getTraineeCode() != null &&
+                !dto.getTraineeCode().equals(trainee.getTraineeCode())) {
+
+            if (dto.getTraineeCode().trim().isEmpty()) {
+                throw new InvalidRequestException("Trainee code cannot be blank");
+            }
+
+            boolean exists =
+                    traineeRepository.existsByTraineeCodeAndIdNot(dto.getTraineeCode(), id);
+
+            if (exists) {
+                throw new InvalidRequestException(
+                        "Trainee code already exists: " + dto.getTraineeCode()
+                );
+            }
+
+            trainee.setTraineeCode(dto.getTraineeCode());
+        }
+
+        // ================= STIPEND =================
+        if (dto.getStipend() != null) {
+
+            if (dto.getStipend() < 0) {
+                throw new InvalidRequestException("Stipend cannot be negative");
+            }
+
             trainee.setStipend(dto.getStipend());
+        }
 
-        if (dto.getStatus() != null)
-            trainee.setStatus(dto.getStatus());
+        // ================= WORK =================
+        if (dto.getWorkDetails() != null) {
+            traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
+        }
 
-        // Work + Education partial update separately
-        traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
-        traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
+        // ================= EDUCATION =================
+        if (dto.getEducationDetails() != null) {
+            traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
+        }
+
+        // ================= DOCUMENT =================
+        if (documents != null || reasons != null) {
+
+            documentService.updateDocuments(
+                    p.getId(),
+                    p.getEmploymentType(),
+                    documents,
+                    reasons
+            );
+        }
 
         return TraineeMapper.toResponse(trainee);
     }
+
+    // =====================================================
+    // ================= GET BY ID =========================
+    // =====================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -146,6 +209,10 @@ public class TraineeServiceImpl implements TraineeService {
                 .map(TraineeMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Trainee not found"));
     }
+
+    // =====================================================
+    // ================= GET ALL ===========================
+    // =====================================================
 
     @Override
     @Transactional(readOnly = true)
@@ -157,14 +224,26 @@ public class TraineeServiceImpl implements TraineeService {
                 .toList();
     }
 
+    // =====================================================
+    // ================= DELETE ============================
+    // =====================================================
+
     @Override
     public void delete(Long id) {
 
         Trainee trainee = traineeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trainee not found"));
 
-        trainee.setStatus(TraineeStatus.INACTIVE);
+        PersonalInformation person = trainee.getPersonalInformation();
+
+        if (person != null && person.getWorkProfile() != null) {
+            person.getWorkProfile().setStatus(Status.INACTIVE);
+        }
     }
+
+    // =====================================================
+    // ================= UTIL ==============================
+    // =====================================================
 
     private String generateTraineeCode() {
         Long count = traineeRepository.count() + 1;

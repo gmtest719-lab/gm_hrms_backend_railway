@@ -2,16 +2,22 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.PersonalInformationRequestDTO;
 import com.gm.hrms.dto.response.PersonalInformationResponseDTO;
+import com.gm.hrms.entity.Address;
 import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.entity.PersonalInformationContact;
+import com.gm.hrms.entity.WorkProfile;
 import com.gm.hrms.exception.DuplicateResourceException;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
+import com.gm.hrms.mapper.AddressMapper;
 import com.gm.hrms.mapper.PersonalInformationMapper;
+import com.gm.hrms.repository.AddressRepository;
 import com.gm.hrms.repository.PersonContactRepository;
 import com.gm.hrms.repository.PersonalInformationRepository;
-import com.gm.hrms.service.EmployeeAddressService;
 import com.gm.hrms.service.EmployeeBankDetailsService;
 import com.gm.hrms.service.PersonalInformationService;
+import com.gm.hrms.service.WorkProfileService;
+import com.gm.hrms.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +31,10 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
 
     private final PersonalInformationRepository personalInformationRepository;
     private final PersonContactRepository contactRepository;
-    private final EmployeeAddressService employeeAddressService;
     private final EmployeeBankDetailsService employeeBankDetailsService;
+    private final AddressRepository addressRepository;
+    private final WorkProfileService workProfileService;
+
 
 
 
@@ -35,18 +43,23 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
     @Override
     public PersonalInformationResponseDTO create(PersonalInformationRequestDTO dto) {
 
-        // 1️⃣ Validate personal email
+        //  Validate personal email
         if (contactRepository.existsByPersonalEmail(dto.getPersonalEmail())) {
             throw new DuplicateResourceException("Personal email already exists");
         }
 
-        // 2️⃣ Validate office email (only if provided)
+        //  Validate office email (only if provided)
         if (dto.getOfficeEmail() != null &&
                 contactRepository.existsByOfficeEmail(dto.getOfficeEmail())) {
             throw new DuplicateResourceException("Office email already exists");
         }
 
-        // 3️⃣ Save PersonalInformation
+        ValidationUtils.validateOfficeEmail(
+                dto.getOfficeEmail(),
+                dto.getEmploymentType()
+        );
+
+        //  Save PersonalInformation
         PersonalInformation personalInformation =
                 PersonalInformationMapper.toEntity(dto);
 
@@ -57,7 +70,24 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
         }
 
         if (dto.getAddress() != null) {
-            employeeAddressService.saveOrUpdate(personalInformation, dto.getAddress());
+
+            Address current = AddressMapper.toEntity(dto.getAddress().getCurrentAddress());
+
+            addressRepository.save(current);
+
+            Address permanent;
+
+            if (Boolean.TRUE.equals(dto.getAddress().getSameAsCurrent())) {
+                permanent = current;
+            } else {
+
+                permanent = AddressMapper.toEntity(dto.getAddress().getPermanentAddress());
+
+                addressRepository.save(permanent);
+            }
+
+            personalInformation.setCurrentAddress(current);
+            personalInformation.setPermanentAddress(permanent);
         }
 
         // 4️⃣ Create Contact
@@ -72,7 +102,12 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
 
         contact = contactRepository.save(contact);
 
-        // 🔥 IMPORTANT: Set inverse side to avoid NPE
+        if (dto.getWorkProfile() == null)
+            throw new InvalidRequestException("Work Profile data required");
+        workProfileService.create(personalInformation.getId(),dto.getWorkProfile());
+
+
+        //  IMPORTANT: Set inverse side to avoid NPE
         personalInformation.setContact(contact);
 
         return PersonalInformationMapper.toResponse(personalInformation);
@@ -98,6 +133,12 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
             contact.setPersonalInformation(personalInformation);
         }
 
+        WorkProfile workProfile = personalInformation.getWorkProfile();
+        if (workProfile != null) {
+            workProfileService.update(personalInformation.getWorkProfile().getId(),dto.getWorkProfile());
+        }
+
+
         //  Duplicate check ONLY if email is provided and changed
         if (dto.getPersonalEmail() != null &&
                 (contact.getPersonalEmail() == null ||
@@ -121,7 +162,44 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
         }
 
         if (dto.getAddress() != null) {
-            employeeAddressService.saveOrUpdate(personalInformation, dto.getAddress());
+
+            if (dto.getAddress().getCurrentAddress() != null) {
+
+                Address current = personalInformation.getCurrentAddress();
+
+                if (current == null) {
+
+                    current = AddressMapper.toEntity(dto.getAddress().getCurrentAddress());
+                    addressRepository.save(current);
+
+                } else {
+
+                    AddressMapper.patchEntity(current, dto.getAddress().getCurrentAddress());
+                }
+
+                personalInformation.setCurrentAddress(current);
+            }
+
+            if (Boolean.TRUE.equals(dto.getAddress().getSameAsCurrent())) {
+
+                personalInformation.setPermanentAddress(personalInformation.getCurrentAddress());
+
+            } else if (dto.getAddress().getPermanentAddress() != null) {
+
+                Address permanent = personalInformation.getPermanentAddress();
+
+                if (permanent == null) {
+
+                    permanent = AddressMapper.toEntity(dto.getAddress().getPermanentAddress());
+                    addressRepository.save(permanent);
+
+                } else {
+
+                    AddressMapper.patchEntity(permanent, dto.getAddress().getPermanentAddress());
+                }
+
+                personalInformation.setPermanentAddress(permanent);
+            }
         }
 
         //  PATCH CONTACT USING MAPPER

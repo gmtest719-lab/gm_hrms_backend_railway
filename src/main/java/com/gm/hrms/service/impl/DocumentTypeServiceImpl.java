@@ -25,9 +25,11 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     @Override
     public DocumentTypeResponseDTO create(DocumentTypeRequestDTO dto) {
 
-        if (repository.existsByNameIgnoreCase(dto.getName())) {
-            throw new DuplicateResourceException("Document type already exists");
-        }
+        if(repository.existsByNameIgnoreCase(dto.getName()))
+            throw new DuplicateResourceException("Document name already exists");
+
+        if(repository.existsByKeyIgnoreCase(dto.getKey()))
+            throw new DuplicateResourceException("Document key already exists");
 
         DocumentType entity = DocumentTypeMapper.toEntity(dto);
 
@@ -37,7 +39,6 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     }
 
     @Override
-    @Transactional
     public DocumentTypeResponseDTO update(Long id, DocumentTypeRequestDTO dto) {
 
         DocumentType entity = repository.findById(id)
@@ -46,10 +47,11 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
 
         DocumentTypeMapper.updateEntity(entity, dto);
 
-        entity = repository.save(entity);
+        repository.save(entity);
 
         return DocumentTypeMapper.toResponse(entity);
     }
+
     @Override
     public void delete(Long id) {
 
@@ -57,7 +59,7 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Document type not found"));
 
-        entity.setActive(false); // soft delete
+        entity.setActive(false);
     }
 
     @Override
@@ -79,7 +81,9 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
         return DocumentTypeMapper.toResponse(entity);
     }
 
+    @Override
     public List<DocumentTypeResponseDTO> getByApplicableType(ApplicableType type) {
+
         return repository
                 .findByApplicableTypesContainingAndActiveTrue(type)
                 .stream()

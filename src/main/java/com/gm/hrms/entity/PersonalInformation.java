@@ -1,5 +1,6 @@
 package com.gm.hrms.entity;
 
+import com.gm.hrms.dto.request.WorkProfileRequestDTO;
 import com.gm.hrms.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -66,6 +67,12 @@ public class PersonalInformation extends BaseEntity {
             fetch = FetchType.LAZY)
     private PersonalInformationContact contact;
 
+    @OneToOne(mappedBy = "personalInformation",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
+    private WorkProfile workProfile;
+
 
     // Bank Module
     @OneToOne(mappedBy = "personalInformation",
@@ -74,11 +81,12 @@ public class PersonalInformation extends BaseEntity {
             fetch = FetchType.LAZY)
     private BankLegalDetails bankLegalDetails;
 
-    // Address Module
-    @OneToOne(mappedBy = "personalInformation",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true,
-            fetch = FetchType.LAZY)
-    private EmployeeAddress address;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "current_address_id")
+    private Address currentAddress;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "permanent_address_id")
+    private Address permanentAddress;
 
 }

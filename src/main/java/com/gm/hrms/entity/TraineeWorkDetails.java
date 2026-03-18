@@ -20,19 +20,10 @@ public class TraineeWorkDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String branchName;
     private Integer trainingPeriodMonths;
 
-    private LocalDate internshipStartDate;
-    private LocalDate internshipEndDate;
-
-    private String trainingShiftTime;
-
-    @Enumerated(EnumType.STRING)
-    private WorkMode workMode; // REMOTE, HYBRID, ONSITE
-
-    @Enumerated(EnumType.STRING)
-    private WorkingType workingType; // PART_TIME, FULL_TIME
+    private LocalDate trainingStartDate;
+    private LocalDate trainingEndDate;
 
     @OneToOne
     @JoinColumn(name = "trainee_id")

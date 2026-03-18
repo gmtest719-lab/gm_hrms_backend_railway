@@ -1,7 +1,6 @@
 package com.gm.hrms.entity;
 
-import com.gm.hrms.enums.EmployeeStatus;
-import com.gm.hrms.enums.WorkMode;
+import com.gm.hrms.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,18 +34,7 @@ public class EmployeeEmployment {
     @Column(name = "company_name", nullable = false)
     private List<String> previousCompanyNames;
 
-    @Enumerated(EnumType.STRING)
-    private WorkMode workMode;
-
-    @Enumerated(EnumType.STRING)
-    private EmployeeStatus employeeStatus;
-
     private Integer noticePeriod;
-
-    private String shiftTiming;
-
-    @Column(name = "branch_name")
-    private String branchName;
 
     @OneToOne
     @JoinColumn(name = "employee_id", nullable = false, unique = true)

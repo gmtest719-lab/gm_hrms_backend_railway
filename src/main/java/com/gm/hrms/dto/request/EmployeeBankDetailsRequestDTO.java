@@ -13,4 +13,5 @@ public class EmployeeBankDetailsRequestDTO {
     private String aadhaarNumber;
     private String uanNumber;
     private String esicNumber;
+    private String pfNumber;
 }

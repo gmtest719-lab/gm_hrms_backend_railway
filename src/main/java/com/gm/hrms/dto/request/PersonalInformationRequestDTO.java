@@ -34,7 +34,6 @@ public class PersonalInformationRequestDTO {
     @NotBlank(message = "Spouse or parent name is required")
     private String spouseOrParentName;
 
-    @NotBlank(message = "Profile image is required")
     private String profileImageUrl;
 
     // Contact
@@ -49,12 +48,15 @@ public class PersonalInformationRequestDTO {
     private String personalEmail;
 
     @Email(message = "Invalid email format")
-    @NotBlank(message = "Office email is required")
     private String officeEmail;
 
+
+
     @Valid
-    private EmployeeAddressRequestDTO address;
+    private PersonalAddressRequestDTO address;
 
     @Valid
     private EmployeeBankDetailsRequestDTO bankDetails;
+
+    @Valid WorkProfileRequestDTO workProfile;
 }
