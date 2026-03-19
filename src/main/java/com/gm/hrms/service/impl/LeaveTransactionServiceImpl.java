@@ -29,7 +29,7 @@ public class LeaveTransactionServiceImpl implements LeaveTransactionService {
             String remarks
     ) {
 
-        // 🔥 VALIDATION
+        //  VALIDATION
         if (balance == null) {
             throw new IllegalArgumentException("Leave balance required");
         }
