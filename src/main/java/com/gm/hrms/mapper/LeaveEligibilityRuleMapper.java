@@ -4,7 +4,6 @@ import com.gm.hrms.dto.request.LeaveEligibilityRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveEligibilityRuleResponseDTO;
 import com.gm.hrms.entity.LeaveEligibilityRule;
 import com.gm.hrms.entity.LeavePolicy;
-
 public class LeaveEligibilityRuleMapper {
 
     private LeaveEligibilityRuleMapper() {}
@@ -17,9 +16,6 @@ public class LeaveEligibilityRuleMapper {
         return LeaveEligibilityRule.builder()
                 .leavePolicy(policy)
                 .probationPeriodInMonths(dto.getProbationPeriodInMonths())
-                .restrictPaidLeaveDuringProbation(dto.getRestrictPaidLeaveDuringProbation())
-                .allowSickLeaveDuringProbation(dto.getAllowSickLeaveDuringProbation())
-                .allowUnpaidLeaveDuringProbation(dto.getAllowUnpaidLeaveDuringProbation())
                 .allowCompOff(dto.getAllowCompOff())
                 .isActive(true)
                 .isSystemDefined(false)
@@ -31,18 +27,6 @@ public class LeaveEligibilityRuleMapper {
 
         if (dto.getProbationPeriodInMonths() != null) {
             entity.setProbationPeriodInMonths(dto.getProbationPeriodInMonths());
-        }
-
-        if (dto.getRestrictPaidLeaveDuringProbation() != null) {
-            entity.setRestrictPaidLeaveDuringProbation(dto.getRestrictPaidLeaveDuringProbation());
-        }
-
-        if (dto.getAllowSickLeaveDuringProbation() != null) {
-            entity.setAllowSickLeaveDuringProbation(dto.getAllowSickLeaveDuringProbation());
-        }
-
-        if (dto.getAllowUnpaidLeaveDuringProbation() != null) {
-            entity.setAllowUnpaidLeaveDuringProbation(dto.getAllowUnpaidLeaveDuringProbation());
         }
 
         if (dto.getAllowCompOff() != null) {
@@ -57,9 +41,6 @@ public class LeaveEligibilityRuleMapper {
                 .id(e.getId())
                 .policyId(e.getLeavePolicy().getId())
                 .probationPeriodInMonths(e.getProbationPeriodInMonths())
-                .restrictPaidLeaveDuringProbation(e.getRestrictPaidLeaveDuringProbation())
-                .allowSickLeaveDuringProbation(e.getAllowSickLeaveDuringProbation())
-                .allowUnpaidLeaveDuringProbation(e.getAllowUnpaidLeaveDuringProbation())
                 .allowCompOff(e.getAllowCompOff())
                 .isActive(e.getIsActive())
                 .build();

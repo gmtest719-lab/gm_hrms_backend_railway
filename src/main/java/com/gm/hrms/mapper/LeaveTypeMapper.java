@@ -15,7 +15,9 @@ public class LeaveTypeMapper {
                 .code(dto.getCode().toUpperCase())
                 .description(dto.getDescription())
                 .isPaid(dto.getIsPaid())
+                .allowDuringProbation(dto.getAllowDuringProbation())
                 .allowHalfDay(dto.getAllowHalfDay())
+                .isCompOff(dto.getIsCompOff())
                 .isActive(true)
                 .isSystemDefined(false)
                 .build();
@@ -30,7 +32,9 @@ public class LeaveTypeMapper {
                 .description(entity.getDescription())
                 .isPaid(entity.getIsPaid())
                 .allowHalfDay(entity.getAllowHalfDay())
+                .allowDuringProbation(entity.getAllowDuringProbation())
                 .isActive(entity.getIsActive())
+                .isCompOff(entity.getIsCompOff())
                 .isSystemDefined(entity.getIsSystemDefined())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -48,8 +52,15 @@ public class LeaveTypeMapper {
             entity.setCode(dto.getCode().toUpperCase());
         }
 
+        if (dto.getIsCompOff() != null) {
+            entity.setIsCompOff(dto.getIsCompOff());
+        }
+
         if (dto.getDescription() != null) {
             entity.setDescription(dto.getDescription());
+        }
+        if (dto.getAllowDuringProbation() != null) {
+            entity.setAllowDuringProbation(dto.getAllowDuringProbation());
         }
 
         if (dto.getIsPaid() != null) {

@@ -26,6 +26,10 @@ public class LeaveRequest extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private LeaveType leaveType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "policy_id")
+    private LeavePolicy leavePolicy;
+
     private LocalDate startDate;
     private LocalDate endDate;
 

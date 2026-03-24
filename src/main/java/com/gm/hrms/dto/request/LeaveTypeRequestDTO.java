@@ -18,6 +18,12 @@ public class LeaveTypeRequestDTO {
     @NotNull(message = "Paid flag is required")
     private Boolean isPaid;
 
+    @NotNull(message = "CompOff flag is required")
+    private Boolean isCompOff;
+
+    @NotNull(message = "Probation rule is required")
+    private Boolean allowDuringProbation;
+
     @NotNull(message = "Half day flag is required")
     private Boolean allowHalfDay;
 }

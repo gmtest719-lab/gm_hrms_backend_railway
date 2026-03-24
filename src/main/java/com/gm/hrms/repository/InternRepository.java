@@ -17,4 +17,7 @@ public interface InternRepository extends JpaRepository<Intern, Long> {
     boolean existsByPersonalInformationId(Long personalInformationId);
 
     Optional<Intern> findByPersonalInformation(PersonalInformation personalInformation);
+
+    Optional<Intern> findByPersonalInformationId(Long personalId);
+
 }

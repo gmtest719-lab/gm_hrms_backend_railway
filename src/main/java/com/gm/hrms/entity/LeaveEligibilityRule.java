@@ -27,15 +27,6 @@ public class LeaveEligibilityRule extends BaseEntity {
     private Integer probationPeriodInMonths;
 
     @Column(nullable = false)
-    private Boolean restrictPaidLeaveDuringProbation;
-
-    @Column(nullable = false)
-    private Boolean allowSickLeaveDuringProbation;
-
-    @Column(nullable = false)
-    private Boolean allowUnpaidLeaveDuringProbation;
-
-    @Column(nullable = false)
     private Boolean allowCompOff;
 
     //  SYSTEM CONTROL

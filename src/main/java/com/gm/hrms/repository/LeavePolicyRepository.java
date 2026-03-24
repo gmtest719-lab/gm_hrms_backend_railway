@@ -11,4 +11,7 @@ public interface LeavePolicyRepository extends JpaRepository<LeavePolicy, Long> 
     boolean existsByEmploymentTypeAndIsActiveTrue(EmploymentType type);
 
     Optional<LeavePolicy> findByIdAndIsActiveTrue(Long id);
+    Optional<LeavePolicy> findByEmploymentTypeAndIsActiveTrue(EmploymentType  type);
+
+
 }

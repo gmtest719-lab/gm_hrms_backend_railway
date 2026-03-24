@@ -2,10 +2,12 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.AddressRequestDTO;
 import com.gm.hrms.dto.response.AddressResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.AddressService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -78,12 +80,15 @@ public class AddressController {
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AddressResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<AddressResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        List<AddressResponseDTO> response = service.getAll();
+        PageResponseDTO<AddressResponseDTO> response =
+                service.getAll(PageRequest.of(page, size));
 
         return ResponseEntity.ok(
-                ApiResponse.<List<AddressResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<AddressResponseDTO>>builder()
                         .success(true)
                         .message("Addresses fetched successfully")
                         .data(response)

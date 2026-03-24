@@ -17,4 +17,6 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long> {
 
     //  OPTIONAL (consistency with Intern)
     boolean existsByPersonalInformationId(Long personalInformationId);
+
+    Optional<Trainee> findByPersonalInformationId(Long personalId);
 }

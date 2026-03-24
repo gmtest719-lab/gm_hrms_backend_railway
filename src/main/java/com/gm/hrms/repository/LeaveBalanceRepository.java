@@ -2,11 +2,13 @@ package com.gm.hrms.repository;
 
 import com.gm.hrms.entity.LeaveBalance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long> {
+public interface LeaveBalanceRepository extends JpaRepository<LeaveBalance, Long>,
+        JpaSpecificationExecutor<LeaveBalance> {
 
     List<LeaveBalance> findByPersonalIdAndYear(Long personalId, Integer year);
 

@@ -10,9 +10,9 @@ public interface LeaveBalanceService {
 
     List<LeaveBalance> getBalance(Long personalId, Integer year);
 
-    void deductLeave(Long personalId, Long leaveTypeId, int days);
+    void deductLeave(Long personalId, Long leaveTypeId, double days);
 
-    void restoreLeave(Long personalId, Long leaveTypeId, int days);
+    void restoreLeave(Long personalId, Long leaveTypeId, double days);
 
     void monthlyAccrual();
 }

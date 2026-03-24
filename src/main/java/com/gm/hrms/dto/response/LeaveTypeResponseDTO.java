@@ -16,6 +16,8 @@ public class LeaveTypeResponseDTO {
     private Boolean isPaid;
     private Boolean allowHalfDay;
     private Boolean isActive;
+    private Boolean isCompOff;
+    private Boolean allowDuringProbation;
     private Boolean isSystemDefined;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

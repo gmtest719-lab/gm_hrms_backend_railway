@@ -53,24 +53,28 @@ public class CompOffRequestServiceImpl implements CompOffRequestService {
 
         repository.save(entity);
 
-        //  ADD TO LEAVE BALANCE (CompOff LeaveType)
+        // 🔥 GET ONLY COMPOFF BALANCE (FIXED)
         LeaveBalance balance = balanceRepository
                 .findByPersonalIdAndYear(entity.getPersonal().getId(), entity.getWorkedDate().getYear())
                 .stream()
+                .filter(b -> Boolean.TRUE.equals(b.getLeaveType().getIsCompOff()))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Leave balance not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("CompOff balance not found"));
 
-        int before = balance.getRemainingLeaves();
+        double before = balance.getRemainingLeaves();
 
-        balance.setRemainingLeaves(before + entity.getEarnedDays().intValue());
+        // 🔥 DOUBLE FIX (NO intValue)
+        double earned = entity.getEarnedDays();
+
+        balance.setRemainingLeaves(before + earned);
 
         balanceRepository.save(balance);
 
-        //  TRANSACTION LOG
+        // 🔥 TRANSACTION LOG (DOUBLE FIX)
         transactionService.log(
                 balance,
                 LeaveTransactionType.ACCRUAL,
-                entity.getEarnedDays().intValue(),
+                earned,
                 before,
                 balance.getRemainingLeaves(),
                 entity.getId(),

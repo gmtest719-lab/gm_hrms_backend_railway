@@ -22,9 +22,9 @@ public class LeaveTransactionServiceImpl implements LeaveTransactionService {
     public void log(
             LeaveBalance balance,
             LeaveTransactionType type,
-            int days,
-            int before,
-            int after,
+            double days,
+            double before,
+            double after,
             Long referenceId,
             String remarks
     ) {
@@ -39,7 +39,7 @@ public class LeaveTransactionServiceImpl implements LeaveTransactionService {
         }
 
         if (days <= 0) {
-            throw new IllegalArgumentException("Days must be greater than 0");
+            return;
         }
 
         if (after < 0) {

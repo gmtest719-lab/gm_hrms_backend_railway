@@ -2,19 +2,16 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.PersonalInformationRequestDTO;
 import com.gm.hrms.dto.response.PersonalInformationResponseDTO;
-import com.gm.hrms.entity.Address;
-import com.gm.hrms.entity.PersonalInformation;
-import com.gm.hrms.entity.PersonalInformationContact;
-import com.gm.hrms.entity.WorkProfile;
+import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.EmploymentType;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.AddressMapper;
 import com.gm.hrms.mapper.PersonalInformationMapper;
-import com.gm.hrms.repository.AddressRepository;
-import com.gm.hrms.repository.PersonContactRepository;
-import com.gm.hrms.repository.PersonalInformationRepository;
+import com.gm.hrms.repository.*;
 import com.gm.hrms.service.EmployeeBankDetailsService;
+import com.gm.hrms.service.LeaveBalanceService;
 import com.gm.hrms.service.PersonalInformationService;
 import com.gm.hrms.service.WorkProfileService;
 import com.gm.hrms.util.ValidationUtils;
@@ -34,6 +31,11 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
     private final EmployeeBankDetailsService employeeBankDetailsService;
     private final AddressRepository addressRepository;
     private final WorkProfileService workProfileService;
+    private final LeaveBalanceService leaveBalanceService;
+    private final WorkProfileRepository workProfileRepository;
+    private final LeavePolicyRepository leavePolicyRepository;
+
+
 
 
 
@@ -59,11 +61,14 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
                 dto.getEmploymentType()
         );
 
+
+
         //  Save PersonalInformation
         PersonalInformation personalInformation =
                 PersonalInformationMapper.toEntity(dto);
 
         personalInformation = personalInformationRepository.save(personalInformation);
+
 
         if (dto.getBankDetails() != null) {
             employeeBankDetailsService.saveOrUpdate(personalInformation, dto.getBankDetails());
@@ -109,6 +114,14 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
 
         //  IMPORTANT: Set inverse side to avoid NPE
         personalInformation.setContact(contact);
+
+
+        Long policyId = getPolicyId(personalInformation.getId());
+
+        leaveBalanceService.initializeLeaveBalance(personalInformation.getId(), policyId);
+
+
+
 
         return PersonalInformationMapper.toResponse(personalInformation);
     }// ================= UPDATE =================
@@ -242,5 +255,21 @@ public class PersonalInformationServiceImpl implements PersonalInformationServic
                 .orElseThrow(() -> new ResourceNotFoundException("PersonalInformation not found"));
 
         personalInformation.setActive(false);
+    }
+
+    // 🔥 FINAL POLICY RESOLUTION (ENTERPRISE)
+    private Long getPolicyId(Long personalId) {
+
+        WorkProfile profile = workProfileRepository
+                .findByPersonalInformationId(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work profile not found"));
+
+        EmploymentType type = profile.getPersonalInformation().getEmploymentType();
+
+        LeavePolicy policy = leavePolicyRepository
+                .findByEmploymentTypeAndIsActiveTrue(type)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave policy not found"));
+
+        return policy.getId();
     }
 }

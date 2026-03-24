@@ -19,6 +19,10 @@ public class LeaveTransaction extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personal_id", nullable = false)
+    private PersonalInformation personal;
+
     // 🔥 RELATIONS
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leave_balance_id", nullable = false)
@@ -29,10 +33,10 @@ public class LeaveTransaction extends BaseEntity {
     private LeaveTransactionType type;
 
     //  DATA
-    private Integer days;
+    private double days;
 
-    private Integer beforeBalance;
-    private Integer afterBalance;
+    private double beforeBalance;
+    private double afterBalance;
 
     //  OPTIONAL REFERENCE (LeaveRequest / Admin Action)
     private Long referenceId;

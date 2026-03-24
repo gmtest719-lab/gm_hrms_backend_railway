@@ -2,12 +2,15 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.AddressRequestDTO;
 import com.gm.hrms.dto.response.AddressResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Address;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.AddressMapper;
 import com.gm.hrms.repository.AddressRepository;
 import com.gm.hrms.service.AddressService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,12 +54,19 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public List<AddressResponseDTO> getAll() {
+    public PageResponseDTO<AddressResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findAll()
-                .stream()
-                .map(AddressMapper::toResponse)
-                .toList();
+        Page<Address> page = repository.findAll(pageable);
+
+        return PageResponseDTO.<AddressResponseDTO>builder()
+                .content(page.map(AddressMapper::toResponse).getContent())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

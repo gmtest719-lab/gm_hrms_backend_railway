@@ -11,11 +11,5 @@ public class LeaveEligibilityRuleRequestDTO {
 
     private Integer probationPeriodInMonths;
 
-    private Boolean restrictPaidLeaveDuringProbation;
-
-    private Boolean allowSickLeaveDuringProbation;
-
-    private Boolean allowUnpaidLeaveDuringProbation;
-
     private Boolean allowCompOff;
 }

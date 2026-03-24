@@ -23,7 +23,7 @@ public class LeaveScheduler {
     private final LeaveTransactionService transactionService;
 
     // ================= 1. MONTHLY ACCRUAL =================
-    @Scheduled(cron = "0 0 2 1 * ?") // every month 1st date 2 AM
+    @Scheduled(cron = "0 0 2 1 * ?")
     public void monthlyAccrual() {
 
         int year = LocalDate.now().getYear();
@@ -40,11 +40,11 @@ public class LeaveScheduler {
 
             for (LeaveBalance b : balances) {
 
-                int before = b.getRemainingLeaves();
+                double before = b.getRemainingLeaves();
 
                 if (before >= m.getTotalLeaves()) continue;
 
-                int after = Math.min(
+                double after = Math.min(
                         before + m.getAccrualValue(),
                         m.getTotalLeaves()
                 );
@@ -55,7 +55,7 @@ public class LeaveScheduler {
                 transactionService.log(
                         b,
                         LeaveTransactionType.ACCRUAL,
-                        m.getAccrualValue(),
+                        m.getAccrualValue().doubleValue(),
                         before,
                         after,
                         null,
@@ -66,7 +66,7 @@ public class LeaveScheduler {
     }
 
     // ================= 2. YEAR END CARRY FORWARD =================
-    @Scheduled(cron = "0 0 3 1 1 ?") // 1 Jan 3 AM
+    @Scheduled(cron = "0 0 3 1 1 ?")
     public void carryForward() {
 
         int currentYear = LocalDate.now().getYear();
@@ -85,7 +85,7 @@ public class LeaveScheduler {
 
             if (rule == null || !rule.getIsEnabled()) continue;
 
-            int carry = Math.min(
+            double carry = Math.min(
                     b.getRemainingLeaves(),
                     rule.getMaxCarryForward()
             );
@@ -95,7 +95,7 @@ public class LeaveScheduler {
                     .leavePolicy(b.getLeavePolicy())
                     .leaveType(b.getLeaveType())
                     .totalLeaves(b.getTotalLeaves())
-                    .usedLeaves(0)
+                    .usedLeaves(0.0)
                     .remainingLeaves(carry)
                     .year(currentYear)
                     .build();
@@ -105,7 +105,7 @@ public class LeaveScheduler {
     }
 
     // ================= 3. LEAVE ENCASHMENT =================
-    @Scheduled(cron = "0 0 4 31 12 ?") // 31 Dec 4 AM
+    @Scheduled(cron = "0 0 4 31 12 ?")
     public void encashLeaves() {
 
         int year = LocalDate.now().getYear();
@@ -123,12 +123,12 @@ public class LeaveScheduler {
 
             if (rule == null || !rule.getIsEnabled()) continue;
 
-            int encash = Math.min(
+            double encash = Math.min(
                     b.getRemainingLeaves(),
                     rule.getMaxEncashment()
             );
 
-            int before = b.getRemainingLeaves();
+            double before = b.getRemainingLeaves();
 
             b.setRemainingLeaves(before - encash);
 
@@ -147,7 +147,7 @@ public class LeaveScheduler {
     }
 
     // ================= 4. COMPOFF EXPIRY =================
-    @Scheduled(cron = "0 0 1 * * ?") // daily 1 AM
+    @Scheduled(cron = "0 0 1 * * ?")
     public void expireCompOff() {
 
         LocalDate today = LocalDate.now();
@@ -159,7 +159,6 @@ public class LeaveScheduler {
             if (r.getStatus() != com.gm.hrms.enums.CompOffStatus.APPROVED)
                 continue;
 
-            // expiry logic (example: 30 days)
             if (r.getWorkedDate().plusDays(30).isBefore(today)) {
 
                 LeaveBalance balance =
@@ -170,11 +169,12 @@ public class LeaveScheduler {
 
                 if (balance == null) continue;
 
-                int before = balance.getRemainingLeaves();
+                double before = balance.getRemainingLeaves();
+
+                double expired = r.getEarnedDays();
 
                 balance.setRemainingLeaves(
-                        Math.max(0,
-                                before - r.getEarnedDays().intValue())
+                        Math.max(0, before - expired)
                 );
 
                 balanceRepository.save(balance);
@@ -182,7 +182,7 @@ public class LeaveScheduler {
                 transactionService.log(
                         balance,
                         LeaveTransactionType.EXPIRE,
-                        r.getEarnedDays().intValue(),
+                        expired,
                         before,
                         balance.getRemainingLeaves(),
                         r.getId(),

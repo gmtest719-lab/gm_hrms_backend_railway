@@ -32,6 +32,10 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
         LeavePolicy policy = policyRepository.findById(dto.getPolicyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Policy not found"));
 
+        if (dto.getProbationPeriodInMonths() == null) {
+            throw new InvalidRequestException("Probation period is required");
+        }
+
         if (repository.existsByLeavePolicyIdAndIsActiveTrue(dto.getPolicyId())) {
             throw new DuplicateResourceException("Eligibility rule already exists");
         }
@@ -59,6 +63,7 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
     public LeaveEligibilityRuleResponseDTO update(Long id, LeaveEligibilityRuleRequestDTO dto) {
 
         LeaveEligibilityRule entity = repository.findById(id)
+                .filter(e -> Boolean.TRUE.equals(e.getIsActive()))
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found"));
 
         if (Boolean.TRUE.equals(entity.getIsSystemDefined())) {
@@ -82,6 +87,7 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
     public void delete(Long id) {
 
         LeaveEligibilityRule entity = repository.findById(id)
+                .filter(e -> Boolean.TRUE.equals(e.getIsActive()))
                 .orElseThrow(() -> new ResourceNotFoundException("Rule not found"));
 
         if (Boolean.TRUE.equals(entity.getIsSystemDefined())) {
@@ -101,15 +107,10 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
             throw new InvalidRequestException("Invalid probation period");
         }
 
-        if (dto.getRestrictPaidLeaveDuringProbation() == null ||
-                dto.getAllowSickLeaveDuringProbation() == null ||
-                dto.getAllowUnpaidLeaveDuringProbation() == null ||
-                dto.getAllowCompOff() == null) {
-
-            throw new InvalidRequestException("All fields required");
+        if (dto.getAllowCompOff() == null) {
+            throw new InvalidRequestException("CompOff flag is required");
         }
     }
-
     private void validateAfterPatch(LeaveEligibilityRule entity) {
 
         if (entity.getProbationPeriodInMonths() == null || entity.getProbationPeriodInMonths() < 0) {
@@ -119,9 +120,6 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
 
     private boolean isEmpty(LeaveEligibilityRuleRequestDTO dto) {
         return dto.getProbationPeriodInMonths() == null &&
-                dto.getRestrictPaidLeaveDuringProbation() == null &&
-                dto.getAllowSickLeaveDuringProbation() == null &&
-                dto.getAllowUnpaidLeaveDuringProbation() == null &&
                 dto.getAllowCompOff() == null;
     }
 

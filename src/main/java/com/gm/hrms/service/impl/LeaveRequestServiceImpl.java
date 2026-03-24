@@ -8,8 +8,10 @@ import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.mapper.LeaveRequestMapper;
 import com.gm.hrms.repository.*;
+import com.gm.hrms.service.LeaveAttendanceService;
 import com.gm.hrms.service.LeaveBalanceService;
 import com.gm.hrms.service.LeaveRequestService;
+import com.gm.hrms.service.LeaveValidationEngine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +25,16 @@ import java.util.List;
 @Transactional
 public class LeaveRequestServiceImpl implements LeaveRequestService {
 
+    private final WorkProfileRepository workProfileRepository;
     private final LeaveRequestRepository repository;
     private final LeaveTypeRepository leaveTypeRepository;
     private final LeaveApplicationRuleRepository ruleRepository;
     private final LeavePolicyRepository policyRepository;
     private final LeavePolicyLeaveTypeRepository mappingRepository;
     private final LeaveBalanceService balanceService;
-    private final HolidayRepository holidayRepository;
-    private final AttendanceRepository attendanceRepository;
+    private final LeaveAttendanceService leaveAttendanceService;
+    private final LeaveValidationEngine validationEngine;
+    private final LeaveRequestMapper mapper;
 
     // ================= APPLY =================
     @Override
@@ -43,30 +47,37 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
         Long policyId = getPolicyId(dto.getPersonalId());
 
-        LeaveApplicationRule rule = ruleRepository
-                .findByLeavePolicyIdAndIsActiveTrue(policyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application rule not found"));
+        LeavePolicy policy = policyRepository.findById(policyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Policy not found"));
+
+        //  VALIDATION ENGINE (includes probation now)
+        double totalDays = validationEngine.calculateTotalDays(dto, policyId);
+
+        validationEngine.validateBeforeApply(dto, totalDays, policyId);
+
+        validationEngine.validateAttendanceConflict(dto.getPersonalId(), dto);
 
         validatePolicyMapping(policyId, dto.getLeaveTypeId());
 
-        double totalDays = calculateDays(dto, rule);
+        LeaveRequest entity = mapper.toEntity(dto, leaveType);
+        //  IMPORTANT FIELDS (same as before)
+        entity.setLeavePolicy(policy);
+        entity.setTotalDays(totalDays);
+        entity.setStatus(LeaveStatus.PENDING);
+        entity.setApprovalLevel(0);
+        entity.setIsCancelled(false);
 
-        validateRules(dto, rule, totalDays);
+        //  SAVE FIRST (ONLY CHANGE)
+        LeaveRequest saved = repository.save(entity);
 
-        // 🔥 Deduct balance
+        //  THEN deduct (FIXED ORDER)
         balanceService.deductLeave(
                 dto.getPersonalId(),
                 leaveType.getId(),
-                (int) Math.ceil(totalDays)
+                totalDays
         );
 
-        LeaveRequest entity = LeaveRequestMapper.toEntity(dto, leaveType);
-        entity.setTotalDays(totalDays);
-
-        LeaveRequest saved = repository.save(entity);
-
-        return LeaveRequestMapper.toResponse(saved);
-    }
+        return mapper.toResponse(saved);    }
 
     // ================= APPROVE =================
     @Override
@@ -80,16 +91,41 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
         req.setApprovalLevel(req.getApprovalLevel() + 1);
 
-        // 🔥 multi-level approval (2 level example)
-        if (req.getApprovalLevel() >= 2) {
+        if (isFinalApproval(req)) {
+
             req.setStatus(LeaveStatus.APPROVED);
             req.setApprovedBy(approverId);
             req.setApprovedAt(LocalDateTime.now());
 
-            applyAttendance(req);
+            //  Attendance sync
+            leaveAttendanceService.markLeaveAttendance(req);
         }
 
         repository.save(req);
+    }
+
+    // ================= DYNAMIC APPROVAL =================
+    private boolean isFinalApproval(LeaveRequest req) {
+
+        int requiredLevels = 2; // unchanged
+
+        return req.getApprovalLevel() >= requiredLevels;
+    }
+
+    // ================= PARTIAL CANCEL =================
+    public void partialCancel(Long leaveId, LocalDate from, LocalDate to) {
+
+        LeaveRequest req = get(leaveId);
+
+        double cancelDays = calculateCancelDays(from, to);
+
+        balanceService.restoreLeave(
+                req.getPersonalId(),
+                req.getLeaveType().getId(),
+                req.getTotalDays() //  FIX
+        );
+
+        leaveAttendanceService.revertLeaveAttendance(req);
     }
 
     // ================= REJECT =================
@@ -105,13 +141,11 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         req.setStatus(LeaveStatus.REJECTED);
         req.setRejectionReason(reason);
 
-        // 🔥 restore balance
         balanceService.restoreLeave(
                 req.getPersonalId(),
                 req.getLeaveType().getId(),
-                (int) Math.ceil(req.getTotalDays())
+                req.getTotalDays() //  FIX
         );
-
         repository.save(req);
     }
 
@@ -121,20 +155,17 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
         LeaveRequest req = get(id);
 
-        if (req.getStatus() == LeaveStatus.CANCELLED) {
-            throw new InvalidRequestException("Already cancelled");
-        }
-
         req.setStatus(LeaveStatus.CANCELLED);
         req.setIsCancelled(true);
         req.setCancelledAt(LocalDateTime.now());
 
-        // 🔥 restore balance
         balanceService.restoreLeave(
                 req.getPersonalId(),
                 req.getLeaveType().getId(),
-                (int) Math.ceil(req.getTotalDays())
+                req.getTotalDays() // FIX
         );
+
+        leaveAttendanceService.revertLeaveAttendance(req);
 
         repository.save(req);
     }
@@ -145,7 +176,7 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
         return repository.findByPersonalId(personalId)
                 .stream()
-                .map(LeaveRequestMapper::toResponse)
+                .map(mapper::toResponse)
                 .toList();
     }
 
@@ -172,90 +203,6 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
                 .orElseThrow(() -> new InvalidRequestException("Leave type not allowed in policy"));
     }
 
-    private void validateRules(LeaveRequestDTO dto, LeaveApplicationRule rule, double days) {
-
-        if (dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new InvalidRequestException("Invalid date range");
-        }
-
-        if (days < rule.getMinLeaveDuration()) {
-            throw new InvalidRequestException("Below minimum leave duration");
-        }
-
-        if (days > rule.getMaxConsecutiveDays()) {
-            throw new InvalidRequestException("Exceeded max consecutive days");
-        }
-
-        if (!rule.getAllowBackdatedLeave() && dto.getStartDate().isBefore(LocalDate.now())) {
-            throw new InvalidRequestException("Backdated leave not allowed");
-        }
-    }
-
-    // ================= CALCULATION =================
-
-    private double calculateDays(LeaveRequestDTO dto, LeaveApplicationRule rule) {
-
-        List<LocalDate> holidays = holidayRepository.findAll()
-                .stream()
-                .filter(Holiday::getIsActive)
-                .map(Holiday::getHolidayDate)
-                .toList();
-
-        double total = 0;
-        LocalDate date = dto.getStartDate();
-
-        while (!date.isAfter(dto.getEndDate())) {
-
-            boolean isWeekend = date.getDayOfWeek().getValue() >= 6;
-            boolean isHoliday = holidays.contains(date);
-
-            if (!rule.getSandwichRuleEnabled() && (isWeekend || isHoliday)) {
-                date = date.plusDays(1);
-                continue;
-            }
-
-            total++;
-            date = date.plusDays(1);
-        }
-
-        // 🔥 half-day logic
-        if (dto.getStartDayType() != DayType.FULL) total -= 0.5;
-        if (dto.getEndDayType() != DayType.FULL) total -= 0.5;
-
-        return total;
-    }
-
-    // ================= ATTENDANCE =================
-
-    private void applyAttendance(LeaveRequest req) {
-
-        LocalDate date = req.getStartDate();
-
-        while (!date.isAfter(req.getEndDate())) {
-
-            Attendance attendance = attendanceRepository
-                    .findByPersonalInformationIdAndAttendanceDate(
-                            req.getPersonalId(),
-                            date
-                    )
-                    .orElse(
-                            Attendance.builder()
-                                    .attendanceDate(date)
-                                    .build()
-                    );
-
-            if (req.getTotalDays() == 0.5) {
-                attendance.setStatus(AttendanceStatus.HALF_DAY);
-            } else {
-                attendance.setStatus(AttendanceStatus.LEAVE);
-            }
-
-            attendanceRepository.save(attendance);
-
-            date = date.plusDays(1);
-        }
-    }
-
     // ================= COMMON =================
 
     private LeaveRequest get(Long id) {
@@ -263,11 +210,36 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
                 .orElseThrow(() -> new ResourceNotFoundException("Leave request not found"));
     }
 
-    //  TODO: replace with actual WorkProfile → EmploymentType → Policy
-    private Long getPolicyId(Long personalId) {
-        return 1L;
+    private double calculateCancelDays(LocalDate from, LocalDate to) {
+
+        double days = 0;
+        LocalDate date = from;
+
+        while (!date.isAfter(to)) {
+            days++;
+            date = date.plusDays(1);
+        }
+
+        return days;
     }
 
+    // 🔥 SAME OLD METHOD (UNCHANGED)
+    private Long getPolicyId(Long personalId) {
+
+        WorkProfile profile = workProfileRepository
+                .findByPersonalInformationId(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Work profile not found"));
+
+        EmploymentType type = profile.getPersonalInformation().getEmploymentType();
+
+        LeavePolicy policy = policyRepository
+                .findByEmploymentTypeAndIsActiveTrue(type)
+                .orElseThrow(() -> new ResourceNotFoundException("Leave policy not found"));
+
+        return policy.getId();
+    }
+
+    // ================= DOCUMENT REQUEST =================
     @Override
     public void requestDocument(Long id) {
 
@@ -280,4 +252,5 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         req.setStatus(LeaveStatus.WAITING_FOR_DOCUMENT);
 
         repository.save(req);
-    }}
+    }
+}

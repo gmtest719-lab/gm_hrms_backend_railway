@@ -55,16 +55,16 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
             if (exists) continue;
 
-            int initial = m.getAccrualType() == AccrualType.YEARLY
-                    ? m.getTotalLeaves()
-                    : 0;
+            double initial = m.getAccrualType() == AccrualType.YEARLY
+                    ? m.getTotalLeaves().doubleValue()
+                    : 0.0;
 
             LeaveBalance balance = LeaveBalance.builder()
                     .personal(personal)
                     .leavePolicy(policy)
                     .leaveType(m.getLeaveType())
-                    .totalLeaves(m.getTotalLeaves())
-                    .usedLeaves(0)
+                    .totalLeaves(m.getTotalLeaves().doubleValue())
+                    .usedLeaves(0.0)
                     .remainingLeaves(initial)
                     .year(year)
                     .build();
@@ -74,9 +74,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
         List<LeaveBalance> savedBalances = repository.saveAll(toSave);
 
-        // 🔥 TRANSACTION LOG
         for (LeaveBalance b : savedBalances) {
-
             leaveTransactionService.log(
                     b,
                     LeaveTransactionType.ACCRUAL,
@@ -98,7 +96,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
     // ================= DEDUCT =================
     @Override
     @Transactional
-    public void deductLeave(Long personalId, Long leaveTypeId, int days) {
+    public void deductLeave(Long personalId, Long leaveTypeId, double days) {
 
         if (days <= 0) {
             throw new InvalidRequestException("Days must be greater than 0");
@@ -106,7 +104,9 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
         LeaveBalance balance = getBalanceEntity(personalId, leaveTypeId);
 
-        int before = balance.getRemainingLeaves();
+        boolean isCompOffLeave = Boolean.TRUE.equals(balance.getLeaveType().getIsCompOff());
+
+        double before = balance.getRemainingLeaves();
 
         if (before < days) {
             throw new InvalidRequestException("Insufficient leave balance");
@@ -124,14 +124,14 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
                 before,
                 balance.getRemainingLeaves(),
                 null,
-                "Leave applied"
+                isCompOffLeave ? "CompOff used" : "Leave applied"
         );
     }
 
     // ================= RESTORE =================
     @Override
     @Transactional
-    public void restoreLeave(Long personalId, Long leaveTypeId, int days) {
+    public void restoreLeave(Long personalId, Long leaveTypeId, double days) {
 
         if (days <= 0) {
             throw new InvalidRequestException("Days must be greater than 0");
@@ -139,9 +139,9 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
         LeaveBalance balance = getBalanceEntity(personalId, leaveTypeId);
 
-        int before = balance.getRemainingLeaves();
+        double before = balance.getRemainingLeaves();
 
-        int after = Math.min(
+        double after = Math.min(
                 before + days,
                 balance.getTotalLeaves()
         );
@@ -186,13 +186,13 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
 
             for (LeaveBalance b : balances) {
 
-                int before = b.getRemainingLeaves();
+                double before = b.getRemainingLeaves();
 
                 if (before >= m.getTotalLeaves()) continue;
 
-                int after = Math.min(
-                        before + m.getAccrualValue(),
-                        m.getTotalLeaves()
+                double after = Math.min(
+                        before + m.getAccrualValue().doubleValue(),
+                        m.getTotalLeaves().doubleValue()
                 );
 
                 b.setRemainingLeaves(after);
@@ -202,7 +202,7 @@ public class LeaveBalanceServiceImpl implements LeaveBalanceService {
                 leaveTransactionService.log(
                         b,
                         LeaveTransactionType.ACCRUAL,
-                        m.getAccrualValue(),
+                        m.getAccrualValue().doubleValue(),
                         before,
                         after,
                         null,

@@ -32,6 +32,14 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
             throw new DuplicateResourceException("Leave code already exists");
         }
 
+        // 🔥 NEW: CompOff validation (ONLY ADDITION)
+        if (Boolean.TRUE.equals(dto.getIsCompOff())) {
+            boolean exists = repository.existsByIsCompOffTrueAndIsActiveTrue();
+            if (exists) {
+                throw new InvalidRequestException("CompOff leave type already exists");
+            }
+        }
+
         LeaveType entity = LeaveTypeMapper.toEntity(dto);
 
         return LeaveTypeMapper.toResponse(repository.save(entity));
@@ -76,6 +84,16 @@ public class LeaveTypeServiceImpl implements LeaveTypeService {
 
         if (entity.getIsSystemDefined()) {
             throw new InvalidRequestException("System defined leave cannot be modified");
+        }
+
+        // 🔥 NEW: CompOff validation (ONLY ADDITION)
+        if (dto.getIsCompOff() != null && dto.getIsCompOff()) {
+
+            boolean exists = repository.existsByIsCompOffTrueAndIsActiveTrue();
+
+            if (exists && !Boolean.TRUE.equals(entity.getIsCompOff())) {
+                throw new InvalidRequestException("CompOff leave type already exists");
+            }
         }
 
         //  CODE VALIDATION ONLY IF PROVIDED

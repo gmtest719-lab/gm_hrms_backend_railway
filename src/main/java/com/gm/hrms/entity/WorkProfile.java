@@ -6,6 +6,8 @@ import com.gm.hrms.enums.WorkingType;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "work_profiles")
 @Getter
@@ -41,6 +43,9 @@ public class WorkProfile extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "shift_id")
     private Shift shift;
+
+    private LocalDate dateOfJoining;
+
 
     // REPORTING MANAGER (WORK PROFILE SELF RELATION)
 

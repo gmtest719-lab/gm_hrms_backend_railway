@@ -5,12 +5,12 @@ import com.gm.hrms.enums.LeaveTransactionType;
 
 public interface LeaveTransactionService {
 
-    void log(
+    public void log(
             LeaveBalance balance,
             LeaveTransactionType type,
-            int days,
-            int before,
-            int after,
+            double days,
+            double before,
+            double after,
             Long referenceId,
             String remarks
     );

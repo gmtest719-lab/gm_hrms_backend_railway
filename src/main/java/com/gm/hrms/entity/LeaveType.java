@@ -31,6 +31,12 @@ public class LeaveType extends BaseEntity {
 
     private Boolean isActive;
 
+    @Column(nullable = false)
+    private Boolean isCompOff;
+
+    @Column(nullable = false)
+    private Boolean allowDuringProbation;
+
     private Boolean isSystemDefined;
 
     private LocalDateTime deletedAt;

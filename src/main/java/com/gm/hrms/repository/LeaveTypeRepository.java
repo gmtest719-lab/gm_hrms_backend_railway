@@ -13,4 +13,7 @@ public interface LeaveTypeRepository extends JpaRepository<LeaveType, Long> {
     Optional<LeaveType> findByIdAndIsActiveTrue(Long id);
 
     List<LeaveType> findByIsActiveTrue();
+
+    // 🔥 NEW (for CompOff validation)
+    boolean existsByIsCompOffTrueAndIsActiveTrue();
 }
