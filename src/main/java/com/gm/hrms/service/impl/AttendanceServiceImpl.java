@@ -1,0 +1,347 @@
+package com.gm.hrms.service.impl;
+
+import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
+import com.gm.hrms.dto.request.AttendanceRequestDTO;
+import com.gm.hrms.dto.response.AttendanceResponseDTO;
+import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.AttendanceStatus;
+import com.gm.hrms.enums.ShiftType;
+import com.gm.hrms.exception.InvalidRequestException;
+import com.gm.hrms.exception.ResourceNotFoundException;
+import com.gm.hrms.mapper.AttendanceMapper;
+import com.gm.hrms.repository.*;
+import com.gm.hrms.service.AttendanceService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.*;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class AttendanceServiceImpl implements AttendanceService {
+
+    private final AttendanceRepository attendanceRepository;
+    private final AttendanceLogRepository attendanceLogRepository;
+    private final AttendanceBreakLogRepository breakLogRepository;
+    private final AttendanceCalculationRepository calculationRepository;
+    private final PersonalInformationRepository personalInformationRepository;
+    private final WorkProfileRepository workProfileRepository;
+
+    @Override
+    public AttendanceResponseDTO checkIn(AttendanceRequestDTO dto) {
+
+        PersonalInformation person = personalInformationRepository
+                .findById(dto.getPersonalInformationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Person not found"));
+
+        Attendance existing =
+                attendanceRepository
+                        .findByPersonalInformationIdAndAttendanceDate(
+                                person.getId(),
+                                LocalDate.now())
+                        .orElse(null);
+
+        if(existing != null){
+            throw new InvalidRequestException("Already checked in today");
+        }
+
+        WorkProfile profile =
+                workProfileRepository
+                        .findByPersonalInformationId(person.getId())
+                        .orElse(null);
+
+        Attendance attendance =
+                AttendanceMapper.createAttendance(person, profile);
+
+        attendanceRepository.save(attendance);
+
+        attendanceLogRepository.save(
+                AttendanceMapper.createCheckInLog(person)
+        );
+
+        return AttendanceMapper.toResponse(attendance, null);
+    }
+
+    @Override
+    public AttendanceResponseDTO checkOut(AttendanceRequestDTO dto) {
+
+        Attendance attendance =
+                attendanceRepository
+                        .findByPersonalInformationIdAndAttendanceDate(
+                                dto.getPersonalInformationId(),
+                                LocalDate.now())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Attendance not found"));
+
+        if(attendance.getCheckOut()!=null){
+            throw new InvalidRequestException("Already checked out");
+        }
+
+        attendance.setCheckOut(LocalDateTime.now());
+        attendanceRepository.save(attendance);
+
+        attendanceLogRepository.save(
+                AttendanceMapper.createCheckOutLog(
+                        attendance.getPersonalInformation())
+        );
+
+        AttendanceCalculation calc = calculateAttendance(attendance);
+
+        return AttendanceMapper.toResponse(attendance, calc);
+    }
+
+    @Override
+    public AttendanceResponseDTO breakStart(AttendanceRequestDTO dto) {
+
+        Attendance attendance =
+                attendanceRepository
+                        .findByPersonalInformationIdAndAttendanceDate(
+                                dto.getPersonalInformationId(),
+                                LocalDate.now())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Attendance not found"));
+
+        if(attendance.getCheckOut()!=null){
+            throw new InvalidRequestException("Cannot start break after checkout");
+        }
+
+        AttendanceBreakLog lastBreak =
+                breakLogRepository
+                        .findTopByAttendanceIdOrderByBreakStartDesc(
+                                attendance.getId());
+
+        if(lastBreak != null && lastBreak.getBreakEnd()==null){
+            throw new InvalidRequestException("Break already started");
+        }
+
+        breakLogRepository.save(
+                AttendanceMapper.createBreakStart(attendance)
+        );
+
+        return AttendanceMapper.toResponse(attendance, null);
+    }
+
+    @Override
+    public AttendanceResponseDTO breakEnd(AttendanceRequestDTO dto) {
+
+        Attendance attendance =
+                attendanceRepository
+                        .findByPersonalInformationIdAndAttendanceDate(
+                                dto.getPersonalInformationId(),
+                                LocalDate.now())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Attendance not found"));
+
+        if(attendance.getCheckOut()!=null){
+            throw new InvalidRequestException("Cannot end break after checkout");
+        }
+
+        AttendanceBreakLog breakLog =
+                breakLogRepository
+                        .findTopByAttendanceIdOrderByBreakStartDesc(
+                                attendance.getId());
+
+        if(breakLog==null || breakLog.getBreakEnd()!=null){
+            throw new InvalidRequestException("Break not started");
+        }
+
+        breakLog.setBreakEnd(LocalDateTime.now());
+
+        int minutes =
+                (int)Duration.between(
+                        breakLog.getBreakStart(),
+                        breakLog.getBreakEnd()
+                ).toMinutes();
+
+        breakLog.setDurationMinutes(minutes);
+
+        breakLogRepository.save(breakLog);
+
+        return AttendanceMapper.toResponse(attendance, null);
+    }
+
+    @Override
+    public AttendanceResponseDTO getTodayAttendance(Long personalInformationId) {
+
+        Attendance attendance =
+                attendanceRepository
+                        .findByPersonalInformationIdAndAttendanceDate(
+                                personalInformationId,
+                                LocalDate.now())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Attendance not found"));
+
+        AttendanceCalculation calc =
+                calculationRepository
+                        .findByAttendanceId(attendance.getId())
+                        .orElse(null);
+
+        return AttendanceMapper.toResponse(attendance, calc);
+    }
+
+    @Override
+    public List<AttendanceResponseDTO> getAllAttendance() {
+
+        return attendanceRepository
+                .findAll()
+                .stream()
+                .map(a -> {
+
+                    AttendanceCalculation calc =
+                            calculationRepository
+                                    .findByAttendanceId(a.getId())
+                                    .orElse(null);
+
+                    return AttendanceMapper.toResponse(a, calc);
+                })
+                .toList();
+    }
+
+    private AttendanceCalculation calculateAttendance(Attendance attendance){
+
+        long totalMinutes =
+                Duration.between(
+                                attendance.getCheckIn(),
+                                attendance.getCheckOut())
+                        .toMinutes();
+
+        int breakMinutes =
+                breakLogRepository
+                        .findByAttendanceId(attendance.getId())
+                        .stream()
+                        .mapToInt(AttendanceBreakLog::getDurationMinutes)
+                        .sum();
+
+        int workMinutes = (int) totalMinutes - breakMinutes;
+
+        int lateMinutes = 0;
+        int overtimeMinutes = 0;
+
+        AttendanceStatus status = AttendanceStatus.PRESENT;
+
+        WorkProfile profile = attendance.getWorkProfile();
+
+        if(profile!=null && profile.getShift()!=null){
+
+            Shift shift = profile.getShift();
+
+            LocalTime shiftStart =
+                    resolveShiftStartTime(
+                            shift,
+                            attendance.getAttendanceDate());
+
+            if(shiftStart!=null && attendance.getCheckIn()!=null){
+
+                int grace =
+                        shift.getGraceMinutes()==null ?
+                                0 :
+                                shift.getGraceMinutes();
+
+                LocalDateTime allowedTime =
+                        attendance.getAttendanceDate()
+                                .atTime(shiftStart)
+                                .plusMinutes(grace);
+
+                if(attendance.getCheckIn().isAfter(allowedTime)){
+
+                    lateMinutes =
+                            (int)Duration.between(
+                                            allowedTime,
+                                            attendance.getCheckIn())
+                                    .toMinutes();
+                }
+            }
+
+            if(shift.getMinimumWorkHours()!=null){
+
+                int requiredMinutes =
+                        shift.getMinimumWorkHours() * 60;
+
+                if(workMinutes > requiredMinutes){
+                    overtimeMinutes = workMinutes - requiredMinutes;
+                }
+
+                int lateCount =
+                        calculationRepository
+                                .countMonthlyLate(
+                                        attendance.getPersonalInformation().getId(),
+                                        attendance.getAttendanceDate().getMonthValue(),
+                                        attendance.getAttendanceDate().getYear()
+                                );
+
+                if(lateMinutes > 0){
+                    lateCount++;
+                }
+
+                if(lateCount >= 3 && workMinutes < requiredMinutes){
+                    status = AttendanceStatus.HALF_DAY;
+                }
+
+                if(workMinutes < requiredMinutes/2){
+                    status = AttendanceStatus.HALF_DAY;
+                }
+            }
+        }
+
+        attendance.setStatus(status);
+        attendanceRepository.save(attendance);
+
+        AttendanceCalculation calc =
+                AttendanceMapper.createCalculation(
+                        attendance,
+                        workMinutes,
+                        breakMinutes,
+                        lateMinutes,
+                        overtimeMinutes
+                );
+
+        return calculationRepository.save(calc);
+    }
+
+    private LocalTime resolveShiftStartTime(Shift shift, LocalDate date){
+
+        if(shift.getShiftType()== ShiftType.NORMAL){
+
+            ShiftTiming timing = shift.getTiming();
+
+            return timing!=null ? timing.getStartTime() : null;
+        }
+
+        DayOfWeek today = date.getDayOfWeek();
+
+        return shift.getDayConfigs()
+                .stream()
+                .filter(d -> d.getDayOfWeek() == today)
+                .findFirst()
+                .map(ShiftDayConfig::getStartTime)
+                .orElse(null);
+    }
+
+    @Override
+    public AttendanceResponseDTO correctAttendance(
+            AttendanceCorrectionRequestDTO dto){
+
+        Attendance attendance =
+                attendanceRepository.findById(dto.getAttendanceId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException("Attendance not found"));
+
+        if(dto.getCheckIn()!=null){
+            attendance.setCheckIn(dto.getCheckIn());
+        }
+
+        if(dto.getCheckOut()!=null){
+            attendance.setCheckOut(dto.getCheckOut());
+        }
+
+        attendanceRepository.save(attendance);
+
+        AttendanceCalculation calc =
+                calculateAttendance(attendance);
+
+        return AttendanceMapper.toResponse(attendance, calc);
+    }
+}

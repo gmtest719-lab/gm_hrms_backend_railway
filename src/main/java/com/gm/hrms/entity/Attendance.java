@@ -1,40 +1,47 @@
 package com.gm.hrms.entity;
 
+import com.gm.hrms.enums.AttendanceStatus;
 import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "attendance")
-public class Attendance {
+@Table(
+        name = "attendance",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_attendance_person_date",
+                        columnNames = {"personal_information_id","attendance_date"}
+                )
+        }
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Attendance extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private LocalDate date;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personal_information_id", nullable = false)
+    private PersonalInformation personalInformation;
 
-    @Column(name="clock_in")
-    private LocalDateTime clockIn;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_profile_id")
+    private WorkProfile workProfile;
 
-    @Column(name = "clock_out")
-    private LocalDateTime clockOut;
+    @Column(nullable = false)
+    private LocalDate attendanceDate;
 
-    @Column(name = "total_working_time")
-    private Duration totalWorkingTime;
+    private LocalDateTime checkIn;
 
-    @Column(name = "total_break_time")
-    private Duration totalBreakTime;
+    private LocalDateTime checkOut;
 
-    @Column(name = "late_in")
-    private Boolean lateIn;
-
-    @Column(name = "half_day")
-    private Boolean halfDay;
-
-    @ManyToOne
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
+    @Enumerated(EnumType.STRING)
+    private AttendanceStatus status;
 }
