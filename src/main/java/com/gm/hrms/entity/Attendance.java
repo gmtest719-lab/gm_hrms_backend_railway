@@ -1,5 +1,6 @@
 package com.gm.hrms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gm.hrms.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,6 +35,10 @@ public class Attendance extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_profile_id")
     private WorkProfile workProfile;
+
+    @OneToOne(mappedBy = "attendance", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private AttendanceCalculation calculation;
 
     @Column(nullable = false)
     private LocalDate attendanceDate;

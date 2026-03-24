@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.BranchRequestDTO;
 import com.gm.hrms.dto.request.BranchUpdateDTO;
 import com.gm.hrms.dto.response.BranchResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Address;
 import com.gm.hrms.entity.Branch;
 import com.gm.hrms.exception.DuplicateResourceException;
@@ -13,6 +14,8 @@ import com.gm.hrms.repository.AddressRepository;
 import com.gm.hrms.repository.BranchRepository;
 import com.gm.hrms.service.BranchService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -77,12 +80,24 @@ public class BranchServiceImpl implements BranchService {
     }
 
     @Override
-    public List<BranchResponseDTO> getAll() {
+    public PageResponseDTO<BranchResponseDTO> getAll(Pageable pageable) {
 
-        return branchRepository.findAll()
+        Page<Branch> page = branchRepository.findAll(pageable);
+
+        List<BranchResponseDTO> content = page.getContent()
                 .stream()
                 .map(BranchMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<BranchResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

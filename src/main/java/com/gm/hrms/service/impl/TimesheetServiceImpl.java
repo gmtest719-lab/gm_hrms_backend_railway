@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.TimesheetEntryDTO;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TimesheetResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.TimesheetStatus;
@@ -10,6 +11,8 @@ import com.gm.hrms.repository.*;
 import com.gm.hrms.service.TimesheetService;
 import com.gm.hrms.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -141,12 +144,24 @@ public class TimesheetServiceImpl implements TimesheetService {
     }
 
     @Override
-    public List<TimesheetResponseDTO> getAllTimesheets(){
+    public PageResponseDTO<TimesheetResponseDTO> getAllTimesheets(Pageable pageable){
 
-        return timesheetRepository.findAll()
+        Page<Timesheet> page = timesheetRepository.findAll(pageable);
+
+        List<TimesheetResponseDTO> content = page.getContent()
                 .stream()
                 .map(TimesheetMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<TimesheetResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
     @Override
     public void deleteTimesheet(Long id){

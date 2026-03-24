@@ -2,8 +2,10 @@ package com.gm.hrms.service;
 
 import com.gm.hrms.dto.request.TraineeRequestDTO;
 import com.gm.hrms.dto.request.TraineeUpdateDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TraineeResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -29,8 +31,7 @@ public interface TraineeService {
     // ================= GET =================
     TraineeResponseDTO getById(Long id);
 
-    List<TraineeResponseDTO> getAll();
-
+    PageResponseDTO<TraineeResponseDTO> getAll(Pageable pageable);
     // ================= DELETE =================
     void delete(Long id);
 }

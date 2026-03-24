@@ -2,10 +2,12 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.BreakPolicyRequestDTO;
 import com.gm.hrms.dto.response.BreakPolicyResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.BreakPolicyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -68,13 +70,15 @@ public class BreakPolicyController {
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BreakPolicyResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<BreakPolicyResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<BreakPolicyResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<BreakPolicyResponseDTO>>builder()
                         .success(true)
                         .message("Break policies fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

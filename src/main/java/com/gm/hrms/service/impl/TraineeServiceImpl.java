@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.TraineeRequestDTO;
 import com.gm.hrms.dto.request.TraineeUpdateDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TraineeResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
@@ -14,6 +15,8 @@ import com.gm.hrms.repository.*;
 import com.gm.hrms.service.*;
 import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -216,12 +219,24 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TraineeResponseDTO> getAll() {
+    public PageResponseDTO<TraineeResponseDTO> getAll(Pageable pageable) {
 
-        return traineeRepository.findAll()
+        Page<Trainee> page = traineeRepository.findAll(pageable);
+
+        List<TraineeResponseDTO> content = page.getContent()
                 .stream()
                 .map(TraineeMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<TraineeResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // =====================================================

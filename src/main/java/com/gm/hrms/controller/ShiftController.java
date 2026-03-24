@@ -1,11 +1,13 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.ShiftRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.ShiftResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.ShiftService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +37,17 @@ public class ShiftController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ShiftResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<PageResponseDTO<ShiftResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<ShiftResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<ShiftResponseDTO>>builder()
                         .success(true)
-                        .data(service.getAll())
+                        .message("Shifts fetched successfully")
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

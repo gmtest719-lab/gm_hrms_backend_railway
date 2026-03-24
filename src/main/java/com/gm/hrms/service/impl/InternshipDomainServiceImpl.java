@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.InternshipDomainRequestDTO;
 import com.gm.hrms.dto.response.InternshipDomainResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.InternshipDomain;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -9,6 +10,8 @@ import com.gm.hrms.mapper.InternshipDomainMapper;
 import com.gm.hrms.repository.InternshipDomainRepository;
 import com.gm.hrms.service.InternshipDomainService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,12 +92,24 @@ public class InternshipDomainServiceImpl
 
     @Override
     @Transactional(readOnly = true)
-    public List<InternshipDomainResponseDTO> getAll() {
+    public PageResponseDTO<InternshipDomainResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findAll()
+        Page<InternshipDomain> page = repository.findAll(pageable);
+
+        List<InternshipDomainResponseDTO> content = page.getContent()
                 .stream()
                 .map(InternshipDomainMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<InternshipDomainResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // ================= DELETE (SOFT) =================

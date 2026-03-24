@@ -2,8 +2,9 @@ package com.gm.hrms.service;
 
 import com.gm.hrms.dto.request.InternCourseRequestDTO;
 import com.gm.hrms.dto.response.InternCourseResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 public interface InternCourseService {
 
@@ -11,7 +12,7 @@ public interface InternCourseService {
 
     InternCourseResponseDTO updateCourse(Long id, InternCourseRequestDTO dto);
 
-    List<InternCourseResponseDTO> getAllCourses();
+    PageResponseDTO<InternCourseResponseDTO> getAllCourses(Pageable pageable);
 
     InternCourseResponseDTO getCourseById(Long id);
 

@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.InternCourseRequestDTO;
 import com.gm.hrms.dto.response.InternCourseResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.InternCourse;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -9,6 +10,8 @@ import com.gm.hrms.mapper.InternCourseMapper;
 import com.gm.hrms.repository.InternCourseRepository;
 import com.gm.hrms.service.InternCourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -61,12 +64,24 @@ public class InternCourseServiceImpl implements InternCourseService {
 
     // GET ACTIVE COURSES ONLY
     @Override
-    public List<InternCourseResponseDTO> getAllCourses() {
+    public PageResponseDTO<InternCourseResponseDTO> getAllCourses(Pageable pageable) {
 
-        return repository.findByStatusTrue()
+        Page<InternCourse> page = repository.findByStatusTrue(pageable);
+
+        List<InternCourseResponseDTO> content = page.getContent()
                 .stream()
                 .map(InternCourseMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
+
+        return PageResponseDTO.<InternCourseResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // GET COURSE BY ID

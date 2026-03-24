@@ -2,6 +2,8 @@ package com.gm.hrms.service;
 
 import com.gm.hrms.dto.request.HolidayRequestDTO;
 import com.gm.hrms.dto.response.HolidayResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -13,7 +15,7 @@ public interface HolidayService {
 
     HolidayResponseDTO getById(Long id);
 
-    List<HolidayResponseDTO> getAll();
+    PageResponseDTO<HolidayResponseDTO> getAll(Pageable pageable);
 
     void delete(Long id);
 }

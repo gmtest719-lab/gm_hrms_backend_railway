@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.Status;
@@ -14,6 +15,8 @@ import com.gm.hrms.repository.PersonalInformationRepository;
 import com.gm.hrms.service.*;
 import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -206,11 +209,24 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EmployeeResponseDTO> getAll() {
-        return employeeRepository.findAll()
+    public PageResponseDTO<EmployeeResponseDTO> getAll(Pageable pageable) {
+
+        Page<Employee> page = employeeRepository.findAll(pageable);
+
+        List<EmployeeResponseDTO> content = page.getContent()
                 .stream()
                 .map(EmployeeMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<EmployeeResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // =====================================================

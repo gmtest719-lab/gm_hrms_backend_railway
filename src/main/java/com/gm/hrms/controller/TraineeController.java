@@ -1,10 +1,12 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.TraineeUpdateDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TraineeResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.TraineeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -75,13 +77,15 @@ public class TraineeController {
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TraineeResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<TraineeResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<TraineeResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<TraineeResponseDTO>>builder()
                         .success(true)
-                        .message("Fetched successfully")
-                        .data(service.getAll())
+                        .message("Trainees fetched successfully")
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

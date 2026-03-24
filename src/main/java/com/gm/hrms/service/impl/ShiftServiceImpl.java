@@ -1,6 +1,7 @@
 package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.ShiftRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.ShiftResponseDTO;
 import com.gm.hrms.entity.Shift;
 import com.gm.hrms.entity.ShiftBreakMapping;
@@ -16,6 +17,8 @@ import com.gm.hrms.repository.ShiftRepository;
 import com.gm.hrms.repository.ShiftTimingRepository;
 import com.gm.hrms.service.ShiftService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,13 +97,26 @@ public class ShiftServiceImpl implements ShiftService {
         return ShiftMapper.toResponse(shift);
     }
 
-    @Override
-    public List<ShiftResponseDTO> getAll() {
 
-        return shiftRepository.findAll()
+    @Override
+    public PageResponseDTO<ShiftResponseDTO> getAll(Pageable pageable) {
+
+        Page<Shift> page = shiftRepository.findAll(pageable);
+
+        List<ShiftResponseDTO> content = page.getContent()
                 .stream()
                 .map(ShiftMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<ShiftResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

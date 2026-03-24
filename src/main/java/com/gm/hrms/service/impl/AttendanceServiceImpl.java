@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
 import com.gm.hrms.dto.request.AttendanceRequestDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.AttendanceStatus;
 import com.gm.hrms.enums.ShiftType;
@@ -12,11 +13,15 @@ import com.gm.hrms.mapper.AttendanceMapper;
 import com.gm.hrms.repository.*;
 import com.gm.hrms.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -182,22 +187,66 @@ public class AttendanceServiceImpl implements AttendanceService {
         return AttendanceMapper.toResponse(attendance, calc);
     }
 
+//    @Override
+//    public List<AttendanceResponseDTO> getAllAttendance() {
+//
+//        return attendanceRepository
+//                .findAll()
+//                .stream()
+//                .map(a -> {
+//
+//                    AttendanceCalculation calc =
+//                            calculationRepository
+//                                    .findByAttendanceId(a.getId())
+//                                    .orElse(null);
+//
+//                    return AttendanceMapper.toResponse(a, calc);
+//                })
+//                .toList();
+//    }
+
+
     @Override
-    public List<AttendanceResponseDTO> getAllAttendance() {
+    public PageResponseDTO<AttendanceResponseDTO> getAllAttendance(Pageable pageable) {
 
-        return attendanceRepository
-                .findAll()
+        // ✅ Step 1: Get paginated attendance
+        Page<Attendance> page = attendanceRepository.findAll(pageable);
+
+        List<Long> ids = page.getContent()
                 .stream()
-                .map(a -> {
-
-                    AttendanceCalculation calc =
-                            calculationRepository
-                                    .findByAttendanceId(a.getId())
-                                    .orElse(null);
-
-                    return AttendanceMapper.toResponse(a, calc);
-                })
+                .map(Attendance::getId)
                 .toList();
+
+        // ✅ Step 2: Fetch with calculation (JOIN FETCH)
+        List<Attendance> attendanceWithCalc =
+                attendanceRepository.findAllWithCalculationByIds(ids);
+
+        // ✅ Step 3: Convert to Map for fast lookup
+        Map<Long, Attendance> attendanceMap =
+                attendanceWithCalc.stream()
+                        .collect(Collectors.toMap(Attendance::getId, a -> a));
+
+        // ✅ Step 4: Maintain order + map response
+        List<AttendanceResponseDTO> content =
+                page.getContent().stream()
+                        .map(a -> {
+                            Attendance fullData = attendanceMap.get(a.getId());
+                            return AttendanceMapper.toResponse(
+                                    fullData,
+                                    fullData.getCalculation()
+                            );
+                        })
+                        .toList();
+
+        return PageResponseDTO.<AttendanceResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     private AttendanceCalculation calculateAttendance(Attendance attendance){

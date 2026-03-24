@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.DesignationRequestDTO;
 import com.gm.hrms.dto.response.DesignationResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Designation;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -9,6 +10,8 @@ import com.gm.hrms.mapper.DesignationMapper;
 import com.gm.hrms.repository.DesignationRepository;
 import com.gm.hrms.service.DesignationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -78,12 +81,24 @@ public class DesignationServiceImpl implements DesignationService {
     // ================= GET ALL =================
 
     @Override
-    public List<DesignationResponseDTO> getAll() {
+    public PageResponseDTO<DesignationResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findAll()
+        Page<Designation> page = repository.findAll(pageable);
+
+        List<DesignationResponseDTO> content = page.getContent()
                 .stream()
                 .map(DesignationMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<DesignationResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // ================= DELETE =================

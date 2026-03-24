@@ -2,10 +2,12 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.HolidayRequestDTO;
 import com.gm.hrms.dto.response.HolidayResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.HolidayService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -37,13 +39,15 @@ public class HolidayController {
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HolidayResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<PageResponseDTO<HolidayResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<HolidayResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<HolidayResponseDTO>>builder()
                         .success(true)
                         .message("Holidays fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

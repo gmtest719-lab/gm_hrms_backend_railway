@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.InternRequestDTO;
 import com.gm.hrms.dto.request.InternUpdateDTO;
 import com.gm.hrms.dto.response.InternResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.InternShipType;
@@ -15,6 +16,8 @@ import com.gm.hrms.repository.*;
 import com.gm.hrms.service.*;
 import com.gm.hrms.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -196,12 +199,24 @@ public class InternServiceImpl implements InternService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InternResponseDTO> getAll() {
+    public PageResponseDTO<InternResponseDTO> getAll(Pageable pageable) {
 
-        return internRepository.findAll()
+        Page<Intern> page = internRepository.findAll(pageable);
+
+        List<InternResponseDTO> content = page.getContent()
                 .stream()
                 .map(InternMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<InternResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
     @Override
     public void delete(Long id) {

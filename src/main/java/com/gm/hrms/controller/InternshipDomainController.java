@@ -2,10 +2,12 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.InternshipDomainRequestDTO;
 import com.gm.hrms.dto.response.InternshipDomainResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.InternshipDomainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -74,12 +76,15 @@ public class InternshipDomainController {
     // ================= GET ALL =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<InternshipDomainResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<InternshipDomainResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        List<InternshipDomainResponseDTO> response = service.getAll();
+        PageResponseDTO<InternshipDomainResponseDTO> response =
+                service.getAll(PageRequest.of(page, size));
 
         return ResponseEntity.ok(
-                ApiResponse.<List<InternshipDomainResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<InternshipDomainResponseDTO>>builder()
                         .success(true)
                         .message("Internship domains fetched successfully")
                         .data(response)

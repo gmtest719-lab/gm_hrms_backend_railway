@@ -2,12 +2,15 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.BreakPolicyRequestDTO;
 import com.gm.hrms.dto.response.BreakPolicyResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.BreakPolicy;
 import com.gm.hrms.enums.BreakCategory;
 import com.gm.hrms.mapper.BreakPolicyMapper;
 import com.gm.hrms.repository.BreakPolicyRepository;
 import com.gm.hrms.service.BreakPolicyService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -65,12 +68,24 @@ public class BreakPolicyServiceImpl implements BreakPolicyService {
     }
 
     @Override
-    public List<BreakPolicyResponseDTO> getAll() {
+    public PageResponseDTO<BreakPolicyResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findAll()
+        Page<BreakPolicy> page = repository.findAll(pageable);
+
+        List<BreakPolicyResponseDTO> content = page.getContent()
                 .stream()
                 .map(BreakPolicyMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<BreakPolicyResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

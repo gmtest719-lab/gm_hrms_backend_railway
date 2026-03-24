@@ -3,11 +3,13 @@ package com.gm.hrms.controller;
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
 import com.gm.hrms.dto.request.EmployeeUpdateDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -76,12 +78,15 @@ public class EmployeeController {
     // ================= GET ALL =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<EmployeeResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<EmployeeResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
-        List<EmployeeResponseDTO> response = service.getAll();
+        PageResponseDTO<EmployeeResponseDTO> response =
+                service.getAll(PageRequest.of(page, size));
 
         return ResponseEntity.ok(
-                ApiResponse.<List<EmployeeResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<EmployeeResponseDTO>>builder()
                         .success(true)
                         .message("Employees fetched successfully")
                         .data(response)

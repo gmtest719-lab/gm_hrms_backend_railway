@@ -2,17 +2,18 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.DocumentTypeRequestDTO;
 import com.gm.hrms.dto.response.DocumentTypeResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.enums.ApplicableType;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.DocumentTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/document-types")
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class DocumentTypeController {
 
     private final DocumentTypeService service;
 
+    // ✅ CREATE → ADMIN only
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> create(
@@ -34,6 +36,7 @@ public class DocumentTypeController {
         );
     }
 
+    // ✅ UPDATE → ADMIN only
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> update(
@@ -49,6 +52,7 @@ public class DocumentTypeController {
         );
     }
 
+    // ✅ DELETE → ADMIN only
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
@@ -63,18 +67,24 @@ public class DocumentTypeController {
         );
     }
 
+    // ✅ GET ALL → ADMIN + HR + EMPLOYEE (Pagination)
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<DocumentTypeResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<DocumentTypeResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<DocumentTypeResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<DocumentTypeResponseDTO>>builder()
                         .success(true)
                         .message("Document types fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }
 
+    // ✅ GET BY ID → ADMIN + HR + EMPLOYEE
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> getById(
             @PathVariable Long id) {
@@ -88,15 +98,19 @@ public class DocumentTypeController {
         );
     }
 
+    // ✅ FILTER BY TYPE → ADMIN + HR + EMPLOYEE
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping("/type/{type}")
-    public ResponseEntity<ApiResponse<List<DocumentTypeResponseDTO>>> getByApplicableType(
-            @PathVariable ApplicableType type) {
+    public ResponseEntity<ApiResponse<PageResponseDTO<DocumentTypeResponseDTO>>> getByApplicableType(
+            @PathVariable ApplicableType type,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<DocumentTypeResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<DocumentTypeResponseDTO>>builder()
                         .success(true)
                         .message("Document types fetched successfully")
-                        .data(service.getByApplicableType(type))
+                        .data(service.getByApplicableType(type, PageRequest.of(page, size)))
                         .build()
         );
     }

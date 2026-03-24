@@ -3,10 +3,12 @@ package com.gm.hrms.controller;
 import com.gm.hrms.dto.request.BranchRequestDTO;
 import com.gm.hrms.dto.request.BranchUpdateDTO;
 import com.gm.hrms.dto.response.BranchResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.BranchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -69,13 +71,15 @@ public class BranchController {
 
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BranchResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<BranchResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<BranchResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<BranchResponseDTO>>builder()
                         .success(true)
                         .message("Branches fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

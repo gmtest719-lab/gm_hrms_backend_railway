@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.LeaveApplicationRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveApplicationRuleResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.LeaveApplicationRule;
 import com.gm.hrms.entity.LeavePolicy;
 import com.gm.hrms.exception.*;
@@ -10,6 +11,8 @@ import com.gm.hrms.repository.LeaveApplicationRuleRepository;
 import com.gm.hrms.repository.LeavePolicyRepository;
 import com.gm.hrms.service.LeaveApplicationRuleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,12 +58,25 @@ public class LeaveApplicationRuleServiceImpl implements LeaveApplicationRuleServ
 
     // ================= GET ALL =================
     @Override
-    public List<LeaveApplicationRuleResponseDTO> getAll() {
+    public PageResponseDTO<LeaveApplicationRuleResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findByIsActiveTrue()
+        Page<LeaveApplicationRule> page =
+                repository.findByIsActiveTrue(pageable);
+
+        List<LeaveApplicationRuleResponseDTO> content = page.getContent()
                 .stream()
                 .map(LeaveApplicationRuleMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<LeaveApplicationRuleResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // ================= PATCH =================

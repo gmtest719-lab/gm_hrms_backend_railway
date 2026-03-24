@@ -2,11 +2,14 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.HolidayRequestDTO;
 import com.gm.hrms.dto.response.HolidayResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Holiday;
 import com.gm.hrms.mapper.HolidayMapper;
 import com.gm.hrms.repository.HolidayRepository;
 import com.gm.hrms.service.HolidayService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -58,12 +61,24 @@ public class HolidayServiceImpl implements HolidayService {
     }
 
     @Override
-    public List<HolidayResponseDTO> getAll() {
+    public PageResponseDTO<HolidayResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findAll()
+        Page<Holiday> page = repository.findAll(pageable);
+
+        List<HolidayResponseDTO> content = page.getContent()
                 .stream()
                 .map(HolidayMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<HolidayResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

@@ -2,10 +2,12 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.LeaveEligibilityRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveEligibilityRuleResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.LeaveEligibilityRuleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -80,13 +82,15 @@ public class LeaveEligibilityRuleController {
     }
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<LeaveEligibilityRuleResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<LeaveEligibilityRuleResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<LeaveEligibilityRuleResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<LeaveEligibilityRuleResponseDTO>>builder()
                         .success(true)
                         .message("Eligibility rules fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

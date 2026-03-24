@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.DocumentTypeRequestDTO;
 import com.gm.hrms.dto.response.DocumentTypeResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.DocumentType;
 import com.gm.hrms.enums.ApplicableType;
 import com.gm.hrms.exception.DuplicateResourceException;
@@ -10,6 +11,8 @@ import com.gm.hrms.mapper.DocumentTypeMapper;
 import com.gm.hrms.repository.DocumentTypeRepository;
 import com.gm.hrms.service.DocumentTypeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,12 +66,24 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     }
 
     @Override
-    public List<DocumentTypeResponseDTO> getAll() {
+    public PageResponseDTO<DocumentTypeResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findByActiveTrue()
+        Page<DocumentType> page = repository.findByActiveTrue(pageable);
+
+        List<DocumentTypeResponseDTO> content = page.getContent()
                 .stream()
                 .map(DocumentTypeMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<DocumentTypeResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override
@@ -82,12 +97,26 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     }
 
     @Override
-    public List<DocumentTypeResponseDTO> getByApplicableType(ApplicableType type) {
+    public PageResponseDTO<DocumentTypeResponseDTO> getByApplicableType(
+            ApplicableType type,
+            Pageable pageable) {
 
-        return repository
-                .findByApplicableTypesContainingAndActiveTrue(type)
+        Page<DocumentType> page =
+                repository.findByApplicableTypesContainingAndActiveTrue(type, pageable);
+
+        List<DocumentTypeResponseDTO> content = page.getContent()
                 .stream()
                 .map(DocumentTypeMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<DocumentTypeResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 }

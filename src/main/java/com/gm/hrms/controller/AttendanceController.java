@@ -3,9 +3,11 @@ package com.gm.hrms.controller;
 import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
 import com.gm.hrms.dto.request.AttendanceRequestDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -84,14 +86,20 @@ public class AttendanceController {
         );
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<PageResponseDTO<AttendanceResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageResponseDTO<AttendanceResponseDTO> response =
+                service.getAllAttendance(PageRequest.of(page, size));
 
         return ResponseEntity.ok(
-                ApiResponse.<List<AttendanceResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<AttendanceResponseDTO>>builder()
                         .success(true)
                         .message("Attendance list fetched")
-                        .data(service.getAllAttendance())
+                        .data(response)
                         .build()
         );
     }
