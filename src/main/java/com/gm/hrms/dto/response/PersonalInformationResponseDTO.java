@@ -21,6 +21,8 @@ public class PersonalInformationResponseDTO {
     private LocalDate dateOfBirth;
     private EmploymentType employmentType;
 
+    private RecordStatus status;
+
     private MaritalStatus maritalStatus;
     private String spouseOrParentName;
 

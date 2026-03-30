@@ -61,6 +61,11 @@ public class AuthServiceImpl implements AuthService {
         authRepository.save(auth);
     }
 
+    @Override
+    public boolean existsByPerson(PersonalInformation person) {
+        return authRepository.existsByPersonalInformation(person);
+    }
+
     // ================= LOGIN =================
 
     @Override

@@ -35,8 +35,17 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final PersonalInformationRepository personalInformationRepository;
     private final WorkProfileRepository workProfileRepository;
 
+    // ✅ Common validation
+    private void validateAttendanceRequest(AttendanceRequestDTO dto) {
+        if (dto == null || dto.getPersonalInformationId() == null) {
+            throw new InvalidRequestException("PersonalInformationId is required");
+        }
+    }
+
     @Override
     public AttendanceResponseDTO checkIn(AttendanceRequestDTO dto) {
+
+        validateAttendanceRequest(dto);
 
         PersonalInformation person = personalInformationRepository
                 .findById(dto.getPersonalInformationId())
@@ -61,6 +70,10 @@ public class AttendanceServiceImpl implements AttendanceService {
         Attendance attendance =
                 AttendanceMapper.createAttendance(person, profile);
 
+        if (attendance.getCheckIn() == null) {
+            throw new InvalidRequestException("Check-in time cannot be null");
+        }
+
         attendanceRepository.save(attendance);
 
         attendanceLogRepository.save(
@@ -73,6 +86,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public AttendanceResponseDTO checkOut(AttendanceRequestDTO dto) {
 
+        validateAttendanceRequest(dto);
+
         Attendance attendance =
                 attendanceRepository
                         .findByPersonalInformationIdAndAttendanceDate(
@@ -81,11 +96,21 @@ public class AttendanceServiceImpl implements AttendanceService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException("Attendance not found"));
 
+        if (attendance.getCheckIn() == null) {
+            throw new InvalidRequestException("Cannot checkout without check-in");
+        }
+
         if(attendance.getCheckOut()!=null){
             throw new InvalidRequestException("Already checked out");
         }
 
-        attendance.setCheckOut(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isBefore(attendance.getCheckIn())) {
+            throw new InvalidRequestException("Checkout time cannot be before check-in");
+        }
+
+        attendance.setCheckOut(now);
         attendanceRepository.save(attendance);
 
         attendanceLogRepository.save(
@@ -101,6 +126,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public AttendanceResponseDTO breakStart(AttendanceRequestDTO dto) {
 
+        validateAttendanceRequest(dto);
+
         Attendance attendance =
                 attendanceRepository
                         .findByPersonalInformationIdAndAttendanceDate(
@@ -108,6 +135,10 @@ public class AttendanceServiceImpl implements AttendanceService {
                                 LocalDate.now())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException("Attendance not found"));
+
+        if (attendance.getCheckIn() == null) {
+            throw new InvalidRequestException("Cannot start break before check-in");
+        }
 
         if(attendance.getCheckOut()!=null){
             throw new InvalidRequestException("Cannot start break after checkout");
@@ -132,6 +163,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public AttendanceResponseDTO breakEnd(AttendanceRequestDTO dto) {
 
+        validateAttendanceRequest(dto);
+
         Attendance attendance =
                 attendanceRepository
                         .findByPersonalInformationIdAndAttendanceDate(
@@ -149,17 +182,31 @@ public class AttendanceServiceImpl implements AttendanceService {
                         .findTopByAttendanceIdOrderByBreakStartDesc(
                                 attendance.getId());
 
-        if(breakLog==null || breakLog.getBreakEnd()!=null){
+        if(breakLog==null){
             throw new InvalidRequestException("Break not started");
         }
 
-        breakLog.setBreakEnd(LocalDateTime.now());
+        if (breakLog.getBreakEnd() != null) {
+            throw new InvalidRequestException("Break already ended");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (now.isBefore(breakLog.getBreakStart())) {
+            throw new InvalidRequestException("Break end cannot be before break start");
+        }
+
+        breakLog.setBreakEnd(now);
 
         int minutes =
                 (int)Duration.between(
                         breakLog.getBreakStart(),
                         breakLog.getBreakEnd()
                 ).toMinutes();
+
+        if (minutes < 0) {
+            throw new InvalidRequestException("Invalid break duration");
+        }
 
         breakLog.setDurationMinutes(minutes);
 
@@ -170,6 +217,10 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public AttendanceResponseDTO getTodayAttendance(Long personalInformationId) {
+
+        if (personalInformationId == null) {
+            throw new InvalidRequestException("PersonalInformationId is required");
+        }
 
         Attendance attendance =
                 attendanceRepository
@@ -187,29 +238,13 @@ public class AttendanceServiceImpl implements AttendanceService {
         return AttendanceMapper.toResponse(attendance, calc);
     }
 
-//    @Override
-//    public List<AttendanceResponseDTO> getAllAttendance() {
-//
-//        return attendanceRepository
-//                .findAll()
-//                .stream()
-//                .map(a -> {
-//
-//                    AttendanceCalculation calc =
-//                            calculationRepository
-//                                    .findByAttendanceId(a.getId())
-//                                    .orElse(null);
-//
-//                    return AttendanceMapper.toResponse(a, calc);
-//                })
-//                .toList();
-//    }
-
-
     @Override
     public PageResponseDTO<AttendanceResponseDTO> getAllAttendance(Pageable pageable) {
 
-        // ✅ Step 1: Get paginated attendance
+        if (pageable == null) {
+            throw new InvalidRequestException("Pageable cannot be null");
+        }
+
         Page<Attendance> page = attendanceRepository.findAll(pageable);
 
         List<Long> ids = page.getContent()
@@ -217,16 +252,13 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .map(Attendance::getId)
                 .toList();
 
-        // ✅ Step 2: Fetch with calculation (JOIN FETCH)
         List<Attendance> attendanceWithCalc =
                 attendanceRepository.findAllWithCalculationByIds(ids);
 
-        // ✅ Step 3: Convert to Map for fast lookup
         Map<Long, Attendance> attendanceMap =
                 attendanceWithCalc.stream()
                         .collect(Collectors.toMap(Attendance::getId, a -> a));
 
-        // ✅ Step 4: Maintain order + map response
         List<AttendanceResponseDTO> content =
                 page.getContent().stream()
                         .map(a -> {
@@ -373,10 +405,20 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceResponseDTO correctAttendance(
             AttendanceCorrectionRequestDTO dto){
 
+        if (dto == null || dto.getAttendanceId() == null) {
+            throw new InvalidRequestException("AttendanceId is required");
+        }
+
         Attendance attendance =
                 attendanceRepository.findById(dto.getAttendanceId())
                         .orElseThrow(() ->
                                 new ResourceNotFoundException("Attendance not found"));
+
+        if(dto.getCheckIn()!=null && dto.getCheckOut()!=null){
+            if(dto.getCheckOut().isBefore(dto.getCheckIn())){
+                throw new InvalidRequestException("CheckOut cannot be before CheckIn");
+            }
+        }
 
         if(dto.getCheckIn()!=null){
             attendance.setCheckIn(dto.getCheckIn());

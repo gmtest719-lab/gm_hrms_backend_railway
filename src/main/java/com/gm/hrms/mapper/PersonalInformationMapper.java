@@ -23,6 +23,7 @@ public class PersonalInformationMapper {
                 .maritalStatus(dto.getMaritalStatus())
                 .spouseOrParentName(dto.getSpouseOrParentName())
                 .profileImageUrl(dto.getProfileImageUrl())
+                .recordStatus(dto.getStatus())
                 .active(true)
                 .build();
     }
@@ -78,8 +79,9 @@ public class PersonalInformationMapper {
                 .maritalStatus(personalInformation.getMaritalStatus())
                 .spouseOrParentName(personalInformation.getSpouseOrParentName())
                 .profileImageUrl(personalInformation.getProfileImageUrl())
+                .status(personalInformation.getRecordStatus())
 
-                // ✅ NULL SAFE CONTACT
+                // NULL SAFE CONTACT
                 .personalPhone(contact != null ? contact.getPersonalPhone() : null)
                 .emergencyPhone(contact != null ? contact.getEmergencyPhone() : null)
                 .personalEmail(contact != null ? contact.getPersonalEmail() : null)

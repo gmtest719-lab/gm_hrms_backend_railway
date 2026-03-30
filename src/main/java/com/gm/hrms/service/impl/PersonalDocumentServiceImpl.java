@@ -5,6 +5,7 @@ import com.gm.hrms.entity.PersonalDocument;
 import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.enums.ApplicableType;
 import com.gm.hrms.enums.EmploymentType;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.repository.DocumentTypeRepository;
@@ -46,37 +47,55 @@ public class PersonalDocumentServiceImpl implements PersonalDocumentService {
         PersonalInformation personal = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not found"));
 
+        boolean isDraft = personal.getRecordStatus() == RecordStatus.DRAFT;
+
         List<DocumentType> requiredDocs =
                 documentTypeRepository
                         .findByApplicableTypesContainingAndActiveTrue(
                                 ApplicableType.valueOf(employmentType.name())
                         );
 
-        // ===== VALIDATION =====
+        // ================= VALIDATION (ONLY SUBMIT) =================
 
-        for (DocumentType type : requiredDocs) {
+        if (!isDraft) {
 
-            String key = type.getKey();
+            for (DocumentType type : requiredDocs) {
 
-            MultipartFile file = documents != null ? documents.get(key) : null;
-            String reason = reasons != null ? reasons.get(key) : null;
+                String key = type.getKey();
 
-            if (Boolean.TRUE.equals(type.getMandatory())) {
+                MultipartFile file = documents != null ? documents.get(key) : null;
+                String reason = reasons != null ? reasons.get(key) : null;
+
+                Optional<PersonalDocument> existingDoc =
+                        documentRepository.findByPersonalInformationIdAndDocumentTypeId(
+                                personalId,
+                                type.getId()
+                        );
+
+                boolean alreadyExists = existingDoc.isPresent() &&
+                        existingDoc.get().getFilePath() != null;
 
                 boolean fileMissing = file == null || file.isEmpty();
                 boolean reasonMissing = reason == null || reason.isBlank();
 
-                if (fileMissing && reasonMissing) {
+                if (Boolean.TRUE.equals(type.getMandatory())) {
 
-                    throw new InvalidRequestException(
-                            type.getName()
-                                    + " is mandatory. Upload document or provide reason."
-                    );
+                    if (fileMissing && reasonMissing && !alreadyExists) {
+
+                        throw new InvalidRequestException(
+                                type.getName()
+                                        + " is mandatory. Upload document or provide reason."
+                        );
+                    }
                 }
             }
         }
 
-        // ===== SAVE DOCUMENTS =====
+        // ================= SAVE DOCUMENTS =================
+
+        if (documents == null && (reasons == null || reasons.isEmpty())) {
+            return; // nothing to save
+        }
 
         for (DocumentType type : requiredDocs) {
 
@@ -85,7 +104,8 @@ public class PersonalDocumentServiceImpl implements PersonalDocumentService {
             MultipartFile file = documents != null ? documents.get(key) : null;
             String reason = reasons != null ? reasons.get(key) : null;
 
-            if (file != null || (reason != null && !reason.isBlank())) {
+            if ((file != null && !file.isEmpty()) ||
+                    (reason != null && !reason.isBlank())) {
 
                 PersonalDocument entity = new PersonalDocument();
 

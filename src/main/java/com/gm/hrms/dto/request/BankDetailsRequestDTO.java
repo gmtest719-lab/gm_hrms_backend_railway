@@ -4,7 +4,7 @@ package com.gm.hrms.dto.request;
 import lombok.Data;
 
 @Data
-public class EmployeeBankDetailsRequestDTO {
+public class BankDetailsRequestDTO {
 
     private String bankName;
     private String accountNumber;

@@ -21,12 +21,13 @@ public class InternMapper {
                 .role(RoleType.INTERN)
                 .createdAt(intern.getCreatedAt())
                 .updatedAt(intern.getUpdatedAt())
+                .recordStatus(p != null ? p.getRecordStatus() : null)
                 .build();
 
-        // ✅ COMMON
+        //  COMMON
         BaseUserMapper.mapCommon(dto, p);
 
-        // ✅ ROLE SPECIFIC
+        //  ROLE SPECIFIC
         dto.setCollegeDetails(mapCollege(intern.getCollegeDetails()));
         dto.setInternshipDetails(mapInternship(intern.getInternshipDetails(), wp));
         dto.setMentorDetails(mapMentor(intern.getMentorDetails()));
@@ -90,10 +91,14 @@ public class InternMapper {
         return InternMentorResponseDTO.builder()
                 .mentorEmployeeId(
                         m.getMentor() != null ? m.getMentor().getId() : null
-                )
+                ).mentorDesignation(m.getMentor() != null ? m.getMentor().getPersonalInformation().getWorkProfile().getDesignation().getName() : null)
+                .mentorName(m.getMentor()!=null? m.getMentor().getPersonalInformation().getFirstName() + " "+m.getMentor().getPersonalInformation().getMiddleName()  +" " +  m.getMentor().getPersonalInformation().getLastName() : null)
                 .supervisorEmployeeId(
                         m.getSupervisor() != null ? m.getSupervisor().getId() : null
-                )
+                ).supervisorDesignation(m.getSupervisor() != null ? m.getSupervisor().getPersonalInformation().getWorkProfile().getDesignation().getName() : null)
+                .supervisorName(m.getSupervisor()!=null? m.getSupervisor().getPersonalInformation().getFirstName() + " "+m.getSupervisor().getPersonalInformation().getMiddleName()  +" " +  m.getSupervisor().getPersonalInformation().getLastName() : null)
+
+
                 .build();
     }
 }

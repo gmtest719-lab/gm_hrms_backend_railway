@@ -6,6 +6,7 @@ import com.gm.hrms.dto.response.EmployeeResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.enums.Status;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -53,34 +54,45 @@ public class EmployeeServiceImpl implements EmployeeService {
                         .orElseThrow(() ->
                                 new ResourceNotFoundException("Personal information not found"));
 
+        boolean isDraft = person.getRecordStatus() == RecordStatus.DRAFT;
+
+        // ================= VALIDATION (ONLY SUBMIT) =================
+
+        if (!isDraft && dto.getRole() == null) {
+            throw new InvalidRequestException("Role is required");
+        }
+
         String autoCode = generateEmployeeCode();
 
-        Employee employee = EmployeeMapper.toEntity(
-                dto,
-                autoCode
-        );
-
+        Employee employee = EmployeeMapper.toEntity(dto, autoCode);
         employee.setPersonalInformation(person);
 
         employee = employeeRepository.save(employee);
 
-        // AUTH CREATION
+        // ================= AUTH (ONLY IF SUBMITTED & NOT EXISTS) =================
 
-        String rawPassword = PasswordGenerator.generatePassword(8);
+        boolean isSubmitted = person.getRecordStatus() == RecordStatus.SUBMITTED;
 
-        authService.createAuthForPerson(
-                person,
-                employee.getRole(),
-                rawPassword
-        );
+        if (isSubmitted && !authService.existsByPerson(person)) {
 
-        emailService.sendCredentials(
-                username(person),
-                autoCode,
-                rawPassword
-        );
+            String username = username(person);
 
-        // HR MODULE
+            String rawPassword = PasswordGenerator.generatePassword(8);
+
+            authService.createAuthForPerson(
+                    person,
+                    employee.getRole(),
+                    rawPassword
+            );
+
+            emailService.sendCredentials(
+                    username,
+                    autoCode,
+                    rawPassword
+            );
+        }
+
+        // ================= EMPLOYMENT =================
 
         if (dto.getEmployment() != null) {
             employeeEmploymentService.saveOrUpdate(employee, dto.getEmployment());
@@ -90,9 +102,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .personalInformationId(person.getId())
                 .id(employee.getId())
                 .code(employee.getEmployeeCode())
-                .fullName(
-                        person.getFirstName() + " " + person.getLastName()
-                )
+                .fullName(person.getFirstName() + " " + person.getLastName())
                 .role(employee.getRole())
                 .active(person.getActive())
                 .createdAt(employee.getCreatedAt())
@@ -112,31 +122,54 @@ public class EmployeeServiceImpl implements EmployeeService {
             Map<String, String> reasons
     ) throws Exception {
 
-        // ================= PARSE =================
-
         EmployeeUpdateDTO dto =
                 objectMapper.readValue(employeeJson, EmployeeUpdateDTO.class);
-
-        // ================= FETCH =================
 
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
 
         PersonalInformation person = employee.getPersonalInformation();
 
-        // ================= PROFILE IMAGE =================
+        boolean isDraft = person.getRecordStatus() == RecordStatus.DRAFT;
 
-        if (profileImage != null && !profileImage.isEmpty()) {
 
-            String imagePath = fileStorageService.save(profileImage);
+        // ================= STATUS =================
 
-            person.setProfileImageUrl(imagePath);
+        boolean isSubmitted = person.getRecordStatus() == RecordStatus.SUBMITTED;
+
+
+
+        // ================= VALIDATION =================
+
+        if (!isDraft) {
+
+            String code = dto.getEmployeeCode() != null
+                    ? dto.getEmployeeCode()
+                    : employee.getEmployeeCode();
+
+            if (code == null || code.isBlank()) {
+                throw new InvalidRequestException("Employee code is required");
+            }
         }
 
-        // ================= PERSONAL UPDATE =================
+        // ================= PROFILE IMAGE =================
+
+        if (isSubmitted &&
+                (profileImage == null || profileImage.isEmpty()) &&
+                (person.getProfileImageUrl() == null ||
+                        person.getProfileImageUrl().isBlank())) {
+
+            throw new InvalidRequestException("Profile image is required");
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String profileImagePath = fileStorageService.save(profileImage);
+            person.setProfileImageUrl(profileImagePath);
+        }
+
+        // ================= PERSONAL =================
 
         if (dto.getPersonalInformation() != null) {
-
             personalInformationService.update(
                     person.getId(),
                     dto.getPersonalInformation()
@@ -148,7 +181,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (dto.getEmployeeCode() != null &&
                 !dto.getEmployeeCode().equals(employee.getEmployeeCode())) {
 
-            if (dto.getEmployeeCode().trim().isEmpty()) {
+            if (!isDraft && dto.getEmployeeCode().trim().isEmpty()) {
                 throw new InvalidRequestException("Employee code cannot be blank");
             }
 
@@ -168,7 +201,8 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         if (dto.getEmployment() != null) {
 
-            if (dto.getEmployment().getCtc() != null &&
+            if (!isDraft &&
+                    dto.getEmployment().getCtc() != null &&
                     dto.getEmployment().getCtc() <= 0) {
 
                 throw new InvalidRequestException("CTC must be greater than 0");
@@ -180,15 +214,37 @@ public class EmployeeServiceImpl implements EmployeeService {
             );
         }
 
-        // ================= DOCUMENT UPDATE =================
+        // ================= DOCUMENT =================
 
-        if (documents != null || reasons != null) {
+        if (!isDraft) {
 
-            documentService.updateDocuments(
+            documentService.validateAndSaveDocuments(
                     person.getId(),
                     person.getEmploymentType(),
                     documents,
                     reasons
+            );
+        }
+
+        // ================= AUTH TRIGGER (IMPORTANT) =================
+
+
+        if (isSubmitted && !authService.existsByPerson(person)) {
+
+            String username = username(person);
+
+            String rawPassword = PasswordGenerator.generatePassword(8);
+
+            authService.createAuthForPerson(
+                    person,
+                    employee.getRole(),
+                    rawPassword
+            );
+
+            emailService.sendCredentials(
+                    username,
+                    employee.getEmployeeCode(),
+                    rawPassword
             );
         }
 

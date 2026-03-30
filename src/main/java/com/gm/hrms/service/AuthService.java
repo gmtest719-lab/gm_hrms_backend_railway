@@ -12,6 +12,8 @@ public interface AuthService {
                              RoleType role,
                              String rawPassword);
 
+    boolean existsByPerson(PersonalInformation person); // ✅ ADD THIS
+
     LoginResponseDTO login(LoginRequestDTO request);
 
     LoginResponseDTO refreshToken(String refreshToken);

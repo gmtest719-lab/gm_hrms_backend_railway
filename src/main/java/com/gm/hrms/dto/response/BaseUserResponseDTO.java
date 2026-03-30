@@ -1,9 +1,6 @@
 package com.gm.hrms.dto.response;
 
-import com.gm.hrms.enums.Gender;
-import com.gm.hrms.enums.MaritalStatus;
-import com.gm.hrms.enums.RoleType;
-import com.gm.hrms.enums.Status;
+import com.gm.hrms.enums.*;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -34,6 +31,7 @@ public class BaseUserResponseDTO {
     private String reportingManagerName;
     private RoleType role;
     private Status status;
+    private RecordStatus recordStatus;
 
     // ===== CONTACT =====
     private ContactResponseDTO contact;

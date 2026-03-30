@@ -6,6 +6,7 @@ import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TraineeResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.enums.RoleType;
 import com.gm.hrms.enums.Status;
 import com.gm.hrms.exception.InvalidRequestException;
@@ -56,6 +57,23 @@ public class TraineeServiceImpl implements TraineeService {
         PersonalInformation person = personalRepository.findById(personalInformationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not found"));
 
+        boolean isDraft = person.getRecordStatus() == RecordStatus.DRAFT;
+
+        // ================= VALIDATION (ONLY SUBMIT) =================
+
+        if (!isDraft) {
+
+            if (dto.getStipend() == null) {
+                throw new InvalidRequestException("Stipend is required");
+            }
+
+            if (dto.getStipend() < 0) {
+                throw new InvalidRequestException("Stipend cannot be negative");
+            }
+        }
+
+        // ================= CREATE =================
+
         String traineeCode = generateTraineeCode();
 
         Trainee trainee = new Trainee();
@@ -65,42 +83,43 @@ public class TraineeServiceImpl implements TraineeService {
 
         trainee = traineeRepository.save(trainee);
 
-        if (dto.getStipend() != null && dto.getStipend() < 0) {
-            throw new InvalidRequestException("Stipend cannot be negative");
-        }
-        // WORK + EDUCATION
-        if (dto.getWorkDetails() != null)
+        // ================= CHILD MODULES =================
+
+        if (dto.getWorkDetails() != null) {
             traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
+        }
 
-        if (dto.getEducationDetails() != null)
+        if (dto.getEducationDetails() != null) {
             traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
+        }
 
-        // AUTH
-        String rawPassword = PasswordGenerator.generatePassword(8);
+        // ================= AUTH (ONLY IF SUBMITTED) =================
 
-        authService.createAuthForPerson(
-                person,
-                RoleType.TRAINEE,
-                rawPassword
-        );
+        boolean isSubmitted = person.getRecordStatus() == RecordStatus.SUBMITTED;
 
-        emailService.sendCredentials(
-                person.getContact().getOfficeEmail(),
-                traineeCode,
-                rawPassword
-        );
+        if (isSubmitted && !authService.existsByPerson(person)) {
+
+            String username = username(person);
+            String rawPassword = PasswordGenerator.generatePassword(8);
+
+            authService.createAuthForPerson(
+                    person,
+                    RoleType.TRAINEE,
+                    rawPassword
+            );
+
+            emailService.sendCredentials(
+                    username,
+                    traineeCode,
+                    rawPassword
+            );
+        }
 
         return UserCreateResponseDTO.builder()
                 .personalInformationId(person.getId())
-                .code(traineeCode)
                 .id(trainee.getId())
+                .code(traineeCode)
                 .fullName(person.getFirstName() + " " + person.getLastName())
-                .departmentName(
-                        person.getWorkProfile() != null &&
-                                person.getWorkProfile().getDepartment() != null
-                                ? person.getWorkProfile().getDepartment().getName()
-                                : null
-                )
                 .role(RoleType.TRAINEE)
                 .active(person.getActive())
                 .createdAt(trainee.getCreatedAt())
@@ -120,37 +139,62 @@ public class TraineeServiceImpl implements TraineeService {
             Map<String, String> reasons
     ) throws Exception {
 
-        // ================= PARSE =================
         TraineeUpdateDTO dto =
                 objectMapper.readValue(traineeJson, TraineeUpdateDTO.class);
 
-        // ================= FETCH =================
         Trainee trainee = traineeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trainee not found"));
 
-        PersonalInformation p = trainee.getPersonalInformation();
+        PersonalInformation person = trainee.getPersonalInformation();
+
+        boolean isDraft = person.getRecordStatus() == RecordStatus.DRAFT;
 
         // ================= PROFILE IMAGE =================
-        if (profileImage != null && !profileImage.isEmpty()) {
 
-            String path = fileStorageService.save(profileImage);
-            p.setProfileImageUrl(path);
+
+        boolean isSubmitted = person.getRecordStatus() == RecordStatus.SUBMITTED;
+
+//  GET EXISTING FROM DB (update case)
+        String existingImage = null;
+
+        if (person.getId() != null) {
+            existingImage = personalRepository.findById(person.getId())
+                    .map(PersonalInformation::getProfileImageUrl)
+                    .orElse(null);
         }
 
-        // ================= PERSONAL =================
-        if (dto.getPersonalInformation() != null) {
+        if (isSubmitted &&
+                (profileImage == null || profileImage.isEmpty()) &&
+                (existingImage == null || existingImage.isBlank())) {
 
+            throw new InvalidRequestException("Profile image is required");
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String path = fileStorageService.save(profileImage);
+            person.setProfileImageUrl(path);
+        }
+
+
+
+
+
+
+        // ================= PERSONAL =================
+
+        if (dto.getPersonalInformation() != null) {
             personalInformationService.update(
-                    p.getId(),
+                    person.getId(),
                     dto.getPersonalInformation()
             );
         }
 
-        // ================= TRAINEE CODE =================
+        // ================= CODE =================
+
         if (dto.getTraineeCode() != null &&
                 !dto.getTraineeCode().equals(trainee.getTraineeCode())) {
 
-            if (dto.getTraineeCode().trim().isEmpty()) {
+            if (!isDraft && dto.getTraineeCode().isBlank()) {
                 throw new InvalidRequestException("Trainee code cannot be blank");
             }
 
@@ -166,34 +210,66 @@ public class TraineeServiceImpl implements TraineeService {
             trainee.setTraineeCode(dto.getTraineeCode());
         }
 
-        // ================= STIPEND =================
-        if (dto.getStipend() != null) {
+        // ================= MERGE VALIDATION =================
 
-            if (dto.getStipend() < 0) {
-                throw new InvalidRequestException("Stipend cannot be negative");
+        if (!isDraft) {
+
+            Double stipend = dto.getStipend() != null
+                    ? dto.getStipend()
+                    : trainee.getStipend();
+
+            if (stipend == null) {
+                throw new InvalidRequestException("Stipend is required");
             }
 
+            if (stipend < 0) {
+                throw new InvalidRequestException("Stipend cannot be negative");
+            }
+        }
+
+        // ================= PATCH =================
+
+        if (dto.getStipend() != null) {
             trainee.setStipend(dto.getStipend());
         }
 
-        // ================= WORK =================
         if (dto.getWorkDetails() != null) {
             traineeWorkService.saveOrUpdate(trainee, dto.getWorkDetails());
         }
 
-        // ================= EDUCATION =================
         if (dto.getEducationDetails() != null) {
             traineeEducationService.saveOrUpdate(trainee, dto.getEducationDetails());
         }
 
         // ================= DOCUMENT =================
-        if (documents != null || reasons != null) {
 
+        if (!isDraft) {
             documentService.updateDocuments(
-                    p.getId(),
-                    p.getEmploymentType(),
+                    person.getId(),
+                    person.getEmploymentType(),
                     documents,
                     reasons
+            );
+        }
+
+        // ================= AUTH TRIGGER (IMPORTANT) =================
+
+
+        if (isSubmitted && !authService.existsByPerson(person)) {
+
+            String username = username(person);
+            String rawPassword = PasswordGenerator.generatePassword(8);
+
+            authService.createAuthForPerson(
+                    person,
+                    RoleType.TRAINEE,
+                    rawPassword
+            );
+
+            emailService.sendCredentials(
+                    username,
+                    trainee.getTraineeCode(),
+                    rawPassword
             );
         }
 
@@ -263,5 +339,17 @@ public class TraineeServiceImpl implements TraineeService {
     private String generateTraineeCode() {
         Long count = traineeRepository.count() + 1;
         return String.format("GMTR%03d", count);
+    }
+
+    private String username(PersonalInformation person) {
+
+        if (person.getContact() != null &&
+                person.getContact().getOfficeEmail() != null &&
+                !person.getContact().getOfficeEmail().isBlank()) {
+
+            return person.getContact().getOfficeEmail();
+        }
+
+        return person.getContact().getPersonalEmail();
     }
 }

@@ -4,6 +4,8 @@ import com.gm.hrms.dto.request.InternMentorRequestDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.Intern;
 import com.gm.hrms.entity.InternMentorDetails;
+import com.gm.hrms.enums.RecordStatus;
+import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.repository.EmployeeRepository;
 import com.gm.hrms.repository.InternMentorRepository;
@@ -24,24 +26,49 @@ public class InternMentorServiceImpl implements InternMentorService {
     public void saveOrUpdate(Intern intern,
                              InternMentorRequestDTO dto) {
 
-        if (dto == null) return;
+        boolean isDraft =
+                intern.getPersonalInformation().getRecordStatus() == RecordStatus.DRAFT;
 
         InternMentorDetails mentorDetails =
-                repository.findByIntern(intern)
-                        .orElse(new InternMentorDetails());
+                repository.findByIntern(intern).orElse(null);
 
-        mentorDetails.setIntern(intern);
+        // ================= VALIDATION (ONLY SUBMIT) =================
 
-        if (dto.getMentorEmployeeId() != null) {
-            Employee mentor = employeeRepository.findById(dto.getMentorEmployeeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
-            mentorDetails.setMentor(mentor);
+        if (!isDraft) {
+
+            Long mentorId = dto != null && dto.getMentorEmployeeId() != null
+                    ? dto.getMentorEmployeeId()
+                    : (mentorDetails != null && mentorDetails.getMentor() != null
+                    ? mentorDetails.getMentor().getId()
+                    : null);
+
+            if (mentorId == null) {
+                throw new InvalidRequestException("Mentor is required");
+            }
         }
 
-        if (dto.getSupervisorEmployeeId() != null) {
-            Employee supervisor = employeeRepository.findById(dto.getSupervisorEmployeeId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Supervisor not found"));
-            mentorDetails.setSupervisor(supervisor);
+        // ================= CREATE IF NOT EXISTS =================
+
+        if (mentorDetails == null) {
+            mentorDetails = new InternMentorDetails();
+            mentorDetails.setIntern(intern);
+        }
+
+        // ================= PATCH =================
+
+        if (dto != null) {
+
+            if (dto.getMentorEmployeeId() != null) {
+                Employee mentor = employeeRepository.findById(dto.getMentorEmployeeId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Mentor not found"));
+                mentorDetails.setMentor(mentor);
+            }
+
+            if (dto.getSupervisorEmployeeId() != null) {
+                Employee supervisor = employeeRepository.findById(dto.getSupervisorEmployeeId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Supervisor not found"));
+                mentorDetails.setSupervisor(supervisor);
+            }
         }
 
         repository.save(mentorDetails);

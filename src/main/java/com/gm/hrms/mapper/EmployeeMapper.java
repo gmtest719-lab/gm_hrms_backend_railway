@@ -10,6 +10,9 @@ public class EmployeeMapper {
 
     // ================= CREATE =================
     public static Employee toEntity(EmployeeRequestDTO dto, String autoCode) {
+
+        if (dto == null) return null;
+
         return Employee.builder()
                 .employeeCode(autoCode)
                 .role(dto.getRole())
@@ -19,8 +22,10 @@ public class EmployeeMapper {
     // ================= RESPONSE =================
     public static EmployeeResponseDTO toResponse(Employee e) {
 
+        if (e == null) return null;
+
         PersonalInformation p = e.getPersonalInformation();
-        WorkProfile wp = p != null ? p.getWorkProfile() : null;
+        WorkProfile wp = (p != null) ? p.getWorkProfile() : null;
 
         EmployeeResponseDTO dto = EmployeeResponseDTO.builder()
                 .employeeId(e.getId())
@@ -30,25 +35,31 @@ public class EmployeeMapper {
                 .updatedAt(e.getUpdatedAt())
                 .build();
 
-        //  COMMON
-        BaseUserMapper.mapCommon(dto, p);
+        // ================= COMMON =================
+        if (p != null) {
+            BaseUserMapper.mapCommon(dto, p);
+        }
 
-        //  ROLE SPECIFIC
-        dto.setBranchName(
-                wp != null && wp.getBranch() != null
-                        ? wp.getBranch().getBranchName()
-                        : null
-        );
+        // ================= WORK PROFILE =================
+        if (wp != null) {
 
-        dto.setShiftTiming(
-                wp != null && wp.getShift() != null
-                        ? wp.getShift().getShiftName()
-                        : null
-        );
+            dto.setBranchName(
+                    wp.getBranch() != null
+                            ? wp.getBranch().getBranchName()
+                            : null
+            );
 
-        dto.setWorkMode(wp != null ? wp.getWorkMode() : null);
-        dto.setWorkingType(wp != null ? wp.getWorkingType() : null);
+            dto.setShiftTiming(
+                    wp.getShift() != null
+                            ? wp.getShift().getShiftName()
+                            : null
+            );
 
+            dto.setWorkMode(wp.getWorkMode());
+            dto.setWorkingType(wp.getWorkingType());
+        }
+
+        // ================= EMPLOYMENT =================
         dto.setEmployment(mapEmployment(e.getEmployment()));
 
         return dto;

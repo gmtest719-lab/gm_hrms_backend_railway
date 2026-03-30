@@ -3,6 +3,7 @@ package com.gm.hrms.service.impl;
 import com.gm.hrms.dto.request.TraineeEducationRequestDTO;
 import com.gm.hrms.entity.Trainee;
 import com.gm.hrms.entity.TraineeEducationDetails;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.repository.TraineeEducationRepository;
 import com.gm.hrms.service.TraineeEducationService;
@@ -21,29 +22,54 @@ public class TraineeEducationServiceImpl implements TraineeEducationService {
 
         if (dto == null) return;
 
+        boolean isDraft =
+                trainee.getPersonalInformation().getRecordStatus() == RecordStatus.DRAFT;
+
         TraineeEducationDetails education =
-                repository.findByTrainee(trainee)
-                        .orElse(new TraineeEducationDetails());
+                repository.findByTrainee(trainee).orElse(null);
 
-        education.setTrainee(trainee);
+        // ================= MERGE VALIDATION =================
 
-        // ================= VALIDATION =================
+        if (!isDraft) {
 
-        // HSC < Bachelor
-        if (dto.getHscYear() != null && dto.getBachelorYear() != null &&
-                dto.getBachelorYear() < dto.getHscYear()) {
+            Integer hscYear = dto.getHscYear() != null
+                    ? dto.getHscYear()
+                    : (education != null ? education.getHscYear() : null);
 
-            throw new InvalidRequestException("Bachelor year cannot be before HSC year");
+            Integer bachelorYear = dto.getBachelorYear() != null
+                    ? dto.getBachelorYear()
+                    : (education != null ? education.getBachelorYear() : null);
+
+            Integer masterYear = dto.getMasterYear() != null
+                    ? dto.getMasterYear()
+                    : (education != null ? education.getMasterYear() : null);
+
+            // ===== REQUIRED (optional if needed) =====
+            // if (hscYear == null) throw ...
+
+            // ===== YEAR VALIDATION =====
+
+            if (hscYear != null && bachelorYear != null &&
+                    bachelorYear < hscYear) {
+
+                throw new InvalidRequestException("Bachelor year cannot be before HSC year");
+            }
+
+            if (bachelorYear != null && masterYear != null &&
+                    masterYear < bachelorYear) {
+
+                throw new InvalidRequestException("Master year cannot be before Bachelor year");
+            }
         }
 
-        // Bachelor < Master
-        if (dto.getBachelorYear() != null && dto.getMasterYear() != null &&
-                dto.getMasterYear() < dto.getBachelorYear()) {
+        // ================= CREATE IF NOT EXISTS =================
 
-            throw new InvalidRequestException("Master year cannot be before Bachelor year");
+        if (education == null) {
+            education = new TraineeEducationDetails();
+            education.setTrainee(trainee);
         }
 
-        // ================= SET =================
+        // ================= PATCH =================
 
         if (dto.getHscCompletion() != null)
             education.setHscCompletion(dto.getHscCompletion());

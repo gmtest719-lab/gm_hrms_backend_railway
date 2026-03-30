@@ -50,6 +50,7 @@ public class LeaveTransactionServiceImpl implements LeaveTransactionService {
                 .leaveBalance(balance)
                 .type(type)
                 .days(days)
+                .personal(balance.getPersonal())
                 .beforeBalance(before)
                 .afterBalance(after)
                 .referenceId(referenceId)

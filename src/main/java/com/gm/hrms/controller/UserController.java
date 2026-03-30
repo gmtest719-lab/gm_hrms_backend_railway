@@ -28,7 +28,7 @@ public class UserController {
             @RequestParam(value = "intern", required = false) String internJson,
             @RequestParam(value = "employee", required = false) String employeeJson,
             @RequestParam(value = "trainee", required = false) String traineeJson,
-            @RequestParam("profileImage") MultipartFile profileImage,
+            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
             @RequestParam(required = false) Map<String, MultipartFile> documents,
             @RequestParam(required = false) Map<String, String> reasons
 

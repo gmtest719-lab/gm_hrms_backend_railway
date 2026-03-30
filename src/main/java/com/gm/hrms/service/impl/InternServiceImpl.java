@@ -6,7 +6,7 @@ import com.gm.hrms.dto.response.InternResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.entity.*;
-import com.gm.hrms.enums.InternShipType;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.enums.RoleType;
 import com.gm.hrms.enums.Status;
 import com.gm.hrms.exception.InvalidRequestException;
@@ -52,9 +52,16 @@ public class InternServiceImpl implements InternService {
             InternRequestDTO dto,
             Long personalId) {
 
-
         PersonalInformation person = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal not found"));
+
+        boolean isDraft = person.getRecordStatus() == RecordStatus.DRAFT;
+
+        // ================= VALIDATION (ONLY SUBMIT) =================
+
+        if (!isDraft && dto == null) {
+            throw new InvalidRequestException("Intern data required");
+        }
 
         Intern intern = new Intern();
         intern.setInternCode(generateCode());
@@ -62,44 +69,50 @@ public class InternServiceImpl implements InternService {
 
         intern = internRepository.save(intern);
 
-        // ================= SAVE COLLEGE =================
+        // ================= COLLEGE =================
 
-
-
-        if (dto.getCollegeDetails() != null) {
+        if (dto != null && dto.getCollegeDetails() != null) {
             collegeService.saveOrUpdate(intern, dto.getCollegeDetails());
         }
 
-        // ================= SAVE INTERNSHIP =================
+        // ================= INTERNSHIP =================
 
-        if (dto.getInternshipDetails() != null) {
+        if (dto != null && dto.getInternshipDetails() != null) {
             internshipService.saveOrUpdate(intern, dto.getInternshipDetails());
         }
 
-        // ================= SAVE MENTOR =================
+        // ================= MENTOR =================
 
-        if (dto.getMentorDetails() != null) {
+        if (dto != null && dto.getMentorDetails() != null) {
             mentorService.saveOrUpdate(intern, dto.getMentorDetails());
         }
 
-        // ================= AUTH =================
+        // ================= AUTH (ONLY SUBMIT) =================
 
-        String rawPassword = PasswordGenerator.generatePassword(8);
+        if (!isDraft) {
 
-        authService.createAuthForPerson(person, RoleType.INTERN, rawPassword);
+            String rawPassword = PasswordGenerator.generatePassword(8);
 
-        emailService.sendCredentials(
-                person.getContact().getOfficeEmail(),
-                intern.getInternCode(),
-                rawPassword
-        );
+            authService.createAuthForPerson(person, RoleType.INTERN, rawPassword);
+
+            emailService.sendCredentials(
+                    person.getContact().getOfficeEmail(),
+                    intern.getInternCode(),
+                    rawPassword
+            );
+        }
 
         return UserCreateResponseDTO.builder()
                 .personalInformationId(person.getId())
                 .id(intern.getId())
                 .active(person.getActive())
-                .departmentName(person.getWorkProfile().getDepartment().getName())
-                .fullName(person.getFirstName() + " "+ person.getMiddleName()+ " " + person.getLastName())
+                .departmentName(
+                        person.getWorkProfile() != null &&
+                                person.getWorkProfile().getDepartment() != null
+                                ? person.getWorkProfile().getDepartment().getName()
+                                : null
+                )
+                .fullName(person.getFirstName() + " " + person.getLastName())
                 .code(intern.getInternCode())
                 .role(RoleType.INTERN)
                 .createdAt(intern.getCreatedAt())
@@ -125,11 +138,40 @@ public class InternServiceImpl implements InternService {
 
         PersonalInformation p = intern.getPersonalInformation();
 
-        // ================= PROFILE IMAGE =================
-        if (profileImage != null && !profileImage.isEmpty()) {
+        boolean isDraft = p.getRecordStatus() == RecordStatus.DRAFT;
 
-            String path = fileStorageService.save(profileImage);
-            p.setProfileImageUrl(path);
+        boolean isSubmitted = p.getRecordStatus() == RecordStatus.SUBMITTED;
+
+
+        // ================= MERGE VALIDATION =================
+
+
+
+
+        if (!isDraft) {
+
+            String code = dto.getInternCode() != null
+                    ? dto.getInternCode()
+                    : intern.getInternCode();
+
+            if (code == null || code.isBlank()) {
+                throw new InvalidRequestException("Intern code is required");
+            }
+        }
+
+        // ================= PROFILE IMAGE =================
+
+        if (isSubmitted &&
+                (profileImage == null || profileImage.isEmpty()) &&
+                (p.getProfileImageUrl() == null ||
+                        p.getProfileImageUrl().isBlank())) {
+
+            throw new InvalidRequestException("Profile image is required");
+        }
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String profileImagePath = fileStorageService.save(profileImage);
+            p.setProfileImageUrl(profileImagePath);
         }
 
         // ================= PERSONAL =================
@@ -145,7 +187,7 @@ public class InternServiceImpl implements InternService {
         if (dto.getInternCode() != null &&
                 !dto.getInternCode().equals(intern.getInternCode())) {
 
-            if (dto.getInternCode().trim().isEmpty()) {
+            if (!isDraft && dto.getInternCode().trim().isEmpty()) {
                 throw new InvalidRequestException("Intern code cannot be blank");
             }
 
@@ -174,9 +216,10 @@ public class InternServiceImpl implements InternService {
             mentorService.saveOrUpdate(intern, dto.getMentorDetails());
 
         // ================= DOCUMENT =================
-        if (documents != null || reasons != null) {
 
-            documentService.updateDocuments(
+        if (!isDraft) {
+
+            documentService.validateAndSaveDocuments(
                     p.getId(),
                     p.getEmploymentType(),
                     documents,

@@ -1,6 +1,5 @@
 package com.gm.hrms.entity;
 
-import com.gm.hrms.dto.request.WorkProfileRequestDTO;
 import com.gm.hrms.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
@@ -35,7 +34,6 @@ public class PersonalInformation extends BaseEntity {
     @Column(nullable = false)
     private Gender gender;
 
-    @Column(nullable = false)
     private LocalDate dateOfBirth;
 
     @Enumerated(EnumType.STRING)
@@ -88,5 +86,8 @@ public class PersonalInformation extends BaseEntity {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "permanent_address_id")
     private Address permanentAddress;
+
+    @Enumerated(EnumType.STRING)
+    private RecordStatus recordStatus; // DRAFT / SUBMITTED
 
 }
