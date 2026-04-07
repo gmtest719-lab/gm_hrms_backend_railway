@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.config.CustomUserDetails;
 import com.gm.hrms.dto.request.ProjectAssignmentRequestDTO;
 import com.gm.hrms.dto.response.EmployeeResponseDTO;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping("/api/project-assignments")
 @RequiredArgsConstructor
@@ -21,11 +24,16 @@ public class ProjectAssignmentController {
 
     private final ProjectAssignmentService assignmentService;
 
-    // ================= ADMIN ONLY =================
+    // ================= ASSIGN =================
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Auditable(
+            action      = AuditAction.ASSIGN_PROJECT,
+            resource    = "ProjectAssignment",
+            description = "Assign employee to project"
+    )
     public ResponseEntity<ApiResponse<?>> assign(
-            @RequestBody ProjectAssignmentRequestDTO dto){
+            @RequestBody ProjectAssignmentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -36,12 +44,17 @@ public class ProjectAssignmentController {
         );
     }
 
-    // ================= ADMIN ONLY =================
+    // ================= REMOVE =================
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @Auditable(
+            action      = AuditAction.REMOVE_ASSIGNMENT,
+            resource    = "ProjectAssignment",
+            description = "Remove employee from project"
+    )
     public ResponseEntity<ApiResponse<?>> remove(
             @RequestParam Long projectId,
-            @RequestParam Long employeeId){
+            @RequestParam Long employeeId) {
 
         assignmentService.remove(projectId, employeeId);
 

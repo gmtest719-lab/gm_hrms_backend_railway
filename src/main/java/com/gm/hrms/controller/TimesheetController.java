@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TimesheetResponseDTO;
@@ -18,9 +20,15 @@ public class TimesheetController {
 
     private final TimesheetService service;
 
+    // ================= CREATE OR UPDATE =================
     @PostMapping
+    @Auditable(
+            action      = AuditAction.SAVE_TIMESHEET,
+            resource    = "Timesheet",
+            description = "Create or update timesheet entry"
+    )
     public ResponseEntity<ApiResponse<?>> createOrUpdate(
-            @RequestBody TimesheetRequestDTO request){
+            @RequestBody TimesheetRequestDTO request) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -31,8 +39,14 @@ public class TimesheetController {
         );
     }
 
+    // ================= SUBMIT =================
     @PostMapping("/{id}/submit")
-    public ResponseEntity<ApiResponse<?>> submit(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.SUBMIT_TIMESHEET,
+            resource    = "Timesheet",
+            description = "Employee submits timesheet for approval"
+    )
+    public ResponseEntity<ApiResponse<?>> submit(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -43,8 +57,14 @@ public class TimesheetController {
         );
     }
 
+    // ================= APPROVE =================
     @PostMapping("/{id}/approve")
-    public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.APPROVE_TIMESHEET,
+            resource    = "Timesheet",
+            description = "Timesheet approved"
+    )
+    public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -55,8 +75,14 @@ public class TimesheetController {
         );
     }
 
+    // ================= REJECT =================
     @PostMapping("/{id}/reject")
-    public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.REJECT_TIMESHEET,
+            resource    = "Timesheet",
+            description = "Timesheet rejected"
+    )
+    public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -67,8 +93,9 @@ public class TimesheetController {
         );
     }
 
+    // ================= GET BY ID =================
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -79,10 +106,11 @@ public class TimesheetController {
         );
     }
 
+    // ================= GET BY PERSON AND DATE =================
     @GetMapping("/person/{personId}/date/{date}")
     public ResponseEntity<ApiResponse<?>> getByPersonAndDate(
             @PathVariable Long personId,
-            @PathVariable String date){
+            @PathVariable String date) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -108,8 +136,14 @@ public class TimesheetController {
         );
     }
 
+    // ================= DELETE =================
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.DELETE_TIMESHEET,
+            resource    = "Timesheet",
+            description = "Delete timesheet entry"
+    )
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id) {
 
         service.deleteTimesheet(id);
 

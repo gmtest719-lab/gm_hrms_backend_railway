@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.InternshipDomainRequestDTO;
 import com.gm.hrms.dto.response.InternshipDomainResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
@@ -24,16 +26,19 @@ public class InternshipDomainController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_INTERNSHIP_DOMAIN,
+            resource    = "InternshipDomain",
+            description = "Create internship domain"
+    )
     public ResponseEntity<ApiResponse<InternshipDomainResponseDTO>> create(
             @Valid @RequestBody InternshipDomainRequestDTO dto) {
-
-        InternshipDomainResponseDTO response = service.create(dto);
 
         return ResponseEntity.ok(
                 ApiResponse.<InternshipDomainResponseDTO>builder()
                         .success(true)
                         .message("Internship domain created successfully")
-                        .data(response)
+                        .data(service.create(dto))
                         .build()
         );
     }
@@ -41,17 +46,20 @@ public class InternshipDomainController {
     // ================= UPDATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_INTERNSHIP_DOMAIN,
+            resource    = "InternshipDomain",
+            description = "Update internship domain"
+    )
     public ResponseEntity<ApiResponse<InternshipDomainResponseDTO>> update(
             @PathVariable Long id,
             @Valid @RequestBody InternshipDomainRequestDTO dto) {
-
-        InternshipDomainResponseDTO response = service.update(id, dto);
 
         return ResponseEntity.ok(
                 ApiResponse.<InternshipDomainResponseDTO>builder()
                         .success(true)
                         .message("Internship domain updated successfully")
-                        .data(response)
+                        .data(service.update(id, dto))
                         .build()
         );
     }
@@ -62,13 +70,11 @@ public class InternshipDomainController {
     public ResponseEntity<ApiResponse<InternshipDomainResponseDTO>> getById(
             @PathVariable Long id) {
 
-        InternshipDomainResponseDTO response = service.getById(id);
-
         return ResponseEntity.ok(
                 ApiResponse.<InternshipDomainResponseDTO>builder()
                         .success(true)
                         .message("Internship domain fetched successfully")
-                        .data(response)
+                        .data(service.getById(id))
                         .build()
         );
     }
@@ -92,11 +98,15 @@ public class InternshipDomainController {
         );
     }
 
-    // ================= DELETE (SOFT) =================
+    // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(
-            @PathVariable Long id) {
+    @Auditable(
+            action      = AuditAction.DELETE_INTERNSHIP_DOMAIN,
+            resource    = "InternshipDomain",
+            description = "Deactivate internship domain"
+    )
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
 

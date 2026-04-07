@@ -23,16 +23,16 @@ public class LeaveEligibilityRule extends BaseEntity {
     private LeavePolicy leavePolicy;
 
     //  PROBATION
-    @Column(nullable = false)
+    @Column(nullable = false, name = "probation_period_in_months")
     private Integer probationPeriodInMonths;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "allow_comp_off")
     private Boolean allowCompOff;
 
     //  SYSTEM CONTROL
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_active")
     private Boolean isActive;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_system_defined")
     private Boolean isSystemDefined;
 }

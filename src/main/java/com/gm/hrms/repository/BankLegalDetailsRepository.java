@@ -11,6 +11,8 @@ public interface BankLegalDetailsRepository
         extends JpaRepository<BankLegalDetails, Long> {
 
     Optional<BankLegalDetails> findByPersonalInformation(PersonalInformation personalInformation);
+
     Optional<BankLegalDetails> findByPersonalInformationId(Long personalInformationId);
+
 
 }

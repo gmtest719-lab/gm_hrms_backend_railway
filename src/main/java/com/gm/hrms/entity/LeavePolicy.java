@@ -20,15 +20,18 @@ public class LeavePolicy extends BaseEntity {
     private Long id;
 
     // ================= BASIC =================
+    @Column(name = "policy_name")
     private String policyName;
 
     @Column(length = 500)
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "employment_type")
     private EmploymentType employmentType;
 
     private LocalDate effectiveFrom;
+
     private LocalDate effectiveTo;
 
     // ================= RULES =================

@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveTransactionFilterDTO;
 import com.gm.hrms.dto.response.LeaveTransactionResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
@@ -17,8 +19,13 @@ public class LeaveTransactionController {
 
     private final LeaveTransactionQueryService service;
 
-    // ================= GET ALL + FILTER =================
+    // ================= SEARCH =================
     @PostMapping("/search")
+    @Auditable(
+            action      = AuditAction.SEARCH_LEAVE_TRANSACTION,
+            resource    = "LeaveTransaction",
+            description = "Search leave transactions with filter"
+    )
     public ResponseEntity<ApiResponse<PageResponseDTO<LeaveTransactionResponseDTO>>> search(
             @RequestBody(required = false) LeaveTransactionFilterDTO filter,
             @RequestParam(defaultValue = "0") int page,

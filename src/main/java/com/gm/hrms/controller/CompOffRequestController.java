@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.CompOffRequestDTO;
 import com.gm.hrms.dto.response.CompOffResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -20,16 +22,19 @@ public class CompOffRequestController {
 
     // ================= APPLY =================
     @PostMapping
+    @Auditable(
+            action      = AuditAction.APPLY_COMP_OFF,
+            resource    = "CompOffRequest",
+            description = "Employee applies for comp-off"
+    )
     public ResponseEntity<ApiResponse<CompOffResponseDTO>> apply(
             @RequestBody CompOffRequestDTO request) {
-
-        CompOffResponseDTO response = service.apply(request);
 
         return ResponseEntity.ok(
                 ApiResponse.<CompOffResponseDTO>builder()
                         .success(true)
                         .message("Comp-off applied successfully")
-                        .data(response)
+                        .data(service.apply(request))
                         .build()
         );
     }
@@ -37,17 +42,20 @@ public class CompOffRequestController {
     // ================= APPROVE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}/approve")
+    @Auditable(
+            action      = AuditAction.APPROVE_COMP_OFF,
+            resource    = "CompOffRequest",
+            description = "Approve comp-off request"
+    )
     public ResponseEntity<ApiResponse<CompOffResponseDTO>> approve(
             @PathVariable Long id,
             @RequestParam Long approverId) {
-
-        CompOffResponseDTO response = service.approve(id, approverId);
 
         return ResponseEntity.ok(
                 ApiResponse.<CompOffResponseDTO>builder()
                         .success(true)
                         .message("Comp-off approved successfully")
-                        .data(response)
+                        .data(service.approve(id, approverId))
                         .build()
         );
     }
@@ -55,33 +63,34 @@ public class CompOffRequestController {
     // ================= REJECT =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}/reject")
+    @Auditable(
+            action      = AuditAction.REJECT_COMP_OFF,
+            resource    = "CompOffRequest",
+            description = "Reject comp-off request"
+    )
     public ResponseEntity<ApiResponse<CompOffResponseDTO>> reject(
             @PathVariable Long id,
             @RequestParam Long approverId) {
-
-        CompOffResponseDTO response = service.reject(id, approverId);
 
         return ResponseEntity.ok(
                 ApiResponse.<CompOffResponseDTO>builder()
                         .success(true)
                         .message("Comp-off rejected successfully")
-                        .data(response)
+                        .data(service.reject(id, approverId))
                         .build()
         );
     }
 
-    // ================= GET USER REQUESTS =================
+    // ================= GET BY USER =================
     @GetMapping("/user/{personalId}")
     public ResponseEntity<ApiResponse<List<CompOffResponseDTO>>> getByUser(
             @PathVariable Long personalId) {
-
-        List<CompOffResponseDTO> response = service.getByUser(personalId);
 
         return ResponseEntity.ok(
                 ApiResponse.<List<CompOffResponseDTO>>builder()
                         .success(true)
                         .message("Comp-off requests fetched successfully")
-                        .data(response)
+                        .data(service.getByUser(personalId))
                         .build()
         );
     }

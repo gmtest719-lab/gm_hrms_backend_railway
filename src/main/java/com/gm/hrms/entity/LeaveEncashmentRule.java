@@ -25,20 +25,21 @@ public class LeaveEncashmentRule extends BaseEntity {
 
     // ================= RULE =================
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_enabled")
     private Boolean isEnabled;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "max_encashment")
     private Integer maxEncashment;   // max leaves allowed to encash
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "timing")
     private EncashmentTiming timing; // YEAR_END / RESIGNATION / BOTH
 
     // ================= SYSTEM =================
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_active")
     private Boolean isActive;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_system_defined")
     private Boolean isSystemDefined;
 }

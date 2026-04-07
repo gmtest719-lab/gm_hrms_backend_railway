@@ -26,9 +26,12 @@ public class AttendanceBreakLog extends BaseEntity {
     @JoinColumn(name = "break_policy_id")
     private BreakPolicy breakPolicy;
 
+    @Column(name = "break_start")
     private LocalDateTime breakStart;
 
+    @Column(name = "break_end")
     private LocalDateTime breakEnd;
 
+    @Column(name = "duration_minutes")
     private Integer durationMinutes;
 }

@@ -26,6 +26,7 @@ public class Address extends BaseEntity {
 
     private String state;
 
+    @Column(name = "pin_code")
     private String pinCode;
 
     private String country;

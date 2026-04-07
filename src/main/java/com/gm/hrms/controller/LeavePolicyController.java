@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeavePolicyRequestDTO;
 import com.gm.hrms.dto.response.LeavePolicyResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
@@ -22,16 +24,19 @@ public class LeavePolicyController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_LEAVE_POLICY,
+            resource    = "LeavePolicy",
+            description = "Create leave policy"
+    )
     public ResponseEntity<ApiResponse<LeavePolicyResponseDTO>> create(
             @Valid @RequestBody LeavePolicyRequestDTO request) {
-
-        LeavePolicyResponseDTO response = service.create(request);
 
         return ResponseEntity.ok(
                 ApiResponse.<LeavePolicyResponseDTO>builder()
                         .success(true)
                         .message("Policy created successfully")
-                        .data(response)
+                        .data(service.create(request))
                         .build()
         );
     }
@@ -42,13 +47,11 @@ public class LeavePolicyController {
     public ResponseEntity<ApiResponse<LeavePolicyResponseDTO>> getById(
             @PathVariable Long id) {
 
-        LeavePolicyResponseDTO response = service.getById(id);
-
         return ResponseEntity.ok(
                 ApiResponse.<LeavePolicyResponseDTO>builder()
                         .success(true)
                         .message("Policy fetched successfully")
-                        .data(response)
+                        .data(service.getById(id))
                         .build()
         );
     }
@@ -60,14 +63,11 @@ public class LeavePolicyController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageResponseDTO<LeavePolicyResponseDTO> response =
-                service.getAll(PageRequest.of(page, size));
-
         return ResponseEntity.ok(
                 ApiResponse.<PageResponseDTO<LeavePolicyResponseDTO>>builder()
                         .success(true)
                         .message("Policies fetched successfully")
-                        .data(response)
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }
@@ -75,17 +75,20 @@ public class LeavePolicyController {
     // ================= PUT =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PutMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_LEAVE_POLICY,
+            resource    = "LeavePolicy",
+            description = "Full update of leave policy"
+    )
     public ResponseEntity<ApiResponse<LeavePolicyResponseDTO>> update(
             @PathVariable Long id,
             @Valid @RequestBody LeavePolicyRequestDTO request) {
-
-        LeavePolicyResponseDTO response = service.update(id, request);
 
         return ResponseEntity.ok(
                 ApiResponse.<LeavePolicyResponseDTO>builder()
                         .success(true)
                         .message("Policy updated successfully")
-                        .data(response)
+                        .data(service.update(id, request))
                         .build()
         );
     }
@@ -93,17 +96,20 @@ public class LeavePolicyController {
     // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_LEAVE_POLICY,
+            resource    = "LeavePolicy",
+            description = "Partial update of leave policy"
+    )
     public ResponseEntity<ApiResponse<LeavePolicyResponseDTO>> patch(
             @PathVariable Long id,
             @RequestBody LeavePolicyRequestDTO request) {
-
-        LeavePolicyResponseDTO response = service.patchUpdate(id, request);
 
         return ResponseEntity.ok(
                 ApiResponse.<LeavePolicyResponseDTO>builder()
                         .success(true)
                         .message("Policy updated successfully")
-                        .data(response)
+                        .data(service.patchUpdate(id, request))
                         .build()
         );
     }
@@ -111,6 +117,11 @@ public class LeavePolicyController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_LEAVE_POLICY,
+            resource    = "LeavePolicy",
+            description = "Delete leave policy"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

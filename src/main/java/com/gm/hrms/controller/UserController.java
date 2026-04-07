@@ -1,6 +1,7 @@
 package com.gm.hrms.controller;
 
-import com.gm.hrms.dto.request.*;
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
 
@@ -20,18 +20,22 @@ public class UserController {
 
     private final UserService userService;
 
+    // ================= CREATE =================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @Auditable(
+            action      = AuditAction.CREATE_USER,
+            resource    = "User",
+            description = "Create full user profile (person + role + auth credentials)"
+    )
     public ResponseEntity<ApiResponse<Object>> create(
-
             @RequestParam("personalInformation") String personalInformationJson,
-            @RequestParam(value = "intern", required = false) String internJson,
-            @RequestParam(value = "employee", required = false) String employeeJson,
-            @RequestParam(value = "trainee", required = false) String traineeJson,
-            @RequestParam(value = "profileImage", required = false) MultipartFile profileImage,
+            @RequestParam(value = "intern",    required = false) String internJson,
+            @RequestParam(value = "employee",  required = false) String employeeJson,
+            @RequestParam(value = "trainee",   required = false) String traineeJson,
+            @RequestParam("profileImage") MultipartFile profileImage,
             @RequestParam(required = false) Map<String, MultipartFile> documents,
             @RequestParam(required = false) Map<String, String> reasons
-
     ) throws Exception {
 
         Object response = userService.create(

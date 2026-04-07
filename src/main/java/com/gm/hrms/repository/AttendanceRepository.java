@@ -34,4 +34,10 @@ public interface AttendanceRepository
     WHERE a.id IN :ids
 """)
     List<Attendance> findAllWithCalculationByIds(List<Long> ids);
+    List<Attendance> findByPersonalInformationIdAndAttendanceDateBetween(
+            Long personalInformationId,
+            LocalDate from,
+            LocalDate to
+    );
+
 }

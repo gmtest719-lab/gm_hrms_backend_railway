@@ -31,8 +31,13 @@ public class LeaveBalance extends BaseEntity {
     @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveType leaveType;
 
+    @Column(name = "total_leaves")
     private Double totalLeaves;
+
+    @Column(name = "user_leaves")
     private Double usedLeaves;
+
+    @Column(name = "remaining_leaves")
     private Double remainingLeaves;
 
     private Integer year;

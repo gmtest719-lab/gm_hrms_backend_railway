@@ -40,11 +40,13 @@ public class Attendance extends BaseEntity {
     @JsonIgnore
     private AttendanceCalculation calculation;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "attendance_date")
     private LocalDate attendanceDate;
 
+    @Column(name = "check_in")
     private LocalDateTime checkIn;
 
+    @Column(name = "check_out")
     private LocalDateTime checkOut;
 
     @Enumerated(EnumType.STRING)

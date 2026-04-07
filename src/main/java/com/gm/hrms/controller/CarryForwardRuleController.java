@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.CarryForwardRuleRequestDTO;
 import com.gm.hrms.dto.response.CarryForwardRuleResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -20,33 +22,34 @@ public class CarryForwardRuleController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_CARRY_FORWARD_RULE,
+            resource    = "CarryForwardRule",
+            description = "Create carry forward rule"
+    )
     public ResponseEntity<ApiResponse<CarryForwardRuleResponseDTO>> create(
             @Valid @RequestBody CarryForwardRuleRequestDTO request) {
-
-        CarryForwardRuleResponseDTO response = service.create(request);
 
         return ResponseEntity.ok(
                 ApiResponse.<CarryForwardRuleResponseDTO>builder()
                         .success(true)
                         .message("Carry forward rule created successfully")
-                        .data(response)
+                        .data(service.create(request))
                         .build()
         );
     }
 
-    // ================= GET =================
+    // ================= GET BY POLICY =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/policy/{policyId}")
     public ResponseEntity<ApiResponse<CarryForwardRuleResponseDTO>> getByPolicy(
             @PathVariable Long policyId) {
 
-        CarryForwardRuleResponseDTO response = service.getByPolicy(policyId);
-
         return ResponseEntity.ok(
                 ApiResponse.<CarryForwardRuleResponseDTO>builder()
                         .success(true)
                         .message("Carry forward rule fetched successfully")
-                        .data(response)
+                        .data(service.getByPolicy(policyId))
                         .build()
         );
     }
@@ -54,17 +57,20 @@ public class CarryForwardRuleController {
     // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_CARRY_FORWARD_RULE,
+            resource    = "CarryForwardRule",
+            description = "Update carry forward rule"
+    )
     public ResponseEntity<ApiResponse<CarryForwardRuleResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody CarryForwardRuleRequestDTO request) {
-
-        CarryForwardRuleResponseDTO response = service.patchUpdate(id, request);
 
         return ResponseEntity.ok(
                 ApiResponse.<CarryForwardRuleResponseDTO>builder()
                         .success(true)
                         .message("Carry forward rule updated successfully")
-                        .data(response)
+                        .data(service.patchUpdate(id, request))
                         .build()
         );
     }
@@ -72,6 +78,11 @@ public class CarryForwardRuleController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_CARRY_FORWARD_RULE,
+            resource    = "CarryForwardRule",
+            description = "Delete carry forward rule"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

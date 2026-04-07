@@ -22,11 +22,15 @@ public class AttendanceCalculation extends BaseEntity {
     @JoinColumn(name = "attendance_id")
     private Attendance attendance;
 
+    @Column(name = "work_minutes")
     private Integer workMinutes;
 
+    @Column(name = "break_minutes")
     private Integer breakMinutes;
 
+    @Column(name = "late_minutes")
     private Integer lateMinutes;
 
+    @Column(name = "overtime_minutes")
     private Integer overtimeMinutes;
 }

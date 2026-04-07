@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveTypeRequestDTO;
 import com.gm.hrms.dto.response.LeaveTypeResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
@@ -22,16 +24,19 @@ public class LeaveTypeController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_LEAVE_TYPE,
+            resource    = "LeaveType",
+            description = "Create leave type"
+    )
     public ResponseEntity<ApiResponse<LeaveTypeResponseDTO>> create(
             @Valid @RequestBody LeaveTypeRequestDTO request) {
-
-        LeaveTypeResponseDTO response = service.create(request);
 
         return ResponseEntity.ok(
                 ApiResponse.<LeaveTypeResponseDTO>builder()
                         .success(true)
                         .message("Leave type created successfully")
-                        .data(response)
+                        .data(service.create(request))
                         .build()
         );
     }
@@ -42,13 +47,11 @@ public class LeaveTypeController {
     public ResponseEntity<ApiResponse<LeaveTypeResponseDTO>> getById(
             @PathVariable Long id) {
 
-        LeaveTypeResponseDTO response = service.getById(id);
-
         return ResponseEntity.ok(
                 ApiResponse.<LeaveTypeResponseDTO>builder()
                         .success(true)
                         .message("Leave type fetched successfully")
-                        .data(response)
+                        .data(service.getById(id))
                         .build()
         );
     }
@@ -61,32 +64,32 @@ public class LeaveTypeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        PageResponseDTO<LeaveTypeResponseDTO> response =
-                service.getAll(search, PageRequest.of(page, size));
-
         return ResponseEntity.ok(
                 ApiResponse.<PageResponseDTO<LeaveTypeResponseDTO>>builder()
                         .success(true)
                         .message("Leave types fetched successfully")
-                        .data(response)
+                        .data(service.getAll(search, PageRequest.of(page, size)))
                         .build()
         );
     }
 
-    // ================= PATCH UPDATE =================
+    // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_LEAVE_TYPE,
+            resource    = "LeaveType",
+            description = "Update leave type"
+    )
     public ResponseEntity<ApiResponse<LeaveTypeResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody LeaveTypeRequestDTO request) {
-
-        LeaveTypeResponseDTO response = service.update(id, request);
 
         return ResponseEntity.ok(
                 ApiResponse.<LeaveTypeResponseDTO>builder()
                         .success(true)
                         .message("Leave type updated successfully")
-                        .data(response)
+                        .data(service.update(id, request))
                         .build()
         );
     }
@@ -94,6 +97,11 @@ public class LeaveTypeController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_LEAVE_TYPE,
+            resource    = "LeaveType",
+            description = "Delete leave type"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

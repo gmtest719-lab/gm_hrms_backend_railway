@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.ProjectRequestDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.ProjectResponseDTO;
@@ -18,10 +20,15 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    // ================= ADMIN ONLY =================
+    // ================= CREATE =================
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<?>> create(@RequestBody ProjectRequestDTO dto){
+    @Auditable(
+            action      = AuditAction.CREATE_PROJECT,
+            resource    = "Project",
+            description = "Create new project"
+    )
+    public ResponseEntity<ApiResponse<?>> create(@RequestBody ProjectRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -62,12 +69,17 @@ public class ProjectController {
         );
     }
 
-    // ================= ADMIN ONLY =================
+    // ================= UPDATE =================
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @Auditable(
+            action      = AuditAction.UPDATE_PROJECT,
+            resource    = "Project",
+            description = "Update project details"
+    )
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
-            @RequestBody ProjectRequestDTO dto){
+            @RequestBody ProjectRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -81,7 +93,12 @@ public class ProjectController {
     // ================= ADMIN ONLY =================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.DELETE_PROJECT,
+            resource    = "Project",
+            description = "Delete project"
+    )
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id) {
 
         projectService.delete(id);
 

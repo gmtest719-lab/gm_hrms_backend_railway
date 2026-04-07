@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.CompOffRuleRequestDTO;
 import com.gm.hrms.dto.response.CompOffRuleResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -20,16 +22,19 @@ public class CompOffRuleController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_COMP_OFF_RULE,
+            resource    = "CompOffRule",
+            description = "Create comp-off rule"
+    )
     public ResponseEntity<ApiResponse<CompOffRuleResponseDTO>> create(
             @Valid @RequestBody CompOffRuleRequestDTO request) {
-
-        CompOffRuleResponseDTO response = service.create(request);
 
         return ResponseEntity.ok(
                 ApiResponse.<CompOffRuleResponseDTO>builder()
                         .success(true)
                         .message("Comp-off rule created successfully")
-                        .data(response)
+                        .data(service.create(request))
                         .build()
         );
     }
@@ -40,31 +45,32 @@ public class CompOffRuleController {
     public ResponseEntity<ApiResponse<CompOffRuleResponseDTO>> getByPolicy(
             @PathVariable Long policyId) {
 
-        CompOffRuleResponseDTO response = service.getByPolicy(policyId);
-
         return ResponseEntity.ok(
                 ApiResponse.<CompOffRuleResponseDTO>builder()
                         .success(true)
                         .message("Comp-off rule fetched successfully")
-                        .data(response)
+                        .data(service.getByPolicy(policyId))
                         .build()
         );
     }
 
-    // ================= PATCH UPDATE =================
+    // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_COMP_OFF_RULE,
+            resource    = "CompOffRule",
+            description = "Update comp-off rule"
+    )
     public ResponseEntity<ApiResponse<CompOffRuleResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody CompOffRuleRequestDTO request) {
-
-        CompOffRuleResponseDTO response = service.patchUpdate(id, request);
 
         return ResponseEntity.ok(
                 ApiResponse.<CompOffRuleResponseDTO>builder()
                         .success(true)
                         .message("Comp-off rule updated successfully")
-                        .data(response)
+                        .data(service.patchUpdate(id, request))
                         .build()
         );
     }
@@ -72,6 +78,11 @@ public class CompOffRuleController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_COMP_OFF_RULE,
+            resource    = "CompOffRule",
+            description = "Delete comp-off rule"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
