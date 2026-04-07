@@ -1,5 +1,6 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.enums.TimesheetStatus;
 import com.gm.hrms.service.TimesheetReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +40,7 @@ public class TimesheetReportController {
 
     @GetMapping("/status/{status}")
     public ResponseEntity<?> status(
-            @PathVariable String status,
+            @PathVariable TimesheetStatus status,
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate){
         return ResponseEntity.ok(service.byStatus(status,startDate,endDate));

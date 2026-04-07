@@ -1,9 +1,7 @@
 package com.gm.hrms.dto.request;
 
-import com.gm.hrms.dto.response.EmployeeAddressDTO;
-import com.gm.hrms.dto.response.EmployeeContactDTO;
-import com.gm.hrms.enums.RoleType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.Valid;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -12,20 +10,13 @@ import java.time.LocalDate;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmployeeUpdateDTO {
 
-    private String firstName;
-    private String lastName;
-    private String gender;
-    private LocalDate dateOfBirth;
-    private String employeeCode;
-    private LocalDate dateOfJoining;
-    private Integer yearOfExperience;
-    private String employmentType;
-    private Boolean active;
-    private String profileImageUrl;
-    private Long departmentId;
-    private Long designationId;
-    private RoleType role;
+    // ===== PERSONAL (Delegated) =====
+    @Valid
+    private PersonalInformationRequestDTO personalInformation;
 
-    private EmployeeContactDTO contact;
-    private EmployeeAddressDTO address;
+    // ===== CORE =====
+    private String employeeCode;
+
+    // ===== MODULES =====
+    private EmployeeEmploymentRequestDTO employment;
 }

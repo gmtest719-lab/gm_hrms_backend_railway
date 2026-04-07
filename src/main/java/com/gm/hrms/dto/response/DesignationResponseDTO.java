@@ -8,5 +8,10 @@ import lombok.Data;
 public class DesignationResponseDTO {
 
     private Long id;
+
     private String name;
+
+    private String description;
+
+    private Boolean active;
 }

@@ -1,8 +1,10 @@
 package com.gm.hrms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.gm.hrms.enums.AttendanceStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 @Entity
@@ -10,8 +12,8 @@ import java.time.LocalDateTime;
         name = "attendance",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_attendance_employee_date",
-                        columnNames = {"employee_id", "attendance_date"}
+                        name = "uk_attendance_person_date",
+                        columnNames = {"personal_information_id","attendance_date"}
                 )
         }
 )
@@ -26,28 +28,25 @@ public class Attendance extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "attendance_date", nullable = false)
-    private LocalDate date;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "personal_information_id", nullable = false)
+    private PersonalInformation personalInformation;
 
-    @Column(name = "clock_in")
-    private LocalDateTime clockIn;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "work_profile_id")
+    private WorkProfile workProfile;
 
-    @Column(name = "clock_out")
-    private LocalDateTime clockOut;
+    @OneToOne(mappedBy = "attendance", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private AttendanceCalculation calculation;
 
-    @Column(name = "total_working_minutes")
-    private Integer totalWorkingMinutes = 0;
+    @Column(nullable = false)
+    private LocalDate attendanceDate;
 
-    @Column(name = "total_break_minutes")
-    private Integer totalBreakMinutes = 0;
+    private LocalDateTime checkIn;
 
-    @Column(name = "late_in")
-    private Boolean lateIn = false;
+    private LocalDateTime checkOut;
 
-    @Column(name = "half_day")
-    private Boolean halfDay = false;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
+    @Enumerated(EnumType.STRING)
+    private AttendanceStatus status;
 }

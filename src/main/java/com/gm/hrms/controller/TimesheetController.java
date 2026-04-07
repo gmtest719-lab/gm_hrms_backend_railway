@@ -1,9 +1,14 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import com.gm.hrms.dto.response.TimesheetResponseDTO;
+import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.TimesheetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,36 +18,107 @@ public class TimesheetController {
 
     private final TimesheetService service;
 
-    @PostMapping("/{employeeId}")
-    public ResponseEntity<?> create(
-            @PathVariable Long employeeId,
-            @RequestBody TimesheetRequestDTO dto){
+    @PostMapping
+    public ResponseEntity<ApiResponse<?>> createOrUpdate(
+            @RequestBody TimesheetRequestDTO request){
 
-        return ResponseEntity.ok(service.create(employeeId, dto));
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet saved")
+                        .data(service.createOrUpdateTimesheet(request))
+                        .build()
+        );
     }
 
-    @PatchMapping("/submit/{timesheetId}")
-    public ResponseEntity<?> submit(@PathVariable Long timesheetId){
-        return ResponseEntity.ok(service.submit(timesheetId));
+    @PostMapping("/{id}/submit")
+    public ResponseEntity<ApiResponse<?>> submit(@PathVariable Long id){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet submitted")
+                        .data(service.submitTimesheet(id))
+                        .build()
+        );
     }
 
-    @PatchMapping("/approve/{timesheetId}")
-    public ResponseEntity<?> approve(@PathVariable Long timesheetId){
-        return ResponseEntity.ok(service.approve(timesheetId));
+    @PostMapping("/{id}/approve")
+    public ResponseEntity<ApiResponse<?>> approve(@PathVariable Long id){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet approved")
+                        .data(service.approveTimesheet(id))
+                        .build()
+        );
     }
 
-    @PatchMapping("/reject/{timesheetId}")
-    public ResponseEntity<?> reject(@PathVariable Long timesheetId){
-        return ResponseEntity.ok(service.reject(timesheetId));
+    @PostMapping("/{id}/reject")
+    public ResponseEntity<ApiResponse<?>> reject(@PathVariable Long id){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet rejected")
+                        .data(service.rejectTimesheet(id))
+                        .build()
+        );
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet fetched")
+                        .data(service.getTimesheetById(id))
+                        .build()
+        );
+    }
+
+    @GetMapping("/person/{personId}/date/{date}")
+    public ResponseEntity<ApiResponse<?>> getByPersonAndDate(
+            @PathVariable Long personId,
+            @PathVariable String date){
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet fetched")
+                        .data(service.getByPersonAndDate(personId, date))
+                        .build()
+        );
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<?> getAll(){
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<ApiResponse<PageResponseDTO<TimesheetResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<PageResponseDTO<TimesheetResponseDTO>>builder()
+                        .success(true)
+                        .message("Timesheets fetched successfully")
+                        .data(service.getAllTimesheets(PageRequest.of(page, size)))
+                        .build()
+        );
     }
 
-    @GetMapping("/employee/{employeeId}")
-    public ResponseEntity<?> getByEmployee(@PathVariable Long employeeId){
-        return ResponseEntity.ok(service.getByEmployee(employeeId));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
+
+        service.deleteTimesheet(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Timesheet deleted")
+                        .build()
+        );
     }
+
 }

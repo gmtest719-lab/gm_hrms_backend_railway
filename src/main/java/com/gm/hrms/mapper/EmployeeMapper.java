@@ -1,97 +1,81 @@
 package com.gm.hrms.mapper;
 
 import com.gm.hrms.dto.request.EmployeeRequestDTO;
-import com.gm.hrms.dto.response.EmployeeAddressResponseDTO;
-import com.gm.hrms.dto.response.EmployeeContactResponseDTO;
-import com.gm.hrms.dto.response.EmployeeDocumentResponseDTO;
-import com.gm.hrms.dto.response.EmployeeResponseDTO;
+import com.gm.hrms.dto.response.*;
 import com.gm.hrms.entity.*;
-
-import java.util.List;
 
 public class EmployeeMapper {
 
-    public static Employee toEntity(EmployeeRequestDTO dto,
-                                    Department dept,
-                                    Designation desig){
+    private EmployeeMapper() {}
+
+    // ================= CREATE =================
+    public static Employee toEntity(EmployeeRequestDTO dto, String autoCode) {
+
+        if (dto == null) return null;
 
         return Employee.builder()
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .gender(dto.getGender())
-                .dateOfBirth(dto.getDateOfBirth())
-                .employeeCode(dto.getEmployeeCode())
-                .dateOfJoining(dto.getDateOfJoining())
-                .yearOfExperience(dto.getYearOfExperience())
-                .employmentType(dto.getEmploymentType())
-                .active(dto.getActive() != null ? dto.getActive() : true)
-                .profileImageUrl(dto.getProfileImageUrl())
-                .department(dept)
-                .designation(desig)
+                .employeeCode(autoCode)
                 .role(dto.getRole())
                 .build();
     }
 
-    public static EmployeeResponseDTO toResponse(Employee e){
+    // ================= RESPONSE =================
+    public static EmployeeResponseDTO toResponse(Employee e) {
 
-        return EmployeeResponseDTO.builder()
-                .id(e.getId())
-                .firstName(e.getFirstName())
-                .lastName(e.getLastName())
+        if (e == null) return null;
+
+        PersonalInformation p = e.getPersonalInformation();
+        WorkProfile wp = (p != null) ? p.getWorkProfile() : null;
+
+        EmployeeResponseDTO dto = EmployeeResponseDTO.builder()
+                .employeeId(e.getId())
                 .employeeCode(e.getEmployeeCode())
-
-                .departmentName(e.getDepartment().getName())
-                .designationName(e.getDesignation().getName())
-
-                .active(e.getActive())
                 .role(e.getRole())
-
-                .contact(mapContact(e.getContact()))
-                .address(mapAddress(e.getAddress()))
-                .documents(mapDocuments(e.getDocuments()))
-
                 .createdAt(e.getCreatedAt())
                 .updatedAt(e.getUpdatedAt())
                 .build();
+
+        // ================= COMMON =================
+        if (p != null) {
+            BaseUserMapper.mapCommon(dto, p);
+        }
+
+        // ================= WORK PROFILE =================
+        if (wp != null) {
+
+            dto.setBranchName(
+                    wp.getBranch() != null
+                            ? wp.getBranch().getBranchName()
+                            : null
+            );
+
+            dto.setShiftTiming(
+                    wp.getShift() != null
+                            ? wp.getShift().getShiftName()
+                            : null
+            );
+
+            dto.setWorkMode(wp.getWorkMode());
+            dto.setWorkingType(wp.getWorkingType());
+        }
+
+        // ================= EMPLOYMENT =================
+        dto.setEmployment(mapEmployment(e.getEmployment()));
+
+        return dto;
     }
 
-    private static EmployeeContactResponseDTO mapContact(EmployeeContact contact){
+    // ================= EMPLOYMENT =================
+    private static EmployeeEmploymentResponseDTO mapEmployment(EmployeeEmployment emp) {
 
-        if(contact == null) return null;
+        if (emp == null) return null;
 
-        return EmployeeContactResponseDTO.builder()
-                .personalEmail(contact.getPersonalEmail())
-                .officeEmail(contact.getOfficeEmail())
-                .personalPhone(contact.getPersonalPhone())
-                .emergencyPhone(contact.getEmergencyPhone())
+        return EmployeeEmploymentResponseDTO.builder()
+                .dateOfJoining(emp.getDateOfJoining())
+                .yearOfExperience(emp.getYearOfExperience())
+                .ctc(emp.getCtc())
+                .noticePeriod(emp.getNoticePeriod())
+                .previousCompanyNames(emp.getPreviousCompanyNames())
                 .build();
     }
-
-    private static EmployeeAddressResponseDTO mapAddress(EmployeeAddress address){
-
-        if(address == null) return null;
-
-        return EmployeeAddressResponseDTO.builder()
-                .currentAddress(address.getCurrentAddress())
-                .permanentAddress(address.getPermanentAddress())
-                .build();
-    }
-
-
-    private static List<EmployeeDocumentResponseDTO> mapDocuments(List<EmployeeDocument> docs){
-
-        if(docs == null) return List.of();
-
-        return docs.stream()
-                .map(d -> EmployeeDocumentResponseDTO.builder()
-                        .id(d.getId())
-                        .documentType(d.getDocumentType())
-                        .filePath(d.getFilePath())
-                        .build())
-                .toList();
-    }
-
-
-
-
 }

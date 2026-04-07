@@ -1,15 +1,17 @@
 package com.gm.hrms.repository;
 
 import com.gm.hrms.entity.ProjectAssignment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
 public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssignment, Long> {
 
-    List<ProjectAssignment> findByProjectId(Long projectId);
+    Page<ProjectAssignment> findByProjectId(Long projectId, Pageable pageable);
 
-    List<ProjectAssignment> findByEmployeeId(Long employeeId);
+    Page<ProjectAssignment> findByEmployeeId(Long employeeId, Pageable pageable);
 
     boolean existsByProjectIdAndEmployeeId(Long projectId, Long employeeId);
 

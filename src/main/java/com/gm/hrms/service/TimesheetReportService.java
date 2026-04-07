@@ -2,6 +2,7 @@ package com.gm.hrms.service;
 
 import com.gm.hrms.dto.response.TimesheetMonthlyDTO;
 import com.gm.hrms.dto.response.TimesheetReportDTO;
+import com.gm.hrms.enums.TimesheetStatus;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,11 +23,7 @@ public interface TimesheetReportService {
             LocalDate end
     );
 
-    List<TimesheetReportDTO> byStatus(
-            String status,
-            LocalDate start,
-            LocalDate end
-    );
+
 
     List<TimesheetReportDTO> todayAll();
 
@@ -37,4 +34,10 @@ public interface TimesheetReportService {
     List<TimesheetMonthlyDTO> monthly(int month, int year);
 
     TimesheetMonthlyDTO monthlyEmployee(Long empId, int month, int year);
+
+    List<TimesheetReportDTO> byStatus(
+            TimesheetStatus status,
+            LocalDate s,
+            LocalDate e
+    );
 }

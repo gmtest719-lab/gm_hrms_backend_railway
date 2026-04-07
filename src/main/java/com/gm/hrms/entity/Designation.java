@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Designation {
+public class Designation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,4 +18,10 @@ public class Designation {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(length = 500)
+    private String description;
+
+    @Column(nullable = false)
+    private Boolean active = true;
 }

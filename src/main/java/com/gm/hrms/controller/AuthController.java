@@ -1,50 +1,84 @@
 package com.gm.hrms.controller;
 
-import com.gm.hrms.config.CustomUserDetails;
-import com.gm.hrms.config.JwtService;
+import com.gm.hrms.dto.request.ChangePasswordRequestDTO;
 import com.gm.hrms.dto.request.LoginRequestDTO;
+import com.gm.hrms.dto.request.LogoutRequestDTO;
+import com.gm.hrms.dto.request.RefreshTokenRequestDTO;
 import com.gm.hrms.dto.response.LoginResponseDTO;
+import com.gm.hrms.payload.ApiResponse;
+import com.gm.hrms.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final AuthService authService;
 
+    // ⭐ LOGIN
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(
+            @RequestBody LoginRequestDTO request){
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
+        LoginResponseDTO response = authService.login(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.<LoginResponseDTO>builder()
+                        .success(true)
+                        .message("Login successful")
+                        .data(response)
+                        .build()
         );
-
-        CustomUserDetails user =
-                (CustomUserDetails) authentication.getPrincipal();
-
-        String token = jwtService.generateToken(user.getUsername());
-
-        LoginResponseDTO response = LoginResponseDTO.builder()
-                .token(token)
-                .username(user.getUsername())
-                .role(user.getAuthorities().iterator().next().getAuthority())
-                .build();
-
-        return ResponseEntity.ok(response);
     }
 
+    // ⭐ REFRESH TOKEN
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> refresh(
+            @RequestBody RefreshTokenRequestDTO request){
+
+        LoginResponseDTO response =
+                authService.refreshToken(request.getRefreshToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.<LoginResponseDTO>builder()
+                        .success(true)
+                        .message("Token refreshed successfully")
+                        .data(response)
+                        .build()
+        );
+    }
+
+    // ⭐ LOGOUT
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @RequestBody LogoutRequestDTO request){
+
+        authService.logout(request.getRefreshToken());
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Logout successful")
+                        .build()
+        );
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<ApiResponse<?>> changePassword(
+            @RequestBody ChangePasswordRequestDTO request) {
+
+        System.out.println("dsfadfadsfadsf");
+        authService.changePassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.builder()
+                        .success(true)
+                        .message("Password changed successfully")
+                        .build()
+        );
+    }
 
 }

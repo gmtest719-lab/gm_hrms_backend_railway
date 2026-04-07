@@ -1,26 +1,26 @@
 package com.gm.hrms.dto.response;
 
-import com.gm.hrms.mapper.TimesheetStatus;
+import com.gm.hrms.enums.TimesheetStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
 public class TimesheetResponseDTO {
 
     private Long id;
+
     private LocalDate workDate;
-    private Double hours;
-    private String description;
+
+    private String personName;
+
+    private String totalTime;
+
     private TimesheetStatus status;
 
-    private String employeeName;
-    private String projectName;
+    private List<TimesheetEntryResponseDTO> entries;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 }
-

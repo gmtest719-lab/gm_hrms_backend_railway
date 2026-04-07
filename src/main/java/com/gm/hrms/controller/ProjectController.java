@@ -1,10 +1,14 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.ProjectRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import com.gm.hrms.dto.response.ProjectResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.ProjectService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,7 +18,9 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
+    // ================= ADMIN ONLY =================
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> create(@RequestBody ProjectRequestDTO dto){
 
         return ResponseEntity.ok(
@@ -26,7 +32,25 @@ public class ProjectController {
         );
     }
 
+    // ================= ADMIN + HR =================
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    public ResponseEntity<ApiResponse<PageResponseDTO<ProjectResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<PageResponseDTO<ProjectResponseDTO>>builder()
+                        .success(true)
+                        .message("Projects fetched successfully")
+                        .data(projectService.getAll(PageRequest.of(page, size)))
+                        .build()
+        );
+    }
+
+    // ================= ADMIN + HR =================
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
         return ResponseEntity.ok(
@@ -38,18 +62,9 @@ public class ProjectController {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll(){
-
-        return ResponseEntity.ok(
-                ApiResponse.builder()
-                        .success(true)
-                        .message("Projects fetched successfully")
-                        .data(projectService.getAll())
-                        .build()
-        );
-    }
+    // ================= ADMIN ONLY =================
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
             @RequestBody ProjectRequestDTO dto){
@@ -63,7 +78,9 @@ public class ProjectController {
         );
     }
 
+    // ================= ADMIN ONLY =================
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id){
 
         projectService.delete(id);
@@ -76,4 +93,3 @@ public class ProjectController {
         );
     }
 }
-

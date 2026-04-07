@@ -1,11 +1,15 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.DepartmentRequestDTO;
+import com.gm.hrms.dto.response.DepartmentResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.DepartmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,7 +19,8 @@ public class DepartmentController {
 
     private final DepartmentService service;
 
-    //  CREATE
+    // CREATE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<?>> create(
             @Valid @RequestBody DepartmentRequestDTO dto) {
@@ -29,11 +34,12 @@ public class DepartmentController {
         );
     }
 
-    //  UPDATE
-    @PutMapping("/{id}")
+    // UPDATE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> update(
             @PathVariable Long id,
-            @Valid @RequestBody DepartmentRequestDTO dto) {
+            @RequestBody DepartmentRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -44,7 +50,8 @@ public class DepartmentController {
         );
     }
 
-    //  GET BY ID
+    // GET BY ID → Admin + HR
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(
             @PathVariable Long id) {
@@ -58,20 +65,23 @@ public class DepartmentController {
         );
     }
 
-    //  GET ALL
+    // GET ALL → Admin + HR + Employee
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<DepartmentResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<DepartmentResponseDTO>>builder()
                         .success(true)
                         .message("Departments fetched successfully")
-                        .data(service.getAllDepartments())
+                        .data(service.getAllDepartments(PageRequest.of(page, size)))
                         .build()
         );
     }
-
-    //  DELETE
+    // DELETE → Admin Only
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id) {

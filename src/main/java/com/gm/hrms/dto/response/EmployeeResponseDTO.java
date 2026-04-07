@@ -1,32 +1,26 @@
 package com.gm.hrms.dto.response;
 
-import com.gm.hrms.enums.RoleType;
-import lombok.*;
+import com.gm.hrms.enums.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
-@Builder
-public class EmployeeResponseDTO {
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+public class EmployeeResponseDTO extends BaseUserResponseDTO {
 
-    private Long id;
-    private String firstName;
-    private String lastName;
+    private Long employeeId;
+
     private String employeeCode;
+    private String branchName;
+    private String shiftTiming;
+    private WorkMode workMode;
+    private WorkingType workingType;
 
-    private String departmentName;
-    private String designationName;
-
-    private Boolean active;
-    private RoleType role;
-
-    private EmployeeContactResponseDTO contact;
-    private EmployeeAddressResponseDTO address;
-    private List<EmployeeDocumentResponseDTO> documents;
-
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private EmployeeEmploymentResponseDTO employment;
 }
-
-

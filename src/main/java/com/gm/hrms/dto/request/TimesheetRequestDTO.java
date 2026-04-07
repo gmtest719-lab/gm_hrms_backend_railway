@@ -1,26 +1,27 @@
 package com.gm.hrms.dto.request;
 
+import com.gm.hrms.enums.TimesheetStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class TimesheetRequestDTO {
 
     @NotNull
+    private Long personId;
+
+    @NotNull
     private LocalDate workDate;
 
     @NotNull
-    @Min(0)
-    @Max(24)
-    private Double hours;
+    private TimesheetStatus status;
 
-    private String description;
+    private List<TimesheetEntryDTO> entries;
 
-    @NotNull
-    private Long projectId;
 }
-

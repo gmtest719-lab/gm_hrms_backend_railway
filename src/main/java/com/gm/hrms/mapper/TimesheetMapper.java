@@ -1,28 +1,43 @@
 package com.gm.hrms.mapper;
 
+import com.gm.hrms.dto.response.TimesheetEntryResponseDTO;
 import com.gm.hrms.dto.response.TimesheetResponseDTO;
 import com.gm.hrms.entity.Timesheet;
+import com.gm.hrms.entity.TimesheetEntry;
+import com.gm.hrms.util.TimeUtil;
+
+import java.util.stream.Collectors;
 
 public class TimesheetMapper {
 
-    private TimesheetMapper(){}
+    private TimesheetMapper() {}
 
     public static TimesheetResponseDTO toResponse(Timesheet t){
 
         return TimesheetResponseDTO.builder()
                 .id(t.getId())
                 .workDate(t.getWorkDate())
-                .hours(t.getHours())
-                .description(t.getDescription())
-                .status(t.getStatus())
-                .employeeName(
-                        t.getEmployee().getFirstName() + " " +
-                                t.getEmployee().getLastName()
+                .personName(
+                        t.getPerson().getFirstName() + " " +
+                                t.getPerson().getLastName()
                 )
-                .projectName(t.getProject().getProjectName())
-                .createdAt(t.getCreatedAt())
-                .updatedAt(t.getUpdatedAt())
+                .status(t.getStatus())
+                .totalTime(TimeUtil.toHHmm(t.getTotalMinutes()))
+                .entries(
+                        t.getEntries()
+                                .stream()
+                                .map(TimesheetMapper::toEntryDTO) //  use mapper
+                                .collect(Collectors.toList())
+                )
+                .build();
+    }
+    public static TimesheetEntryResponseDTO toEntryDTO(TimesheetEntry e){
+
+        return TimesheetEntryResponseDTO.builder()
+                .projectId(e.getProject().getId())
+                .projectName(e.getProject().getProjectName())
+                .workedTime(TimeUtil.toHHmm(e.getWorkedMinutes()))
+                .description(e.getDescription())
                 .build();
     }
 }
-

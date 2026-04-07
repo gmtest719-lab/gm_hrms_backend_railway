@@ -1,0 +1,80 @@
+package com.gm.hrms.controller;
+
+import com.gm.hrms.dto.request.LeaveEncashmentRuleRequestDTO;
+import com.gm.hrms.dto.response.LeaveEncashmentRuleResponseDTO;
+import com.gm.hrms.payload.ApiResponse;
+import com.gm.hrms.service.LeaveEncashmentRuleService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/leave-encashment-rules")
+@RequiredArgsConstructor
+public class LeaveEncashmentRuleController {
+
+    private final LeaveEncashmentRuleService service;
+
+    // ================= CREATE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @PostMapping
+    public ResponseEntity<ApiResponse<LeaveEncashmentRuleResponseDTO>> create(
+            @Valid @RequestBody LeaveEncashmentRuleRequestDTO request) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<LeaveEncashmentRuleResponseDTO>builder()
+                        .success(true)
+                        .message("Leave encashment rule created successfully")
+                        .data(service.create(request))
+                        .build()
+        );
+    }
+
+    // ================= GET =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping("/policy/{policyId}")
+    public ResponseEntity<ApiResponse<LeaveEncashmentRuleResponseDTO>> getByPolicy(
+            @PathVariable Long policyId) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<LeaveEncashmentRuleResponseDTO>builder()
+                        .success(true)
+                        .message("Leave encashment rule fetched successfully")
+                        .data(service.getByPolicy(policyId))
+                        .build()
+        );
+    }
+
+    // ================= PATCH =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<LeaveEncashmentRuleResponseDTO>> update(
+            @PathVariable Long id,
+            @RequestBody LeaveEncashmentRuleRequestDTO request) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<LeaveEncashmentRuleResponseDTO>builder()
+                        .success(true)
+                        .message("Leave encashment rule updated successfully")
+                        .data(service.patchUpdate(id, request))
+                        .build()
+        );
+    }
+
+    // ================= DELETE =================
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
+
+        service.delete(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.<Void>builder()
+                        .success(true)
+                        .message("Leave encashment rule deleted successfully")
+                        .build()
+        );
+    }
+}

@@ -1,27 +1,27 @@
 package com.gm.hrms.service;
 
+import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
+import com.gm.hrms.dto.request.AttendanceRequestDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
 import java.util.List;
 
 public interface AttendanceService {
 
-    AttendanceResponseDTO clockIn(Long employeeId);
+    AttendanceResponseDTO checkIn(AttendanceRequestDTO dto);
 
-    AttendanceResponseDTO breakIn(Long employeeId);
+    AttendanceResponseDTO checkOut(AttendanceRequestDTO dto);
 
-    AttendanceResponseDTO breakOut(Long employeeId);
+    AttendanceResponseDTO breakStart(AttendanceRequestDTO dto);
 
-    AttendanceResponseDTO clockOut(Long employeeId);
+    AttendanceResponseDTO breakEnd(AttendanceRequestDTO dto);
 
-    AttendanceResponseDTO getToday(Long employeeId);
+    AttendanceResponseDTO getTodayAttendance(Long personalInformationId);
 
-    List<AttendanceResponseDTO> getAll();
+    PageResponseDTO<AttendanceResponseDTO> getAllAttendance(Pageable pageable);
 
-    List<AttendanceResponseDTO> getByEmployee(Long employeeId);
-
-    List<AttendanceResponseDTO> getByDateRange(LocalDate start, LocalDate end);
+    AttendanceResponseDTO correctAttendance(AttendanceCorrectionRequestDTO dto);
 
 }
-

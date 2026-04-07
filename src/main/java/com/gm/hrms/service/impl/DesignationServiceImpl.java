@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.DesignationRequestDTO;
 import com.gm.hrms.dto.response.DesignationResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Designation;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -9,10 +10,11 @@ import com.gm.hrms.mapper.DesignationMapper;
 import com.gm.hrms.repository.DesignationRepository;
 import com.gm.hrms.service.DesignationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +22,24 @@ public class DesignationServiceImpl implements DesignationService {
 
     private final DesignationRepository repository;
 
+    // ================= CREATE =================
+
     @Override
     public DesignationResponseDTO create(DesignationRequestDTO dto) {
 
-        if (repository.existsByName(dto.getName())) {
+        if (repository.existsByNameIgnoreCase(dto.getName())) {
             throw new DuplicateResourceException(
                     "Designation already exists with name: " + dto.getName());
         }
 
-        Designation entity = repository.save(
-                DesignationMapper.toEntity(dto));
+        Designation entity = DesignationMapper.toEntity(dto);
+
+        repository.save(entity);
 
         return DesignationMapper.toResponse(entity);
     }
+
+    // ================= UPDATE =================
 
     @Override
     public DesignationResponseDTO update(Long id, DesignationRequestDTO dto) {
@@ -42,19 +49,23 @@ public class DesignationServiceImpl implements DesignationService {
                         new ResourceNotFoundException(
                                 "Designation not found with id: " + id));
 
-        //  Duplicate Check During Update
-        if (repository.existsByName(dto.getName()) &&
+        // Duplicate check only if name is changing
+        if (dto.getName() != null &&
+                repository.existsByNameIgnoreCase(dto.getName()) &&
                 !entity.getName().equalsIgnoreCase(dto.getName())) {
 
             throw new DuplicateResourceException(
                     "Designation already exists with name: " + dto.getName());
         }
 
-        entity.setName(dto.getName());
+        DesignationMapper.updateEntity(entity, dto);
 
-        return DesignationMapper.toResponse(repository.save(entity));
+        repository.save(entity);
+
+        return DesignationMapper.toResponse(entity);
     }
 
+    // ================= GET BY ID =================
 
     @Override
     public DesignationResponseDTO getById(Long id) {
@@ -67,14 +78,30 @@ public class DesignationServiceImpl implements DesignationService {
         return DesignationMapper.toResponse(entity);
     }
 
-    @Override
-    public List<DesignationResponseDTO> getAll() {
+    // ================= GET ALL =================
 
-        return repository.findAll()
+    @Override
+    public PageResponseDTO<DesignationResponseDTO> getAll(Pageable pageable) {
+
+        Page<Designation> page = repository.findAll(pageable);
+
+        List<DesignationResponseDTO> content = page.getContent()
                 .stream()
                 .map(DesignationMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
+
+        return PageResponseDTO.<DesignationResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
+
+    // ================= DELETE =================
 
     @Override
     public void delete(Long id) {
@@ -84,6 +111,9 @@ public class DesignationServiceImpl implements DesignationService {
                         new ResourceNotFoundException(
                                 "Designation not found with id: " + id));
 
-        repository.delete(entity);
+        // Soft delete recommended
+        entity.setActive(false);
+
+        repository.save(entity);
     }
 }
