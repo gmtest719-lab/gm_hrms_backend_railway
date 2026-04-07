@@ -20,6 +20,8 @@ public class BankLegalDetailsController {
 
     private final BankLegalDetailsService service;
 
+
+
     // ================= SAVE OR UPDATE =================
     @PostMapping("/{personalInformationId}")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
