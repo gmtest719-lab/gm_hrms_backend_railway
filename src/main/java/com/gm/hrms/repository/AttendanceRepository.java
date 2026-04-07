@@ -4,6 +4,7 @@ import com.gm.hrms.entity.Attendance;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface AttendanceRepository
@@ -17,6 +18,12 @@ public interface AttendanceRepository
     boolean existsByPersonalInformationIdAndAttendanceDate(
             Long personalInformationId,
             LocalDate attendanceDate
+    );
+
+    List<Attendance> findByPersonalInformationIdAndAttendanceDateBetween(
+            Long personalInformationId,
+            LocalDate from,
+            LocalDate to
     );
 
 }

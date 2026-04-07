@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.BranchRequestDTO;
 import com.gm.hrms.dto.request.BranchUpdateDTO;
 import com.gm.hrms.dto.response.BranchResponseDTO;
@@ -20,39 +22,48 @@ public class BranchController {
 
     private final BranchService service;
 
+    // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_BRANCH,
+            resource    = "Branch",
+            description = "Create new branch"
+    )
     public ResponseEntity<ApiResponse<BranchResponseDTO>> create(
             @Valid @RequestBody BranchRequestDTO dto) {
-
-        BranchResponseDTO response = service.create(dto);
 
         return ResponseEntity.ok(
                 ApiResponse.<BranchResponseDTO>builder()
                         .success(true)
                         .message("Branch created successfully")
-                        .data(response)
+                        .data(service.create(dto))
                         .build()
         );
     }
 
+    // ================= UPDATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_BRANCH,
+            resource    = "Branch",
+            description = "Update branch details"
+    )
     public ResponseEntity<ApiResponse<BranchResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody BranchUpdateDTO dto) {
-
-        BranchResponseDTO response = service.update(id, dto);
 
         return ResponseEntity.ok(
                 ApiResponse.<BranchResponseDTO>builder()
                         .success(true)
                         .message("Branch updated successfully")
-                        .data(response)
+                        .data(service.update(id, dto))
                         .build()
         );
     }
 
+    // ================= GET BY ID =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BranchResponseDTO>> getById(
@@ -67,6 +78,7 @@ public class BranchController {
         );
     }
 
+    // ================= GET ALL =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<BranchResponseDTO>>> getAll() {
@@ -80,8 +92,14 @@ public class BranchController {
         );
     }
 
+    // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_BRANCH,
+            resource    = "Branch",
+            description = "Deactivate branch"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

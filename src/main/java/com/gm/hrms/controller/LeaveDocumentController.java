@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.response.LeaveDocumentResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.LeaveDocumentService;
@@ -21,13 +23,15 @@ public class LeaveDocumentController {
     // ================= UPLOAD =================
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN','HR')")
     @PostMapping("/{leaveId}")
+    @Auditable(
+            action      = AuditAction.UPLOAD_DOCUMENT,
+            resource    = "LeaveDocument",
+            description = "Upload documents for leave request"
+    )
     public ResponseEntity<ApiResponse<Void>> upload(
-
             @PathVariable Long leaveId,
             @RequestParam Long personalId,
-            @RequestParam List<MultipartFile> files
-
-    ) {
+            @RequestParam List<MultipartFile> files) {
 
         service.upload(leaveId, personalId, files);
 
@@ -43,9 +47,7 @@ public class LeaveDocumentController {
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN','HR')")
     @GetMapping("/{leaveId}")
     public ResponseEntity<ApiResponse<List<LeaveDocumentResponseDTO>>> get(
-
-            @PathVariable Long leaveId
-    ) {
+            @PathVariable Long leaveId) {
 
         return ResponseEntity.ok(
                 ApiResponse.<List<LeaveDocumentResponseDTO>>builder()
@@ -59,6 +61,11 @@ public class LeaveDocumentController {
     // ================= DELETE =================
     @PreAuthorize("hasAnyRole('EMPLOYEE','ADMIN','HR')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_DOCUMENT,
+            resource    = "LeaveDocument",
+            description = "Delete leave document"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

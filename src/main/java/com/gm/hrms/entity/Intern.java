@@ -14,13 +14,12 @@ public class Intern extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, name = "intern_code")
     private String internCode;
 
     @OneToOne
     @JoinColumn(name = "personal_information_id")
     private PersonalInformation personalInformation;
-
 
     @OneToOne(mappedBy = "intern", cascade = CascadeType.ALL)
     private InternCollegeDetails collegeDetails;

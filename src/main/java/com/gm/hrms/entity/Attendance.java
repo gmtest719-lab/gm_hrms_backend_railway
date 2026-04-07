@@ -35,11 +35,13 @@ public class Attendance extends BaseEntity {
     @JoinColumn(name = "work_profile_id")
     private WorkProfile workProfile;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "attendance_date")
     private LocalDate attendanceDate;
 
+    @Column(name = "check_in")
     private LocalDateTime checkIn;
 
+    @Column(name = "check_out")
     private LocalDateTime checkOut;
 
     @Enumerated(EnumType.STRING)

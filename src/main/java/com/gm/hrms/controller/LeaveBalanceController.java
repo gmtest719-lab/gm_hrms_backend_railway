@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveBalanceFilterDTO;
 import com.gm.hrms.dto.response.LeaveBalanceResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
@@ -17,7 +19,13 @@ public class LeaveBalanceController {
 
     private final LeaveBalanceQueryService service;
 
+    // ================= SEARCH =================
     @PostMapping("/search")
+    @Auditable(
+            action      = AuditAction.SEARCH_LEAVE_BALANCE,
+            resource    = "LeaveBalance",
+            description = "Search leave balances with filter"
+    )
     public ResponseEntity<ApiResponse<PageResponseDTO<LeaveBalanceResponseDTO>>> getAll(
             @RequestBody(required = false) LeaveBalanceFilterDTO filter,
             @RequestParam(defaultValue = "0") int page,

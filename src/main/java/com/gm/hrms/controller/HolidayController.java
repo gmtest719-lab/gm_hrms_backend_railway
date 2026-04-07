@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.HolidayRequestDTO;
 import com.gm.hrms.dto.response.HolidayResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -19,25 +21,30 @@ public class HolidayController {
 
     private final HolidayService service;
 
+    // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_HOLIDAY,
+            resource    = "Holiday",
+            description = "Create holiday — affects org-wide leave calendar"
+    )
     public ResponseEntity<ApiResponse<HolidayResponseDTO>> create(
-            @Valid @RequestBody HolidayRequestDTO dto){
-
-        HolidayResponseDTO response = service.create(dto);
+            @Valid @RequestBody HolidayRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<HolidayResponseDTO>builder()
                         .success(true)
                         .message("Holiday created successfully")
-                        .data(response)
+                        .data(service.create(dto))
                         .build()
         );
     }
 
+    // ================= GET ALL =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<HolidayResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<List<HolidayResponseDTO>>> getAll() {
 
         return ResponseEntity.ok(
                 ApiResponse.<List<HolidayResponseDTO>>builder()
@@ -48,9 +55,11 @@ public class HolidayController {
         );
     }
 
+    // ================= GET BY ID =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<HolidayResponseDTO>> getById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<HolidayResponseDTO>> getById(
+            @PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.<HolidayResponseDTO>builder()
@@ -60,26 +69,36 @@ public class HolidayController {
         );
     }
 
+    // ================= UPDATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_HOLIDAY,
+            resource    = "Holiday",
+            description = "Update holiday — affects org-wide leave calendar"
+    )
     public ResponseEntity<ApiResponse<HolidayResponseDTO>> update(
             @PathVariable Long id,
-            @RequestBody HolidayRequestDTO dto){
-
-        HolidayResponseDTO response = service.update(id,dto);
+            @RequestBody HolidayRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<HolidayResponseDTO>builder()
                         .success(true)
                         .message("Holiday updated successfully")
-                        .data(response)
+                        .data(service.update(id, dto))
                         .build()
         );
     }
 
+    // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.DELETE_HOLIDAY,
+            resource    = "Holiday",
+            description = "Delete holiday"
+    )
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
 

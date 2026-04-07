@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.ShiftRequestDTO;
 import com.gm.hrms.dto.response.ShiftResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -19,24 +21,29 @@ public class ShiftController {
 
     private final ShiftService service;
 
+    // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_SHIFT,
+            resource    = "Shift",
+            description = "Create new shift"
+    )
     public ResponseEntity<ApiResponse<ShiftResponseDTO>> create(
-            @Valid @RequestBody ShiftRequestDTO dto){
-
-        ShiftResponseDTO response = service.create(dto);
+            @Valid @RequestBody ShiftRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<ShiftResponseDTO>builder()
                         .success(true)
                         .message("Shift created successfully")
-                        .data(response)
+                        .data(service.create(dto))
                         .build()
         );
     }
 
+    // ================= GET ALL =================
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ShiftResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<List<ShiftResponseDTO>>> getAll() {
 
         return ResponseEntity.ok(
                 ApiResponse.<List<ShiftResponseDTO>>builder()
@@ -46,8 +53,9 @@ public class ShiftController {
         );
     }
 
+    // ================= GET BY ID =================
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ShiftResponseDTO>> getById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<ShiftResponseDTO>> getById(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 ApiResponse.<ShiftResponseDTO>builder()
@@ -57,8 +65,14 @@ public class ShiftController {
         );
     }
 
+    // ================= DELETE =================
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id){
+    @Auditable(
+            action      = AuditAction.DELETE_SHIFT,
+            resource    = "Shift",
+            description = "Delete shift"
+    )
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);
 

@@ -17,30 +17,30 @@ public class CompOffRule extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔥 POLICY LINK (1 policy = 1 rule)
+    // POLICY LINK (1 policy = 1 rule)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "policy_id", nullable = false)
     private LeavePolicy leavePolicy;
 
     // ================= RULE CONFIG =================
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_enabled")
     private Boolean isEnabled;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "approval_required")
     private Boolean approvalRequired;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "max_per_month")
     private Integer maxPerMonth;   // e.g. 2 comp off/month
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "expiry_days")
     private Integer expiryDays;    // e.g. 30 days validity
 
     // ================= SYSTEM =================
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_active")
     private Boolean isActive;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "is_system_defined")
     private Boolean isSystemDefined;
 }

@@ -23,11 +23,14 @@ public class AttendanceLog extends BaseEntity {
     @JoinColumn(name = "personal_information_id", nullable = false)
     private PersonalInformation personalInformation;
 
+    @Column(name = "log_time")
     private LocalDateTime logTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "log_type")
     private AttendanceLogType logType;
 
+    @Column(name = "device_type")
     private String deviceType;
 
 }

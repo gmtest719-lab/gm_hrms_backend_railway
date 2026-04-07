@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveRequestDTO;
 import com.gm.hrms.dto.response.LeaveRequestResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -22,6 +24,11 @@ public class LeaveRequestController {
     // ================= APPLY =================
     @PreAuthorize("hasAnyRole('EMPLOYEE','INTERN','TRAINEE')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.APPLY_LEAVE,
+            resource    = "LeaveRequest",
+            description = "Employee applies for leave"
+    )
     public ResponseEntity<ApiResponse<LeaveRequestResponseDTO>> apply(
             @Valid @RequestBody LeaveRequestDTO dto) {
 
@@ -39,6 +46,11 @@ public class LeaveRequestController {
     // ================= APPROVE =================
     @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
     @PatchMapping("/{id}/approve")
+    @Auditable(
+            action      = AuditAction.APPROVE_LEAVE,
+            resource    = "LeaveRequest",
+            description = "Approve leave request"
+    )
     public ResponseEntity<ApiResponse<Void>> approve(
             @PathVariable Long id,
             @RequestParam Long approverId) {
@@ -56,6 +68,11 @@ public class LeaveRequestController {
     // ================= REJECT =================
     @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
     @PatchMapping("/{id}/reject")
+    @Auditable(
+            action      = AuditAction.REJECT_LEAVE,
+            resource    = "LeaveRequest",
+            description = "Reject leave request"
+    )
     public ResponseEntity<ApiResponse<Void>> reject(
             @PathVariable Long id,
             @RequestParam String reason) {
@@ -73,6 +90,11 @@ public class LeaveRequestController {
     // ================= CANCEL =================
     @PreAuthorize("hasAnyRole('EMPLOYEE','INTERN','TRAINEE','ADMIN','HR')")
     @PatchMapping("/{id}/cancel")
+    @Auditable(
+            action      = AuditAction.CANCEL_LEAVE,
+            resource    = "LeaveRequest",
+            description = "Cancel leave request"
+    )
     public ResponseEntity<ApiResponse<Void>> cancel(@PathVariable Long id) {
 
         service.cancel(id);
@@ -105,6 +127,11 @@ public class LeaveRequestController {
     // ================= REQUEST DOCUMENT =================
     @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
     @PatchMapping("/{id}/request-document")
+    @Auditable(
+            action      = AuditAction.REQUEST_DOCUMENT,
+            resource    = "LeaveRequest",
+            description = "Request supporting document for leave"
+    )
     public ResponseEntity<ApiResponse<Void>> requestDocument(@PathVariable Long id) {
 
         service.requestDocument(id);

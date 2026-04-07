@@ -26,12 +26,18 @@ public class InternInternshipDetails extends BaseEntity {
     @JoinColumn(name = "domain_id")
     private InternshipDomain domain;
 
+    @Column(name = "start_date")
     private LocalDate startDate;
+
+    @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "training_period_months")
     private Integer trainingPeriodMonths;
+
     private Double stipend;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "internship_type")
     private InternShipType internshipType;
 }

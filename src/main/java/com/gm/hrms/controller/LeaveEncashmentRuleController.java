@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveEncashmentRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveEncashmentRuleResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -20,6 +22,11 @@ public class LeaveEncashmentRuleController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_ENCASHMENT_RULE,
+            resource    = "LeaveEncashmentRule",
+            description = "Create leave encashment rule"
+    )
     public ResponseEntity<ApiResponse<LeaveEncashmentRuleResponseDTO>> create(
             @Valid @RequestBody LeaveEncashmentRuleRequestDTO request) {
 
@@ -50,6 +57,11 @@ public class LeaveEncashmentRuleController {
     // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_ENCASHMENT_RULE,
+            resource    = "LeaveEncashmentRule",
+            description = "Update leave encashment rule"
+    )
     public ResponseEntity<ApiResponse<LeaveEncashmentRuleResponseDTO>> update(
             @PathVariable Long id,
             @RequestBody LeaveEncashmentRuleRequestDTO request) {
@@ -66,6 +78,11 @@ public class LeaveEncashmentRuleController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_ENCASHMENT_RULE,
+            resource    = "LeaveEncashmentRule",
+            description = "Delete leave encashment rule"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

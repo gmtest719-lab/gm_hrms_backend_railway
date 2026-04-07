@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveApplicationRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveApplicationRuleResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -22,6 +24,11 @@ public class LeaveApplicationRuleController {
     // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_LEAVE_RULE,
+            resource    = "LeaveApplicationRule",
+            description = "Create leave application rule"
+    )
     public ResponseEntity<ApiResponse<LeaveApplicationRuleResponseDTO>> create(
             @Valid @RequestBody LeaveApplicationRuleRequestDTO request) {
 
@@ -65,6 +72,11 @@ public class LeaveApplicationRuleController {
     // ================= PATCH =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.UPDATE_LEAVE_RULE,
+            resource    = "LeaveApplicationRule",
+            description = "Update leave application rule"
+    )
     public ResponseEntity<ApiResponse<LeaveApplicationRuleResponseDTO>> patch(
             @PathVariable Long id,
             @RequestBody LeaveApplicationRuleRequestDTO request) {
@@ -81,6 +93,11 @@ public class LeaveApplicationRuleController {
     // ================= DELETE =================
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.DELETE_LEAVE_RULE,
+            resource    = "LeaveApplicationRule",
+            description = "Delete leave application rule"
+    )
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
 
         service.delete(id);

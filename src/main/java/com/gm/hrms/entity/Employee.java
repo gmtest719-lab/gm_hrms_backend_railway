@@ -22,12 +22,9 @@ public class Employee extends BaseEntity {
     @Column(nullable = false, unique = true, name = "employee_code")
     private String employeeCode;
 
-
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private RoleType role;
-
 
     // ================= MODULES =================
 

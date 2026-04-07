@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
 import com.gm.hrms.dto.request.AttendanceRequestDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
@@ -19,9 +21,15 @@ public class AttendanceController {
 
     private final AttendanceService service;
 
+    // ================= CHECK IN =================
     @PostMapping("/check-in")
+    @Auditable(
+            action      = AuditAction.ATTENDANCE_CHECK_IN,
+            resource    = "Attendance",
+            description = "Employee check-in"
+    )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> checkIn(
-            @RequestBody AttendanceRequestDTO dto){
+            @RequestBody AttendanceRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -32,9 +40,15 @@ public class AttendanceController {
         );
     }
 
+    // ================= CHECK OUT =================
     @PostMapping("/check-out")
+    @Auditable(
+            action      = AuditAction.ATTENDANCE_CHECK_OUT,
+            resource    = "Attendance",
+            description = "Employee check-out"
+    )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> checkOut(
-            @RequestBody AttendanceRequestDTO dto){
+            @RequestBody AttendanceRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -45,9 +59,15 @@ public class AttendanceController {
         );
     }
 
+    // ================= BREAK START =================
     @PostMapping("/break-start")
+    @Auditable(
+            action      = AuditAction.ATTENDANCE_BREAK_START,
+            resource    = "Attendance",
+            description = "Employee break started"
+    )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> breakStart(
-            @RequestBody AttendanceRequestDTO dto){
+            @RequestBody AttendanceRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -58,9 +78,15 @@ public class AttendanceController {
         );
     }
 
+    // ================= BREAK END =================
     @PostMapping("/break-end")
+    @Auditable(
+            action      = AuditAction.ATTENDANCE_BREAK_END,
+            resource    = "Attendance",
+            description = "Employee break ended"
+    )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> breakEnd(
-            @RequestBody AttendanceRequestDTO dto){
+            @RequestBody AttendanceRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -71,9 +97,10 @@ public class AttendanceController {
         );
     }
 
+    // ================= TODAY =================
     @GetMapping("/today/{personalInformationId}")
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> todayAttendance(
-            @PathVariable Long personalInformationId){
+            @PathVariable Long personalInformationId) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -84,8 +111,9 @@ public class AttendanceController {
         );
     }
 
+    // ================= GET ALL =================
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> getAll(){
+    public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> getAll() {
 
         return ResponseEntity.ok(
                 ApiResponse.<List<AttendanceResponseDTO>>builder()
@@ -96,16 +124,22 @@ public class AttendanceController {
         );
     }
 
+    // ================= CORRECT =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping("/correct")
+    @Auditable(
+            action      = AuditAction.CORRECT_ATTENDANCE,
+            resource    = "Attendance",
+            description = "Admin/HR manual attendance correction"
+    )
     public ResponseEntity<?> correctAttendance(
-            @RequestBody AttendanceCorrectionRequestDTO dto){
+            @RequestBody AttendanceCorrectionRequestDTO dto) {
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
                         .success(true)
                         .message("Attendance updated successful")
-                        .data( service.correctAttendance(dto))
+                        .data(service.correctAttendance(dto))
                         .build()
         );
     }

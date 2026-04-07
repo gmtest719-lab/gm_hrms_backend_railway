@@ -26,11 +26,11 @@ public class CompOffRequest extends BaseEntity {
     private PersonalInformation personal;
 
     //  WORK DATE (work that day)
-    @Column(nullable = false)
+    @Column(nullable = false, name = "worked_date")
     private LocalDate workedDate;
 
     // how many days of compoff
-    @Column(nullable = false)
+    @Column(nullable = false, name = "earned_days")
     private Double earnedDays;
 
     private String reason;
@@ -39,9 +39,13 @@ public class CompOffRequest extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private CompOffStatus status;
 
+    @Column(name = "approved_by")
     private Long approvedBy;
+
+    @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
     // ================= SYSTEM =================
+    @Column(name = "is_active")
     private Boolean isActive;
 }

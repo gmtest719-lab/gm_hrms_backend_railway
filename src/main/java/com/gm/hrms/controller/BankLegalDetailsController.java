@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.config.CustomUserDetails;
 import com.gm.hrms.dto.request.BankLegalDetailsRequestDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -18,9 +20,14 @@ public class BankLegalDetailsController {
 
     private final BankLegalDetailsService service;
 
-    //  ADMIN / HR can update
+    // ================= SAVE OR UPDATE =================
     @PostMapping("/{personalInformationId}")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @Auditable(
+            action      = AuditAction.SAVE_BANK_DETAILS,
+            resource    = "BankLegalDetails",
+            description = "Admin/HR saves or updates bank and legal details"
+    )
     public ResponseEntity<ApiResponse<?>> saveOrUpdate(
             @PathVariable Long personalInformationId,
             @Valid @RequestBody BankLegalDetailsRequestDTO requestDTO) {
@@ -34,7 +41,7 @@ public class BankLegalDetailsController {
         );
     }
 
-    //  Employee can only view own details
+    // ================= GET MY DETAILS =================
     @GetMapping("/my-details")
     @PreAuthorize("hasRole('EMPLOYEE')")
     public ResponseEntity<ApiResponse<?>> getMyDetails(

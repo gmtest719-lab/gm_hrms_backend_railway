@@ -30,7 +30,7 @@ public class LeaveType extends BaseEntity {
     private Boolean allowHalfDay;
 
     private Boolean isActive;
-
+    
     @Column(nullable = false)
     private Boolean isCompOff;
 

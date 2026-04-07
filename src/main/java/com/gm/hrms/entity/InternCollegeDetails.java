@@ -18,16 +18,28 @@ public class InternCollegeDetails extends BaseEntity {
     @JoinColumn(name = "intern_id")
     private Intern intern;
 
+    @Column(name = "course_name")
     private String courseName;
+
     private String semester;
+
+    @Column(name = "academic_year")
     private String academicYear;
+
+    @Column(name = "enrollment_number")
     private String enrollmentNumber;
+
+    @Column(name = "college_name")
     private String collegeName;
 
-    @Column(length = 1000)
+    @Column(length = 1000, name = "college_address")
     private String collegeAddress;
 
+    @Column(name = "university_name")
     private String universityName;
+
+    @Column(name = "degree_completion_status")
     private String degreeCompletionStatus;
+
     private Integer year;
 }

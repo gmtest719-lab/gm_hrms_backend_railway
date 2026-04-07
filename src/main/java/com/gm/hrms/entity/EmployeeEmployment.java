@@ -20,8 +20,10 @@ public class EmployeeEmployment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "date_of_joining")
     private LocalDate dateOfJoining;
 
+    @Column(name = "year_of_experience")
     private Integer yearOfExperience;
 
     private Double ctc;
@@ -31,9 +33,9 @@ public class EmployeeEmployment {
             name = "employee_previous_companies",
             joinColumns = @JoinColumn(name = "employee_employment_id")
     )
-    @Column(name = "company_name", nullable = false)
     private List<String> previousCompanyNames;
 
+    @Column(name = "notice_period")
     private Integer noticePeriod;
 
     @OneToOne

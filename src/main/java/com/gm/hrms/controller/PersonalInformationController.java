@@ -1,5 +1,7 @@
 package com.gm.hrms.controller;
 
+import com.gm.hrms.audit.Auditable;
+import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.PersonalInformationRequestDTO;
 import com.gm.hrms.dto.response.PersonalInformationResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -17,9 +19,14 @@ public class PersonalInformationController {
 
     private final PersonalInformationService service;
 
-    // ADMIN & HR only
+    // ================= CREATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
+    @Auditable(
+            action      = AuditAction.CREATE_PERSON,
+            resource    = "PersonalInformation",
+            description = "Create personal information record"
+    )
     public ResponseEntity<ApiResponse<PersonalInformationResponseDTO>> create(
             @Valid @RequestBody PersonalInformationRequestDTO dto) {
 
@@ -32,9 +39,14 @@ public class PersonalInformationController {
         );
     }
 
-    // All authenticated users
+    // ================= GET BY ID =================
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','INTERN')")
     @GetMapping("/{id}")
+    @Auditable(
+            action      = AuditAction.VIEW_PERSON,
+            resource    = "PersonalInformation",
+            description = "View personal information record"
+    )
     public ResponseEntity<ApiResponse<PersonalInformationResponseDTO>> getById(
             @PathVariable Long id) {
 
