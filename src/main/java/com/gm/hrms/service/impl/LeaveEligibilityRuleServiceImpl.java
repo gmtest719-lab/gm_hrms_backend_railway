@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.LeaveEligibilityRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveEligibilityRuleResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.LeaveEligibilityRule;
 import com.gm.hrms.entity.LeavePolicy;
 import com.gm.hrms.exception.DuplicateResourceException;
@@ -12,6 +13,8 @@ import com.gm.hrms.repository.LeaveEligibilityRuleRepository;
 import com.gm.hrms.repository.LeavePolicyRepository;
 import com.gm.hrms.service.LeaveEligibilityRuleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,11 +127,24 @@ public class LeaveEligibilityRuleServiceImpl implements LeaveEligibilityRuleServ
     }
 
     @Override
-    public List<LeaveEligibilityRuleResponseDTO> getAll() {
+    public PageResponseDTO<LeaveEligibilityRuleResponseDTO> getAll(Pageable pageable) {
 
-        return repository.findByIsActiveTrue()
+        Page<LeaveEligibilityRule> page =
+                repository.findByIsActiveTrue(pageable);
+
+        List<LeaveEligibilityRuleResponseDTO> content = page.getContent()
                 .stream()
                 .map(LeaveEligibilityRuleMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<LeaveEligibilityRuleResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 }

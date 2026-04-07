@@ -4,10 +4,12 @@ import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveRequestDTO;
 import com.gm.hrms.dto.response.LeaveRequestResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.LeaveRequestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -107,19 +109,38 @@ public class LeaveRequestController {
         );
     }
 
-    // ================= GET MY LEAVES =================
+
     @PreAuthorize("hasAnyRole('EMPLOYEE','INTERN','TRAINEE','ADMIN','HR')")
     @GetMapping("/{personalId}")
-    public ResponseEntity<ApiResponse<List<LeaveRequestResponseDTO>>> getMyLeaves(
-            @PathVariable Long personalId) {
+    public ResponseEntity<ApiResponse<PageResponseDTO<LeaveRequestResponseDTO>>> getMyLeaves(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @PathVariable Long personalId
+            ) {
 
-        List<LeaveRequestResponseDTO> response = service.getMyLeaves(personalId);
 
         return ResponseEntity.ok(
-                ApiResponse.<List<LeaveRequestResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<LeaveRequestResponseDTO>>builder()
                         .success(true)
-                        .message("Leave requests fetched successfully")
-                        .data(response)
+                        .message("My leave requests fetched successfully")
+                        .data(service.getMyLeaves(personalId, PageRequest.of(page, size)))
+                        .build()
+        );
+    }
+
+
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponseDTO<LeaveRequestResponseDTO>>> getAllLeaves(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<PageResponseDTO<LeaveRequestResponseDTO>>builder()
+                        .success(true)
+                        .message("All leave requests fetched successfully")
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

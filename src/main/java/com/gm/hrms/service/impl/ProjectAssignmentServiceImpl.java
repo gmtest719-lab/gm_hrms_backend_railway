@@ -1,6 +1,7 @@
 package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.ProjectAssignmentRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.ProjectAssignmentResponseDTO;
 import com.gm.hrms.entity.Employee;
 import com.gm.hrms.entity.Project;
@@ -13,6 +14,8 @@ import com.gm.hrms.repository.ProjectAssignmentRepository;
 import com.gm.hrms.repository.ProjectRepository;
 import com.gm.hrms.service.ProjectAssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,20 +64,50 @@ public class ProjectAssignmentServiceImpl implements ProjectAssignmentService {
     }
 
     @Override
-    public List<ProjectAssignmentResponseDTO> getEmployeesByProject(Long projectId) {
+    public PageResponseDTO<ProjectAssignmentResponseDTO> getEmployeesByProject(
+            Long projectId,
+            Pageable pageable) {
 
-        return assignmentRepository.findByProjectId(projectId)
+        Page<ProjectAssignment> page =
+                assignmentRepository.findByProjectId(projectId, pageable);
+
+        List<ProjectAssignmentResponseDTO> content = page.getContent()
                 .stream()
                 .map(ProjectAssignmentMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<ProjectAssignmentResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override
-    public List<ProjectAssignmentResponseDTO> getProjectsByEmployee(Long employeeId) {
+    public PageResponseDTO<ProjectAssignmentResponseDTO> getProjectsByEmployee(
+            Long employeeId,
+            Pageable pageable) {
 
-        return assignmentRepository.findByEmployeeId(employeeId)
+        Page<ProjectAssignment> page =
+                assignmentRepository.findByEmployeeId(employeeId, pageable);
+
+        List<ProjectAssignmentResponseDTO> content = page.getContent()
                 .stream()
                 .map(ProjectAssignmentMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<ProjectAssignmentResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 }

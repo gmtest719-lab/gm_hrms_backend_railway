@@ -3,10 +3,14 @@ package com.gm.hrms.controller;
 import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import com.gm.hrms.dto.response.TimesheetResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.TimesheetService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -117,15 +121,17 @@ public class TimesheetController {
         );
     }
 
-    // ================= GET ALL =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<TimesheetResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<TimesheetResponseDTO>>builder()
                         .success(true)
-                        .message("Timesheets fetched")
-                        .data(service.getAllTimesheets())
+                        .message("Timesheets fetched successfully")
+                        .data(service.getAllTimesheets(PageRequest.of(page, size)))
                         .build()
         );
     }
@@ -148,4 +154,5 @@ public class TimesheetController {
                         .build()
         );
     }
+
 }

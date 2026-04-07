@@ -8,7 +8,10 @@ public class AddressMapper {
 
     private AddressMapper() {}
 
+    // ================= TO ENTITY =================
     public static Address toEntity(AddressRequestDTO dto) {
+
+        if (dto == null) return null; //  safety
 
         return Address.builder()
                 .address(dto.getAddress())
@@ -21,7 +24,10 @@ public class AddressMapper {
                 .build();
     }
 
+    // ================= PATCH =================
     public static void patchEntity(Address entity, AddressRequestDTO dto) {
+
+        if (entity == null || dto == null) return; //  safety
 
         if (dto.getAddress() != null)
             entity.setAddress(dto.getAddress());
@@ -45,7 +51,10 @@ public class AddressMapper {
             entity.setCountry(dto.getCountry());
     }
 
+    // ================= TO RESPONSE =================
     public static AddressResponseDTO toResponse(Address entity) {
+
+        if (entity == null) return null; //
 
         return AddressResponseDTO.builder()
                 .id(entity.getId())

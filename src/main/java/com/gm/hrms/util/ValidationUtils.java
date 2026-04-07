@@ -1,6 +1,6 @@
 package com.gm.hrms.util;
 
-import com.gm.hrms.dto.request.EmployeeBankDetailsRequestDTO;
+import com.gm.hrms.dto.request.BankDetailsRequestDTO;
 import com.gm.hrms.entity.Intern;
 import com.gm.hrms.entity.PersonalInformation;
 import com.gm.hrms.enums.EmploymentType;
@@ -48,7 +48,7 @@ public class ValidationUtils {
 
     public static void validateBankIfRequired(
             PersonalInformation person,
-            EmployeeBankDetailsRequestDTO dto,
+            BankDetailsRequestDTO dto,
             Intern intern
     ) {
 

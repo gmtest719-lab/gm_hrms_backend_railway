@@ -4,6 +4,7 @@ import com.gm.hrms.dto.request.*;
 import com.gm.hrms.dto.response.PersonalInformationResponseDTO;
 import com.gm.hrms.dto.response.UserCreateResponseDTO;
 import com.gm.hrms.enums.EmploymentType;
+import com.gm.hrms.enums.RecordStatus;
 import com.gm.hrms.exception.InvalidRequestException;
 import com.gm.hrms.service.*;
 import lombok.RequiredArgsConstructor;
@@ -55,16 +56,20 @@ public class UserServiceImpl implements UserService {
                 ? mapper.readValue(traineeJson, TraineeRequestDTO.class)
                 : null;
 
+        // ================= STATUS =================
+
+        boolean isDraft = personalInformation.getStatus() == RecordStatus.DRAFT;
+
         // ================= PROFILE IMAGE =================
 
-        if (profileImage == null || profileImage.isEmpty()) {
+        if (!isDraft && (profileImage == null || profileImage.isEmpty())) {
             throw new InvalidRequestException("Profile image is required");
         }
 
-        String profileImagePath = fileStorageService.save(profileImage);
-
-        //  SET IN DTO
-        personalInformation.setProfileImageUrl(profileImagePath);
+        if (profileImage != null && !profileImage.isEmpty()) {
+            String profileImagePath = fileStorageService.save(profileImage);
+            personalInformation.setProfileImageUrl(profileImagePath);
+        }
 
         // ================= PERSONAL =================
 
@@ -87,21 +92,30 @@ public class UserServiceImpl implements UserService {
         return switch (type) {
 
             case EMPLOYEE -> {
-                if (employee == null)
+                if (!isDraft && employee == null)
                     throw new InvalidRequestException("Employee data required");
-                yield employeeService.create(employee, person.getId());
+
+                yield employee != null
+                        ? employeeService.create(employee, person.getId())
+                        : null;
             }
 
             case INTERN -> {
-                if (intern == null)
+                if (!isDraft && intern == null)
                     throw new InvalidRequestException("Intern data required");
-                yield internService.create(intern, person.getId());
+
+                yield intern != null
+                        ? internService.create(intern, person.getId())
+                        : null;
             }
 
             case TRAINEE -> {
-                if (trainee == null)
+                if (!isDraft && trainee == null)
                     throw new InvalidRequestException("Trainee data required");
-                yield traineeService.create(trainee, person.getId());
+
+                yield trainee != null
+                        ? traineeService.create(trainee, person.getId())
+                        : null;
             }
         };
     }

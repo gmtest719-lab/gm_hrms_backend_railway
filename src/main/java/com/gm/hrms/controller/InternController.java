@@ -4,15 +4,18 @@ import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.InternUpdateDTO;
 import com.gm.hrms.dto.response.InternResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.InternService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,6 +41,9 @@ public class InternController {
             @RequestParam(required = false) Map<String, String> reasons
     ) throws Exception {
 
+        InternResponseDTO response =
+                service.update(id, internJson, profileImage, documents, reasons);
+
         return ResponseEntity.ok(
                 ApiResponse.<InternResponseDTO>builder()
                         .success(true)
@@ -58,6 +64,21 @@ public class InternController {
                         .success(true)
                         .message("Intern fetched successfully")
                         .data(service.getById(id))
+                        .build()
+        );
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponseDTO<InternResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<PageResponseDTO<InternResponseDTO>>builder()
+                        .success(true)
+                        .message("Interns fetched successfully")
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

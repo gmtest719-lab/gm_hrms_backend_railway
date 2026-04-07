@@ -1,13 +1,15 @@
 package com.gm.hrms.controller;
-
 import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
+
 import com.gm.hrms.dto.request.AttendanceCorrectionRequestDTO;
 import com.gm.hrms.dto.request.AttendanceRequestDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +31,7 @@ public class AttendanceController {
             description = "Employee check-in"
     )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> checkIn(
-            @RequestBody AttendanceRequestDTO dto) {
+            @RequestBody AttendanceRequestDTO dto){
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -48,7 +50,7 @@ public class AttendanceController {
             description = "Employee check-out"
     )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> checkOut(
-            @RequestBody AttendanceRequestDTO dto) {
+            @RequestBody AttendanceRequestDTO dto){
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -67,7 +69,7 @@ public class AttendanceController {
             description = "Employee break started"
     )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> breakStart(
-            @RequestBody AttendanceRequestDTO dto) {
+            @RequestBody AttendanceRequestDTO dto){
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -86,7 +88,7 @@ public class AttendanceController {
             description = "Employee break ended"
     )
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> breakEnd(
-            @RequestBody AttendanceRequestDTO dto) {
+            @RequestBody AttendanceRequestDTO dto){
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
@@ -111,15 +113,20 @@ public class AttendanceController {
         );
     }
 
-    // ================= GET ALL =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AttendanceResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<AttendanceResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageResponseDTO<AttendanceResponseDTO> response =
+                service.getAllAttendance(PageRequest.of(page, size));
 
         return ResponseEntity.ok(
-                ApiResponse.<List<AttendanceResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<AttendanceResponseDTO>>builder()
                         .success(true)
                         .message("Attendance list fetched")
-                        .data(service.getAllAttendance())
+                        .data(response)
                         .build()
         );
     }
@@ -133,13 +140,13 @@ public class AttendanceController {
             description = "Admin/HR manual attendance correction"
     )
     public ResponseEntity<?> correctAttendance(
-            @RequestBody AttendanceCorrectionRequestDTO dto) {
+            @RequestBody AttendanceCorrectionRequestDTO dto){
 
         return ResponseEntity.ok(
                 ApiResponse.<AttendanceResponseDTO>builder()
                         .success(true)
                         .message("Attendance updated successful")
-                        .data(service.correctAttendance(dto))
+                        .data( service.correctAttendance(dto))
                         .build()
         );
     }

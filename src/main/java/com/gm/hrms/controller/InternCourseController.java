@@ -1,9 +1,12 @@
 package com.gm.hrms.controller;
 
 import com.gm.hrms.dto.request.InternCourseRequestDTO;
+import com.gm.hrms.dto.response.InternCourseResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.InternCourseService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -48,13 +51,15 @@ public class InternCourseController {
     // GET ALL
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<?>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<InternCourseResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<InternCourseResponseDTO>>builder()
                         .success(true)
                         .message("Courses fetched successfully")
-                        .data(service.getAllCourses())
+                        .data(service.getAllCourses(PageRequest.of(page, size)))
                         .build()
         );
     }

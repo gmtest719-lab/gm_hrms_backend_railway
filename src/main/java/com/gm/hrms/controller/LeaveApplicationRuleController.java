@@ -4,10 +4,12 @@ import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.LeaveApplicationRuleRequestDTO;
 import com.gm.hrms.dto.response.LeaveApplicationRuleResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.LeaveApplicationRuleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -58,13 +60,15 @@ public class LeaveApplicationRuleController {
     // ================= GET ALL =================
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<LeaveApplicationRuleResponseDTO>>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<LeaveApplicationRuleResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.<List<LeaveApplicationRuleResponseDTO>>builder()
+                ApiResponse.<PageResponseDTO<LeaveApplicationRuleResponseDTO>>builder()
                         .success(true)
                         .message("Application rules fetched successfully")
-                        .data(service.getAll())
+                        .data(service.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }

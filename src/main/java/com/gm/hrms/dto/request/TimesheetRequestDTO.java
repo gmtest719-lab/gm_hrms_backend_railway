@@ -1,5 +1,6 @@
 package com.gm.hrms.dto.request;
 
+import com.gm.hrms.enums.TimesheetStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,7 +19,9 @@ public class TimesheetRequestDTO {
     @NotNull
     private LocalDate workDate;
 
-    @NotEmpty
+    @NotNull
+    private TimesheetStatus status;
+
     private List<TimesheetEntryDTO> entries;
 
 }

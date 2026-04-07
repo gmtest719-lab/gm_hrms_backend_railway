@@ -19,17 +19,15 @@ public class PersonalInformationContact {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
     private String personalPhone;
 
-    @Column(nullable = false)
     private String emergencyPhone;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String personalEmail;
 
     @Column(unique = true)
-    private String officeEmail; // nullable
+    private String officeEmail;
 
     @OneToOne
     @JoinColumn(name = "personal_information_id", nullable = false)

@@ -4,9 +4,14 @@ import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.config.CustomUserDetails;
 import com.gm.hrms.dto.request.ProjectAssignmentRequestDTO;
+import com.gm.hrms.dto.response.EmployeeResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import com.gm.hrms.dto.response.ProjectAssignmentResponseDTO;
+import com.gm.hrms.dto.response.ProjectResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.ProjectAssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -61,29 +66,48 @@ public class ProjectAssignmentController {
         );
     }
 
-    // ================= GET EMPLOYEES BY PROJECT =================
+    // ================= ADMIN + HR =================
     @GetMapping("/project/{projectId}")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<ApiResponse<?>> getEmployees(@PathVariable Long projectId) {
+    public ResponseEntity<ApiResponse<PageResponseDTO<ProjectAssignmentResponseDTO>>> getEmployees(
+            @PathVariable Long projectId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageResponseDTO<ProjectAssignmentResponseDTO> response =
+                assignmentService.getEmployeesByProject(
+                        projectId,
+                        PageRequest.of(page, size)
+                );
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<ProjectAssignmentResponseDTO>>builder()
                         .success(true)
-                        .data(assignmentService.getEmployeesByProject(projectId))
+                        .message("Employees fetched successfully")
+                        .data(response)
                         .build()
         );
     }
 
-    // ================= MY PROJECTS =================
+    // ================= EMPLOYEE (SELF ONLY) =================
     @GetMapping("/my")
     @PreAuthorize("hasRole('EMPLOYEE')")
-    public ResponseEntity<ApiResponse<?>> getMyProjects(
-            @AuthenticationPrincipal CustomUserDetails user) {
+    public ResponseEntity<ApiResponse<PageResponseDTO<ProjectAssignmentResponseDTO>>> getMyProjects(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        PageResponseDTO<ProjectAssignmentResponseDTO> response =
+                assignmentService.getProjectsByEmployee(
+                        user.getUserId(),
+                        PageRequest.of(page, size)
+                );
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<ProjectAssignmentResponseDTO>>builder()
                         .success(true)
-                        .data(assignmentService.getProjectsByEmployee(user.getUserId()))
+                        .message("Projects fetched successfully")
+                        .data(response)
                         .build()
         );
     }

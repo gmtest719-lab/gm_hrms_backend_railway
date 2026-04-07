@@ -17,6 +17,7 @@ public class TraineeMapper {
                 .traineeId(trainee.getId())
                 .traineeCode(trainee.getTraineeCode())
                 .role(RoleType.TRAINEE)
+                .recordStatus(p!=null ? p.getRecordStatus():null)
                 .stipend(trainee.getStipend())
                 .createdAt(trainee.getCreatedAt())
                 .updatedAt(trainee.getUpdatedAt())

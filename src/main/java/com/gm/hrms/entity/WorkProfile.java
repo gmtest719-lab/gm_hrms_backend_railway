@@ -62,6 +62,5 @@ public class WorkProfile extends BaseEntity {
     private WorkingType workingType;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Status status;
 }

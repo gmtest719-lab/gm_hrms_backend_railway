@@ -3,9 +3,12 @@ package com.gm.hrms.controller;
 import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.ProjectRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
+import com.gm.hrms.dto.response.ProjectResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.ProjectService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -36,24 +39,26 @@ public class ProjectController {
         );
     }
 
-    // ================= GET ALL =================
+    // ================= ADMIN + HR =================
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<ApiResponse<?>> getAll() {
+    public ResponseEntity<ApiResponse<PageResponseDTO<ProjectResponseDTO>>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
 
         return ResponseEntity.ok(
-                ApiResponse.builder()
+                ApiResponse.<PageResponseDTO<ProjectResponseDTO>>builder()
                         .success(true)
                         .message("Projects fetched successfully")
-                        .data(projectService.getAll())
+                        .data(projectService.getAll(PageRequest.of(page, size)))
                         .build()
         );
     }
 
-    // ================= GET BY ID =================
+    // ================= ADMIN + HR =================
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -85,7 +90,7 @@ public class ProjectController {
         );
     }
 
-    // ================= DELETE =================
+    // ================= ADMIN ONLY =================
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Auditable(

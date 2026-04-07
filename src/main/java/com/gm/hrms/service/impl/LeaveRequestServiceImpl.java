@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.LeaveRequestDTO;
 import com.gm.hrms.dto.response.LeaveRequestResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.*;
 import com.gm.hrms.exception.InvalidRequestException;
@@ -13,6 +14,8 @@ import com.gm.hrms.service.LeaveBalanceService;
 import com.gm.hrms.service.LeaveRequestService;
 import com.gm.hrms.service.LeaveValidationEngine;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -172,12 +175,27 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
 
     // ================= GET =================
     @Override
-    public List<LeaveRequestResponseDTO> getMyLeaves(Long personalId) {
+    public PageResponseDTO<LeaveRequestResponseDTO> getMyLeaves(
+            Long personalId,
+            Pageable pageable) {
 
-        return repository.findByPersonalId(personalId)
+        Page<LeaveRequest> page =
+                repository.findByPersonalId(personalId, pageable);
+
+        List<LeaveRequestResponseDTO> content = page.getContent()
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<LeaveRequestResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // ================= VALIDATION =================
@@ -194,6 +212,27 @@ public class LeaveRequestServiceImpl implements LeaveRequestService {
         if (exists) {
             throw new InvalidRequestException("Leave already exists in this date range");
         }
+    }
+
+    @Override
+    public PageResponseDTO<LeaveRequestResponseDTO> getAll(Pageable pageable) {
+
+        Page<LeaveRequest> page = repository.findAll(pageable);
+
+        List<LeaveRequestResponseDTO> content = page.getContent()
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return PageResponseDTO.<LeaveRequestResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     private void validatePolicyMapping(Long policyId, Long leaveTypeId) {

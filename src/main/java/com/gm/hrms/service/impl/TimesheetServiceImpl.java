@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.TimesheetEntryDTO;
 import com.gm.hrms.dto.request.TimesheetRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.TimesheetResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.TimesheetStatus;
@@ -10,6 +11,8 @@ import com.gm.hrms.repository.*;
 import com.gm.hrms.service.TimesheetService;
 import com.gm.hrms.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -27,6 +30,23 @@ public class TimesheetServiceImpl implements TimesheetService {
 
     @Override
     public TimesheetResponseDTO createOrUpdateTimesheet(TimesheetRequestDTO request){
+
+        boolean isDraft = request.getStatus() == TimesheetStatus.DRAFT;
+
+        //  Required validation ONLY for SUBMIT
+        if(!isDraft){
+            if(request.getPersonId() == null){
+                throw new RuntimeException("Person not found");
+            }
+
+            if(request.getWorkDate() == null){
+                throw new RuntimeException("Work date is required");
+            }
+
+            if(request.getEntries() == null || request.getEntries().isEmpty()){
+                throw new RuntimeException("At least one entry is required");
+            }
+        }
 
         PersonalInformation person =
                 personRepository.findById(request.getPersonId())
@@ -49,34 +69,57 @@ public class TimesheetServiceImpl implements TimesheetService {
 
         int totalMinutes = 0;
 
-        for(TimesheetEntryDTO entryDTO : request.getEntries()){
+        //  Handle null entries safely for DRAFT
+        if(request.getEntries() != null){
 
-            Project project =
-                    projectRepository.findById(entryDTO.getProjectId())
-                            .orElseThrow(() -> new RuntimeException("Project not found"));
+            for(TimesheetEntryDTO entryDTO : request.getEntries()){
 
-            int minutes = TimeUtil.toMinutes(entryDTO.getWorkedTime());
+                //  Required validation ONLY for SUBMIT
+                if(!isDraft){
+                    if(entryDTO.getProjectId() == null){
+                        throw new RuntimeException("Project is required");
+                    }
 
-            totalMinutes += minutes;
+                    if(entryDTO.getWorkedTime() == null || entryDTO.getWorkedTime().isBlank()){
+                        throw new RuntimeException("Worked time is required");
+                    }
+                }
 
-            TimesheetEntry entry =
-                    TimesheetEntry.builder()
-                            .timesheet(timesheet)
-                            .project(project)
-                            .workedMinutes(minutes)
-                            .taskName(entryDTO.getTaskName())
-                            .description(entryDTO.getDescription())
-                            .build();
+                // ❗ Skip empty entries in DRAFT
+                if(isDraft && (entryDTO.getProjectId() == null || entryDTO.getWorkedTime() == null)){
+                    continue;
+                }
 
-            timesheet.getEntries().add(entry);
+                Project project =
+                        projectRepository.findById(entryDTO.getProjectId())
+                                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+                int minutes = TimeUtil.toMinutes(entryDTO.getWorkedTime());
+
+                totalMinutes += minutes;
+
+                TimesheetEntry entry =
+                        TimesheetEntry.builder()
+                                .timesheet(timesheet)
+                                .project(project)
+                                .workedMinutes(minutes)
+                                .taskName(entryDTO.getTaskName())
+                                .description(entryDTO.getDescription())
+                                .build();
+
+                timesheet.getEntries().add(entry);
+            }
         }
 
-        // validation
-        if(totalMinutes > 480){
+        //  Business validation ONLY for SUBMIT
+        if(!isDraft && totalMinutes > 480){
             throw new RuntimeException("Daily work hours cannot exceed 8 hours");
         }
 
         timesheet.setTotalMinutes(totalMinutes);
+
+        //  Set correct status (DRAFT / SUBMITTED)
+        timesheet.setStatus(request.getStatus());
 
         Timesheet saved = timesheetRepository.save(timesheet);
 
@@ -141,12 +184,24 @@ public class TimesheetServiceImpl implements TimesheetService {
     }
 
     @Override
-    public List<TimesheetResponseDTO> getAllTimesheets(){
+    public PageResponseDTO<TimesheetResponseDTO> getAllTimesheets(Pageable pageable){
 
-        return timesheetRepository.findAll()
+        Page<Timesheet> page = timesheetRepository.findAll(pageable);
+
+        List<TimesheetResponseDTO> content = page.getContent()
                 .stream()
                 .map(TimesheetMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<TimesheetResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
     @Override
     public void deleteTimesheet(Long id){

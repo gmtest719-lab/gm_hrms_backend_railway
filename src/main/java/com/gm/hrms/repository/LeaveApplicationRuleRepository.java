@@ -1,6 +1,8 @@
 package com.gm.hrms.repository;
 
 import com.gm.hrms.entity.LeaveApplicationRule;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,8 +14,7 @@ public interface LeaveApplicationRuleRepository extends JpaRepository<LeaveAppli
 
     Optional<LeaveApplicationRule> findByIdAndIsActiveTrue(Long id);
 
-    List<LeaveApplicationRule> findByIsActiveTrue();
-
+    Page<LeaveApplicationRule> findByIsActiveTrue(Pageable pageable);
     // ================= POLICY BASED =================
 
     Optional<LeaveApplicationRule> findByLeavePolicyIdAndIsActiveTrue(Long policyId);

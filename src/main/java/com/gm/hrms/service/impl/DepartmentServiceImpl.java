@@ -2,6 +2,7 @@ package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.DepartmentRequestDTO;
 import com.gm.hrms.dto.response.DepartmentResponseDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.entity.Department;
 import com.gm.hrms.exception.DuplicateResourceException;
 import com.gm.hrms.exception.ResourceNotFoundException;
@@ -9,6 +10,8 @@ import com.gm.hrms.mapper.DepartmentMapper;
 import com.gm.hrms.repository.DepartmentRepository;
 import com.gm.hrms.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -88,14 +91,25 @@ public class DepartmentServiceImpl implements DepartmentService {
         return DepartmentMapper.toResponse(dept);
     }
 
-    // GET ALL
     @Override
-    public List<DepartmentResponseDTO> getAllDepartments() {
+    public PageResponseDTO<DepartmentResponseDTO> getAllDepartments(Pageable pageable) {
 
-        return repository.findAll()
+        Page<Department> page = repository.findAll(pageable);
+
+        List<DepartmentResponseDTO> content = page.getContent()
                 .stream()
                 .map(DepartmentMapper::toResponse)
-                .collect(Collectors.toList());
+                .toList();
+
+        return PageResponseDTO.<DepartmentResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     // DELETE

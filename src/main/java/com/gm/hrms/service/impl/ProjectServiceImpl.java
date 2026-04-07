@@ -1,6 +1,7 @@
 package com.gm.hrms.service.impl;
 
 import com.gm.hrms.dto.request.ProjectRequestDTO;
+import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.dto.response.ProjectResponseDTO;
 import com.gm.hrms.entity.Project;
 import com.gm.hrms.exception.DuplicateResourceException;
@@ -9,6 +10,8 @@ import com.gm.hrms.mapper.ProjectMapper;
 import com.gm.hrms.repository.ProjectRepository;
 import com.gm.hrms.service.ProjectService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,12 +62,24 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public List<ProjectResponseDTO> getAll() {
+    public PageResponseDTO<ProjectResponseDTO> getAll(Pageable pageable) {
 
-        return projectRepository.findAll()
+        Page<Project> page = projectRepository.findAll(pageable);
+
+        List<ProjectResponseDTO> content = page.getContent()
                 .stream()
                 .map(ProjectMapper::toResponse)
                 .toList();
+
+        return PageResponseDTO.<ProjectResponseDTO>builder()
+                .content(content)
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
     }
 
     @Override

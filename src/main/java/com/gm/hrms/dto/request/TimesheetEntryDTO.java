@@ -10,7 +10,6 @@ public class TimesheetEntryDTO {
     @NotNull
     private Long projectId;
 
-    @NotBlank
     private String workedTime; // HH:mm
 
     private String taskName;
