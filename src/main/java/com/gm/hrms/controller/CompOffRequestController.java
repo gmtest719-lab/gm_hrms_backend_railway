@@ -21,6 +21,7 @@ public class CompOffRequestController {
     private final CompOffRequestService service;
 
     // ================= APPLY =================
+    @PreAuthorize("hasAnyRole('EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping
     @Auditable(
             action      = AuditAction.APPLY_COMP_OFF,
@@ -82,6 +83,7 @@ public class CompOffRequestController {
     }
 
     // ================= GET BY USER =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/user/{personalId}")
     public ResponseEntity<ApiResponse<List<CompOffResponseDTO>>> getByUser(
             @PathVariable Long personalId) {

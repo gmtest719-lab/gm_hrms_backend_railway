@@ -9,17 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.io.ByteArrayInputStream;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
+
 
 @Component
 @Slf4j
@@ -42,7 +36,7 @@ public class PayslipDataProvider {
                 // Company
                 .companyName(COMPANY_NAME)
                 .companyAddress(COMPANY_ADDRESS)
-                .logoImage(resolveLogoImage())
+                .logoBase64(resolveLogoBase64())          // ← changed
                 // Period
                 .payslipMonthYear(formatMonthYear(slip))
                 // Employee
@@ -50,7 +44,8 @@ public class PayslipDataProvider {
                 .employeeCode(nullSafe(slip.getEmployeeCode()))
                 .department(nullSafe(slip.getDepartment()))
                 .designation(nullSafe(slip.getDesignation()))
-                .payDate(slip.getPayDate() != null ? slip.getPayDate().format(DATE_FMT) : "")
+                .payDate(slip.getPayDate() != null
+                        ? slip.getPayDate().format(DATE_FMT) : "")
                 .dateOfJoining(slip.getDateOfJoining() != null
                         ? slip.getDateOfJoining().format(DATE_FMT) : "")
                 .gender(nullSafe(slip.getGender()))
@@ -63,7 +58,7 @@ public class PayslipDataProvider {
                 .pfNumber(nullSafe(slip.getPfNumber()))
                 // Attendance
                 .paidDays(slip.getPaidDays() != null ? slip.getPaidDays().intValue() : 0)
-                .lopDays(slip.getLopDays()  != null ? slip.getLopDays().intValue()  : 0)
+                .lopDays(slip.getLopDays()   != null ? slip.getLopDays().intValue()  : 0)
                 // Financials
                 .grossEarnings(orZero(slip.getGrossEarnings()))
                 .totalDeductions(orZero(slip.getTotalDeductions()))
@@ -74,7 +69,7 @@ public class PayslipDataProvider {
                 .build();
     }
 
-    // ── Private helpers
+    // ── Private helpers ───────────────────────────────────────────────────
 
     private List<SalarySlipComponent> sorted(SalarySlip slip, PayrollComponentType type) {
         return slip.getComponents().stream()
@@ -88,13 +83,12 @@ public class PayslipDataProvider {
                                        List<SalarySlipComponent> deductions) {
         int max = Math.max(earnings.size(), deductions.size());
         List<PayslipRow> rows = new ArrayList<>(max);
-
         for (int i = 0; i < max; i++) {
             rows.add(PayslipRow.builder()
-                    .earningName   (i < earnings.size()   ? earnings.get(i).getComponentName()   : "")
-                    .earningAmount (i < earnings.size()   ? earnings.get(i).getAmount()           : null)
-                    .deductionName (i < deductions.size() ? deductions.get(i).getComponentName() : "")
-                    .deductionAmount(i < deductions.size()? deductions.get(i).getAmount()         : null)
+                    .earningName   (i < earnings.size()   ? earnings.get(i).getComponentName()    : "")
+                    .earningAmount (i < earnings.size()   ? earnings.get(i).getAmount()            : null)
+                    .deductionName (i < deductions.size() ? deductions.get(i).getComponentName()  : "")
+                    .deductionAmount(i < deductions.size()? deductions.get(i).getAmount()          : null)
                     .build());
         }
         return rows;
@@ -106,22 +100,18 @@ public class PayslipDataProvider {
                 + " " + slip.getYear();
     }
 
-    private Image resolveLogoImage() {
+    private String resolveLogoBase64() {
         try {
             byte[] bytes = new ClassPathResource("static/images/gmt-logo.png")
                     .getContentAsByteArray();
-            return ImageIO.read(new ByteArrayInputStream(bytes));
+            String b64 = Base64.getEncoder().encodeToString(bytes);
+            return "data:image/png;base64," + b64;
         } catch (Exception e) {
             log.warn("Company logo not found at static/images/gmt-logo.png — skipping");
             return null;
         }
     }
 
-    private static String nullSafe(String value) {
-        return value != null ? value : "";
-    }
-
-    private static double orZero(Double value) {
-        return value != null ? value : 0.0;
-    }
+    private static String nullSafe(String value) { return value != null ? value : ""; }
+    private static double orZero(Double value)   { return value != null ? value : 0.0; }
 }

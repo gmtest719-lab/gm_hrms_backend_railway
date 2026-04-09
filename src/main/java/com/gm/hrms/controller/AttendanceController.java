@@ -24,6 +24,7 @@ public class AttendanceController {
     private final AttendanceService service;
 
     // ================= CHECK IN =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/check-in")
     @Auditable(
             action      = AuditAction.ATTENDANCE_CHECK_IN,
@@ -43,6 +44,7 @@ public class AttendanceController {
     }
 
     // ================= CHECK OUT =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/check-out")
     @Auditable(
             action      = AuditAction.ATTENDANCE_CHECK_OUT,
@@ -62,6 +64,7 @@ public class AttendanceController {
     }
 
     // ================= BREAK START =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/break-start")
     @Auditable(
             action      = AuditAction.ATTENDANCE_BREAK_START,
@@ -81,6 +84,7 @@ public class AttendanceController {
     }
 
     // ================= BREAK END =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/break-end")
     @Auditable(
             action      = AuditAction.ATTENDANCE_BREAK_END,
@@ -100,6 +104,7 @@ public class AttendanceController {
     }
 
     // ================= TODAY =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/today/{personalInformationId}")
     public ResponseEntity<ApiResponse<AttendanceResponseDTO>> todayAttendance(
             @PathVariable Long personalInformationId) {

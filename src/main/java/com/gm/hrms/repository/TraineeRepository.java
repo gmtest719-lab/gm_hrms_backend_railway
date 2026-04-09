@@ -9,13 +9,10 @@ public interface TraineeRepository extends JpaRepository<Trainee, Long> {
 
     boolean existsByTraineeCode(String traineeCode);
 
-    //  REQUIRED FOR UPDATE (avoid duplicate with self)
     boolean existsByTraineeCodeAndIdNot(String traineeCode, Long id);
 
-    //  OPTIONAL (good practice)
     Optional<Trainee> findByTraineeCode(String traineeCode);
 
-    //  OPTIONAL (consistency with Intern)
     boolean existsByPersonalInformationId(Long personalInformationId);
 
     Optional<Trainee> findByPersonalInformationId(Long personalId);

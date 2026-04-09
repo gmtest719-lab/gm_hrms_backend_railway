@@ -2,14 +2,14 @@ package com.gm.hrms.audit;
 
 public enum AuditAction {
 
-    // ── Auth ──────────────────────────────────────────────
+    // ── Auth
     LOGIN,
     LOGOUT,
     REFRESH_TOKEN,
     CHANGE_PASSWORD,
     CREATE_AUTH,
 
-    // ── Employee / Person ─────────────────────────────────
+    // ── Employee / Person
     CREATE_EMPLOYEE,
     UPDATE_EMPLOYEE,
     DELETE_EMPLOYEE,
@@ -17,47 +17,47 @@ public enum AuditAction {
     CREATE_PERSON,
     VIEW_PERSON,
 
-    // ── Leave Request (workflow) ───────────────────────────
+    // ── Leave Request (workflow)
     APPLY_LEAVE,
     APPROVE_LEAVE,
     REJECT_LEAVE,
     CANCEL_LEAVE,
     REQUEST_DOCUMENT,
 
-    // ── Leave Balance / Transaction ────────────────────────
+    // ── Leave Balance / Transaction
     SEARCH_LEAVE_BALANCE,
     SEARCH_LEAVE_TRANSACTION,
 
-    // ── Leave Policy ──────────────────────────────────────
+    // ── Leave Policy
     CREATE_LEAVE_POLICY,
     UPDATE_LEAVE_POLICY,
     DELETE_LEAVE_POLICY,
 
-    // ── Leave Type ────────────────────────────────────────
+    // ── Leave Type
     CREATE_LEAVE_TYPE,
     UPDATE_LEAVE_TYPE,
     DELETE_LEAVE_TYPE,
 
-    // ── Leave Application Rule ────────────────────────────
+    // ── Leave Application Rule
     CREATE_LEAVE_RULE,
     UPDATE_LEAVE_RULE,
     DELETE_LEAVE_RULE,
 
-    // ── Leave Encashment Rule ─────────────────────────────
+    // ── Leave Encashment Rule
     CREATE_ENCASHMENT_RULE,
     UPDATE_ENCASHMENT_RULE,
     DELETE_ENCASHMENT_RULE,
 
-    // ── Leave Document ────────────────────────────────────
+    // ── Leave Document
     UPLOAD_DOCUMENT,
     DELETE_DOCUMENT,
 
-    // ── Policy Mapping ────────────────────────────────────
+    // ── Policy Mapping
     CREATE_POLICY_MAPPING,
     UPDATE_POLICY_MAPPING,
     DELETE_POLICY_MAPPING,
 
-    // ── Generic fallback ─────────────────────────────────
+    // ── Generic fallback
     CREATE,
     UPDATE,
     DELETE,
@@ -65,14 +65,14 @@ public enum AuditAction {
     EXPORT,
 
 
-    // ── Attendance ────────────────────────────────────────
+    // ── Attendance
     ATTENDANCE_CHECK_IN,
     ATTENDANCE_CHECK_OUT,
     ATTENDANCE_BREAK_START,
     ATTENDANCE_BREAK_END,
     CORRECT_ATTENDANCE,
 
-    // ── Timesheet ─────────────────────────────────────────
+    // ── Timesheet
     SAVE_TIMESHEET,
     SUBMIT_TIMESHEET,
     APPROVE_TIMESHEET,
@@ -162,6 +162,17 @@ public enum AuditAction {
     GENERATE_SALARY,
     FINALIZE_SALARY,
 
-    // ── Salary Slip ───────────────────────────────────────────────────────
+    // ── Salary Slip
     DOWNLOAD_SALARY_SLIP,
+
+    VIEW_REPORT,
+
+    VIEW_LEAVE_BALANCE_REPORT,
+    VIEW_LEAVE_HISTORY_REPORT,
+    VIEW_LEAVE_REQUEST_REPORT,
+    VIEW_LEAVE_TYPE_USAGE_REPORT,
+    VIEW_LEAVE_TRENDS_REPORT,
+    VIEW_LEAVE_ENCASHMENT_REPORT,
+    VIEW_LEAVE_APPROVAL_REPORT,
+    EXPORT_LEAVE_REPORT
 }

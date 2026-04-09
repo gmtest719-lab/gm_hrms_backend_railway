@@ -37,6 +37,7 @@ public class LeaveEligibilityRuleController {
     }
 
     // ================= GET =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/policy/{policyId}")
     public ResponseEntity<ApiResponse<LeaveEligibilityRuleResponseDTO>> getByPolicy(
             @PathVariable Long policyId) {

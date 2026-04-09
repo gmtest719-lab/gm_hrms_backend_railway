@@ -40,7 +40,7 @@ public class PersonalInformationController {
     }
 
     // ================= GET BY ID =================
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','INTERN')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','INTERN','TRAINEE')")
     @GetMapping("/{id}")
     @Auditable(
             action      = AuditAction.VIEW_PERSON,

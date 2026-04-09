@@ -35,7 +35,7 @@ public class DesignationController {
     }
 
     //  GET BY ID → ADMIN + HR + EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
 
@@ -49,7 +49,7 @@ public class DesignationController {
     }
 
     //  GET ALL (Pagination) → ADMIN + HR + EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDTO<DesignationResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,

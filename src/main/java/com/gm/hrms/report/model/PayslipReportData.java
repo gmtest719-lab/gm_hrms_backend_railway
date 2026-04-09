@@ -3,22 +3,21 @@ package com.gm.hrms.report.model;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.awt.*;
 import java.util.List;
 
 @Getter
 @Builder
 public class PayslipReportData {
 
-    // Company
+    // ── Company ──────────────────────────────────────────────────────────
     private final String companyName;
     private final String companyAddress;
-    private final Image logoImage;
+    private final String logoBase64;
 
-    // Period
+    // ── Period ───────────────────────────────────────────────────────────
     private final String payslipMonthYear;
 
-    // Employee
+    // ── Employee ─────────────────────────────────────────────────────────
     private final String employeeName;
     private final String employeeCode;
     private final String department;
@@ -27,7 +26,7 @@ public class PayslipReportData {
     private final String dateOfJoining;
     private final String gender;
 
-    // Bank
+    // ── Bank ─────────────────────────────────────────────────────────────
     private final String bankName;
     private final String accountNumber;
     private final String ifscCode;
@@ -35,16 +34,15 @@ public class PayslipReportData {
     private final String panNumber;
     private final String pfNumber;
 
-    // Attendance
+    // ── Attendance ───────────────────────────────────────────────────────
     private final Integer paidDays;
     private final Integer lopDays;
 
-    // Financials
+    // ── Financials ───────────────────────────────────────────────────────
     private final Double grossEarnings;
     private final Double totalDeductions;
     private final Double netPayable;
     private final String netPayableWords;
 
-    // Component rows
     private final List<PayslipRow> rows;
 }

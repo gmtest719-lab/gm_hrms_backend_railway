@@ -21,7 +21,6 @@ public class SalaryGenerationController {
 
     private final SalaryGenerationService service;
 
-    /** Step 1 — Generate (creates DRAFT slips) */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     @Auditable(action = AuditAction.GENERATE_SALARY,
@@ -33,7 +32,6 @@ public class SalaryGenerationController {
                 .data(service.generate(dto)).build());
     }
 
-    /** Step 2 — Finalize (locks slips, enables PDF download) */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/finalize")
     @Auditable(action = AuditAction.FINALIZE_SALARY,

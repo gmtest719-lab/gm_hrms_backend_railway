@@ -114,31 +114,22 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- JasperReports 6.21.3 -->
+		<!-- Thymeleaf (template engine) -->
 		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports</artifactId>
-			<version>6.21.3</version>
-			<exclusions>
-				<!-- exclude old iText pulled transitively -->
-				<exclusion>
-					<groupId>com.lowagie</groupId>
-					<artifactId>itext</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 
+		<!-- OpenHTMLtoPDF (HTML → PDF) -->
 		<dependency>
-			<groupId>net.sf.jasperreports</groupId>
-			<artifactId>jasperreports-fonts</artifactId>
-			<version>6.21.3</version>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-pdfbox</artifactId>
+			<version>1.0.10</version>
 		</dependency>
-
-		<!-- iText for PDF export (compatible with JR 6.x) -->
 		<dependency>
-			<groupId>com.lowagie</groupId>
-			<artifactId>itext</artifactId>
-			<version>2.1.7</version>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-svg-support</artifactId>
+			<version>1.0.10</version>
 		</dependency>
 
 		<!-- Number-to-words -->
@@ -147,6 +138,22 @@
 			<artifactId>icu4j</artifactId>
 			<version>73.2</version>
 		</dependency>
+
+		<!-- PDF: OpenPDF (free iText fork) -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>1.3.43</version>
+		</dependency>
+
+		<!-- Excel: Apache POI -->
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.2.5</version>
+		</dependency>
+
+
 	</dependencies>
 
 	<build>

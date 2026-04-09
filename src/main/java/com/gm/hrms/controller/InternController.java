@@ -2,7 +2,6 @@ package com.gm.hrms.controller;
 
 import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
-import com.gm.hrms.dto.request.InternUpdateDTO;
 import com.gm.hrms.dto.response.InternResponseDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
@@ -15,7 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController

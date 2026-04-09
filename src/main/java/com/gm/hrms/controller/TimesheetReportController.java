@@ -6,6 +6,7 @@ import com.gm.hrms.enums.TimesheetStatus;
 import com.gm.hrms.service.TimesheetReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ public class TimesheetReportController {
     private final TimesheetReportService service;
 
     // ================= DATE RANGE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/date-range")
     @Auditable(
             action      = AuditAction.EXPORT_REPORT,
@@ -32,6 +34,7 @@ public class TimesheetReportController {
     }
 
     // ================= BY EMPLOYEE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/employee/{id}")
     public ResponseEntity<?> employee(
             @PathVariable Long id,
@@ -42,6 +45,7 @@ public class TimesheetReportController {
     }
 
     // ================= BY PROJECT =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/project/{id}")
     public ResponseEntity<?> project(
             @PathVariable Long id,
@@ -52,6 +56,7 @@ public class TimesheetReportController {
     }
 
     // ================= BY STATUS =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/status/{status}")
     @Auditable(
             action      = AuditAction.EXPORT_REPORT,
@@ -67,6 +72,7 @@ public class TimesheetReportController {
     }
 
     // ================= TODAY ALL =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/today")
     @Auditable(
             action      = AuditAction.EXPORT_REPORT,
@@ -78,18 +84,21 @@ public class TimesheetReportController {
     }
 
     // ================= TODAY BY EMPLOYEE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/today/employee/{id}")
     public ResponseEntity<?> todayEmp(@PathVariable Long id) {
         return ResponseEntity.ok(service.todayByEmployee(id));
     }
 
     // ================= TODAY BY PROJECT =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/today/project/{id}")
     public ResponseEntity<?> todayProj(@PathVariable Long id) {
         return ResponseEntity.ok(service.todayByProject(id));
     }
 
     // ================= MONTHLY =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/monthly")
     @Auditable(
             action      = AuditAction.EXPORT_REPORT,
@@ -104,6 +113,7 @@ public class TimesheetReportController {
     }
 
     // ================= MONTHLY BY EMPLOYEE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/monthly/employee/{id}")
     public ResponseEntity<?> monthlyEmp(
             @PathVariable Long id,

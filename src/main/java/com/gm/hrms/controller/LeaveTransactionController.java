@@ -10,6 +10,7 @@ import com.gm.hrms.service.LeaveTransactionQueryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +21,7 @@ public class LeaveTransactionController {
     private final LeaveTransactionQueryService service;
 
     // ================= SEARCH =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping("/search")
     @Auditable(
             action      = AuditAction.SEARCH_LEAVE_TRANSACTION,

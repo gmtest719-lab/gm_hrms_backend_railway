@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        body {
+            font-family: "Noto Sans", "DejaVu Sans", Arial, sans-serif;
+            font-size: 9pt;
+            color: #1a1a1a;
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+        }
+
+        /* ================================================================
+           PAGE WRAPPER
+        ================================================================ */
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 14mm 14mm 14mm 14mm;
+            background: #ffffff;
+        }
+
+        /* ================================================================
+           HEADER
+        ================================================================ */
+        .header {
+            display: table;
+            width: 100%;
+            border-bottom: 1pt solid #dddddd;
+            padding-bottom: 12pt;
+            margin-bottom: 14pt;
+        }
+
+        .header-left {
+            display: table-cell;
+            vertical-align: middle;
+            width: 65%;
+        }
+
+        .header-logo-row {
+            display: table;
+            width: 100%;
+        }
+
+        .header-logo-cell {
+            display: table-cell;
+            vertical-align: middle;
+            padding-right: 12pt;
+            width: 52pt;
+        }
+
+        .header-logo-cell img {
+            width: 46pt;
+            height: auto;
+        }
+
+        .header-company-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            line-height: 1.2;
+        }
+
+        .company-address {
+    font-size: 7.5pt;
+    color: #555;
+    line-height: 1.4;
+    margin-top: 3pt;
+    white-space: normal;
+}
+
+        .header-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            width: 35%;
+        }
+
+        .payslip-label {
+            font-size: 8pt;
+            color: #666666;
+        }
+
+        .payslip-month {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-top: 3pt;
+        }
+
+        /* ================================================================
+           SECTION TITLE
+        ================================================================ */
+        .section-title {
+            font-size: 8pt;
+            font-weight: bold;
+            letter-spacing: 0.8pt;
+            color: #555555;
+            text-transform: uppercase;
+            margin-bottom: 10pt;
+        }
+
+        /* ================================================================
+           EMPLOYEE SUMMARY ROW
+        ================================================================ */
+        .summary-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .summary-left {
+            display: table-cell;
+            vertical-align: top;
+            width: 58%;
+        }
+
+        .summary-right {
+            display: table-cell;
+            vertical-align: top;
+            width: 42%;
+            padding-left: 14pt;
+        }
+
+        /* Employee field rows */
+        .emp-field {
+            display: table;
+            width: 100%;
+            margin-bottom: 7pt;
+        }
+
+        .emp-label {
+            display: table-cell;
+            width: 42%;
+            font-size: 8.5pt;
+            color: #555555;
+            vertical-align: top;
+        }
+
+        .emp-colon {
+            display: table-cell;
+            width: 4%;
+            font-size: 8.5pt;
+            color: #555555;
+            vertical-align: top;
+        }
+
+        .emp-value {
+            display: table-cell;
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            vertical-align: top;
+        }
+
+        /* ================================================================
+           SALARY CARD (right side of summary)
+        ================================================================ */
+        .salary-card {
+            border-radius: 14pt;
+        }
+
+        /* TOP — pinkish background with accent line + amount */
+        .salary-top {
+    background-color: #d6b9ab;
+    padding: 14pt 16pt;
+    border-top-left-radius: 12pt;
+    border-top-right-radius: 12pt;
+}
+        .salary-top-inner {
+            display: table;
+            width: 100%;
+        }
+
+        .accent-line-cell {
+            display: table-cell;
+            vertical-align: middle;
+            width: 6pt;
+            padding-right: 12pt;
+        }
+
+        .accent-line {
+            width: 4pt;
+            height: 36pt;
+            background-color: #c66a3d;
+            border-radius: 2pt;
+        }
+
+        .salary-amount-cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .salary-amount {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            line-height: 1.1;
+        }
+
+        .salary-label {
+            font-size: 8pt;
+            color: #444444;
+            margin-top: 2pt;
+        }
+
+        /* BOTTOM — light grey attendance */
+        .salary-bottom {
+    background-color: #eeeeee;
+    padding: 10pt 16pt;
+    border-bottom-left-radius: 12pt;
+    border-bottom-right-radius: 12pt;
+}
+
+        .days-row {
+            display: table;
+            width: 100%;
+            margin-bottom: 5pt;
+        }
+
+        .days-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .days-key {
+            display: table-cell;
+            font-size: 8.5pt;
+            color: #555555;
+            width: 62%;
+        }
+
+        .days-colon {
+            display: table-cell;
+            font-size: 8.5pt;
+            color: #555555;
+            width: 5%;
+        }
+
+        .days-value {
+            display: table-cell;
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            text-align: right;
+        }
+
+        /* ================================================================
+           DOTTED DIVIDER
+        ================================================================ */
+        .dotted-divider {
+            border: none;
+            border-top: 0.8pt dashed #cccccc;
+            margin: 14pt 0;
+        }
+
+        /* ================================================================
+           BANK DETAILS
+        ================================================================ */
+        .bank-table {
+            display: table;
+            width: 100%;
+        }
+
+        .bank-col-left {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+            padding-right: 20pt;
+        }
+
+        .bank-col-right {
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
+        }
+
+        .bank-field {
+            display: table;
+            width: 100%;
+            margin-bottom: 7pt;
+        }
+
+        .bank-label {
+            display: table-cell;
+            width: 45%;
+            font-size: 8.5pt;
+            color: #555555;
+            vertical-align: top;
+        }
+
+        .bank-colon {
+            display: table-cell;
+            width: 4%;
+            font-size: 8.5pt;
+            color: #555555;
+            vertical-align: top;
+        }
+
+        .bank-value {
+            display: table-cell;
+            font-size: 8.5pt;
+            font-weight: bold;
+            color: #1a1a1a;
+            vertical-align: top;
+        }
+
+        /* ================= TABLE ================= */
+.salary-box {
+    margin-top: 16pt;
+    border: 1pt solid #dcdcdc;
+    border-radius: 10pt;
+    overflow: hidden;
+    background: #fff;
+}
+
+.comp-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* HEADER */
+.comp-table th {
+    font-size: 8pt;
+    padding: 9pt 12pt;
+    text-transform: uppercase;
+    border-bottom: 1pt dashed #d6d6d6; /* FIX */
+}
+
+/* REMOVE HEAVY ROW LINES */
+.comp-table td {
+    padding: 8pt 12pt;
+    border-bottom: none;
+}
+
+.comp-table tbody tr {
+    height: 22pt;
+}
+
+/* LIGHT DIVIDER */
+.comp-table th.col-div,
+.comp-table td.col-div {
+    width: 0.1pt;
+    background: #e5e5e5;
+}
+
+/* AMOUNT ALIGN */
+.col-amt {
+    text-align: right;
+    font-weight: bold;
+}
+
+/* FOOTER */
+.comp-table tfoot tr {
+    background: #f0f0f0;
+}
+
+.comp-table tfoot td {
+    padding: 10pt 12pt;
+    font-weight: bold;
+    border-top: 1pt solid #cccccc;
+}
+
+/* ================= NET PAY ================= */
+.netpay-box {
+    display: table;
+    width: 100%;
+    border: 1pt solid #dddddd;
+    border-radius: 10pt;
+    margin-top: 14pt;
+    overflow: hidden;
+    background: #fafafa;
+}
+
+.netpay-left {
+    display: table-cell;
+    padding: 12pt 16pt;
+}
+
+.net-title {
+    font-size: 9pt;
+    font-weight: bold;
+}
+
+.net-sub {
+    font-size: 7.5pt;
+    color: #888;
+}
+
+.netpay-right {
+    display: table-cell;
+    text-align: right;
+    padding: 1pt 6pt;
+    background: #d6b9ab;
+    border-top-right-radius: 10pt;
+    border-bottom-right-radius: 10pt;
+}
+
+.net-amount {
+    font-size: 13pt;
+    font-weight: bold;
+}
+
+/* ================= WORDS ================= */
+.words-row {
+    text-align: right;
+    margin-top: 10pt;
+    font-size: 8.5pt;
+}
+
+/* ================= FOOTER ================= */
+.footer {
+    margin-top: 12pt;
+    border-top: 1pt solid #dddddd;
+    padding-top: 8pt;
+}
+
+.footer p {
+    font-size: 7.5pt;
+    margin-left: 6pt;
+}
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- ================================================================
+         HEADER
+    ================================================================ -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo-row">
+                <div class="header-logo-cell" th:if="${logoBase64 != null}">
+                    <img th:src="${logoBase64}" alt="Logo"/>
+                </div>
+                <div class="header-company-cell">
+                    <div class="company-name" th:text="${companyName}">G.M. Technosys</div>
+                    <div class="company-address" th:text="${companyAddress}">
+                        719, 7th Floor, SATYAMEV EMINENCE...
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="payslip-label">Payslip for the Month</div>
+            <div class="payslip-month" th:text="${payslipMonthYear}">January 2026</div>
+        </div>
+    </div>
+
+    <!-- ================================================================
+         EMPLOYEE SUMMARY
+    ================================================================ -->
+    <div class="section-title">Employee Summary</div>
+
+    <div class="summary-row">
+
+        <!-- Left: employee fields -->
+        <div class="summary-left">
+
+            <div class="emp-field">
+                <span class="emp-label">Employee Name</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${employeeName}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Employee ID</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${employeeCode}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Department</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${department}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Designation</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${designation}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Pay Date</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${payDate}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Date Of Joining</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${dateOfJoining}">—</span>
+            </div>
+            <div class="emp-field">
+                <span class="emp-label">Gender</span>
+                <span class="emp-colon">:</span>
+                <span class="emp-value" th:text="${gender}">—</span>
+            </div>
+
+        </div>
+
+        <!-- Right: salary card -->
+        <div class="summary-right">
+            <div class="salary-card">
+
+                <!-- Top: accent line + net pay amount -->
+                <div class="salary-top">
+                    <div class="salary-top-inner">
+                        <div class="accent-line-cell">
+                            <div class="accent-line"></div>
+                        </div>
+                        <div class="salary-amount-cell">
+                            <div class="salary-amount" th:text="${netPayable}">&#8377;0.00</div>
+                            <div class="salary-label">Total Net pay</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom: paid/LOP days -->
+                <div class="salary-bottom">
+                    <div class="days-row">
+                        <span class="days-key">Paid Days</span>
+                        <span class="days-colon">:</span>
+                        <span class="days-value" th:text="${paidDays}">0</span>
+                    </div>
+                    <div class="days-row">
+                        <span class="days-key">LOP Days</span>
+                        <span class="days-colon">:</span>
+                        <span class="days-value" th:text="${lopDays}">0</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dotted separator -->
+    <hr class="dotted-divider"/>
+
+    <!-- ================================================================
+         BANK DETAILS
+    ================================================================ -->
+    <div class="bank-table">
+
+        <div class="bank-col-left">
+            <div class="bank-field">
+                <span class="bank-label">Bank Name</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${bankName}">—</span>
+            </div>
+            <div class="bank-field">
+                <span class="bank-label">Bank IFSC</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${ifscCode}">—</span>
+            </div>
+            <div class="bank-field">
+                <span class="bank-label">PAN Number</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${panNumber}">—</span>
+            </div>
+        </div>
+
+        <div class="bank-col-right">
+            <div class="bank-field">
+                <span class="bank-label">Bank Account Number</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${accountNumber}">—</span>
+            </div>
+            <div class="bank-field">
+                <span class="bank-label">Payment Mode</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${paymentMode}">—</span>
+            </div>
+            <div class="bank-field">
+                <span class="bank-label">PF Number</span>
+                <span class="bank-colon">:</span>
+                <span class="bank-value" th:text="${pfNumber}">—</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================================================================
+         EARNINGS / DEDUCTIONS TABLE
+    ================================================================ -->
+    <div class="salary-box">
+        <table class="comp-table">
+            <thead>
+            <tr>
+                <th class="col-ename">Earnings</th>
+                <th class="col-eamt col-amt">Amount</th>
+                <th class="col-div"></th>
+                <th class="col-dname">Deductions</th>
+                <th class="col-damt col-amt">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <td th:text="${row.earningName}"></td>
+                <td class="col-amt"
+                    th:text="${row.earningAmount != null ? '&#8377;' + #numbers.formatDecimal(row.earningAmount, 1, 'COMMA', 2, 'POINT') : ''}">
+                </td>
+                <td class="col-div"></td>
+                <td th:text="${row.deductionName}"></td>
+                <td class="col-amt"
+                    th:text="${row.deductionAmount != null ? '&#8377;' + #numbers.formatDecimal(row.deductionAmount, 1, 'COMMA', 2, 'POINT') : ''}">
+                </td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td>Gross Earnings</td>
+                <td class="col-amt" th:text="${grossEarnings}">&#8377;0.00</td>
+                <td class="col-div"></td>
+                <td>Total Deductions</td>
+                <td class="col-amt" th:text="${totalDeductions}">&#8377;0.00</td>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- ================================================================
+         TOTAL NET PAYABLE
+    ================================================================ -->
+    <div class="netpay-box">
+        <div class="netpay-left">
+            <div class="net-title">Total Net Payable</div>
+            <div class="net-sub">Gross Earnings - Total Deductions</div>
+        </div>
+        <div class="netpay-right">
+            <div class="net-amount" th:text="${netPayable}">&#8377;0.00</div>
+        </div>
+    </div>
+
+    <!-- Amount in words -->
+    <div class="words-row">
+        Amount In Words :&#160;
+        <strong th:text="'Indian Rupee ' + ${netPayableWords}">Indian Rupee Zero Only</strong>
+    </div>
+
+    <!-- ================================================================
+         FOOTER
+    ================================================================ -->
+    <div class="footer">
+        <p>&#8226; This is a computer generated statement, does not require signature.</p>
+    </div>
+
+</div>
+</body>
+</html>

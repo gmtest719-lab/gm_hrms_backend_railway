@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class LeavePolicyLeaveTypeController {
     private final LeavePolicyLeaveTypeService service;
 
     // ================= CREATE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping
     @Auditable(
             action      = AuditAction.CREATE_POLICY_MAPPING,
@@ -40,6 +42,7 @@ public class LeavePolicyLeaveTypeController {
     }
 
     // ================= GET BY ID =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<LeavePolicyLeaveTypeResponseDTO>> getById(
             @PathVariable Long id) {
@@ -54,6 +57,7 @@ public class LeavePolicyLeaveTypeController {
     }
 
     // ================= GET ALL =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDTO<LeavePolicyLeaveTypeResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -69,6 +73,7 @@ public class LeavePolicyLeaveTypeController {
     }
 
     // ================= PATCH =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}")
     @Auditable(
             action      = AuditAction.UPDATE_POLICY_MAPPING,
@@ -89,6 +94,7 @@ public class LeavePolicyLeaveTypeController {
     }
 
     // ================= DELETE =================
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @Auditable(
             action      = AuditAction.DELETE_POLICY_MAPPING,

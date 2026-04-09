@@ -11,6 +11,7 @@ import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -84,6 +85,7 @@ public class AuthController {
     }
 
     // ⭐ CHANGE PASSWORD
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/change-password")
     @Auditable(
             action      = AuditAction.CHANGE_PASSWORD,

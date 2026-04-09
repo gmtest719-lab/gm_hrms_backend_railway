@@ -59,6 +59,7 @@ public class ShiftController {
     }
 
     // ================= GET BY ID =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ShiftResponseDTO>> getById(@PathVariable Long id) {
 
@@ -71,6 +72,7 @@ public class ShiftController {
     }
 
     // ================= DELETE =================
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @Auditable(
             action      = AuditAction.DELETE_SHIFT,

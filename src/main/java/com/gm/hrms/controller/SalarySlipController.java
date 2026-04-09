@@ -29,7 +29,7 @@ public class SalarySlipController {
                 .success(true).data(service.getById(id)).build());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/employee/{personalId}")
     public ResponseEntity<ApiResponse<List<SalarySlipResponseDTO>>> getByEmployee(
             @PathVariable Long personalId) {
@@ -37,7 +37,7 @@ public class SalarySlipController {
                 .success(true).data(service.getByEmployee(personalId)).build());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/employee/{personalId}/{year}/{month}")
     public ResponseEntity<ApiResponse<SalarySlipResponseDTO>> getByPersonAndMonth(
             @PathVariable Long personalId,
@@ -47,8 +47,7 @@ public class SalarySlipController {
                 .success(true).data(service.getByPersonAndMonth(personalId, month, year)).build());
     }
 
-    /** Download PDF — returns raw bytes as application/pdf */
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @GetMapping("/{id}/download")
     @Auditable(action = AuditAction.DOWNLOAD_SALARY_SLIP,
             resource = "SalarySlip", description = "Download salary slip PDF")

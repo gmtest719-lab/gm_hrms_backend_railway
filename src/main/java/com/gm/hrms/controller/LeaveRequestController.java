@@ -46,7 +46,7 @@ public class LeaveRequestController {
     }
 
     // ================= APPROVE =================
-    @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}/approve")
     @Auditable(
             action      = AuditAction.APPROVE_LEAVE,
@@ -68,7 +68,7 @@ public class LeaveRequestController {
     }
 
     // ================= REJECT =================
-    @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}/reject")
     @Auditable(
             action      = AuditAction.REJECT_LEAVE,
@@ -146,7 +146,7 @@ public class LeaveRequestController {
     }
 
     // ================= REQUEST DOCUMENT =================
-    @PreAuthorize("hasAnyRole('MANAGER','HR','ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PatchMapping("/{id}/request-document")
     @Auditable(
             action      = AuditAction.REQUEST_DOCUMENT,

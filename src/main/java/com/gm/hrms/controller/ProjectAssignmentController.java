@@ -91,7 +91,7 @@ public class ProjectAssignmentController {
 
     // ================= EMPLOYEE (SELF ONLY) =================
     @GetMapping("/my")
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','TRAINEE','INTERN')")
     public ResponseEntity<ApiResponse<PageResponseDTO<ProjectAssignmentResponseDTO>>> getMyProjects(
             @AuthenticationPrincipal CustomUserDetails user,
             @RequestParam(defaultValue = "0") int page,

@@ -21,6 +21,7 @@ public class TimesheetController {
     private final TimesheetService service;
 
     // ================= CREATE OR UPDATE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping
     @Auditable(
             action      = AuditAction.SAVE_TIMESHEET,
@@ -40,6 +41,7 @@ public class TimesheetController {
     }
 
     // ================= SUBMIT =================
+    @PreAuthorize("hasAnyRole('EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/{id}/submit")
     @Auditable(
             action      = AuditAction.SUBMIT_TIMESHEET,
@@ -58,6 +60,7 @@ public class TimesheetController {
     }
 
     // ================= APPROVE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping("/{id}/approve")
     @Auditable(
             action      = AuditAction.APPROVE_TIMESHEET,
@@ -76,6 +79,7 @@ public class TimesheetController {
     }
 
     // ================= REJECT =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
     @PostMapping("/{id}/reject")
     @Auditable(
             action      = AuditAction.REJECT_TIMESHEET,
@@ -94,6 +98,7 @@ public class TimesheetController {
     }
 
     // ================= GET BY ID =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id) {
 
@@ -107,6 +112,7 @@ public class TimesheetController {
     }
 
     // ================= GET BY PERSON AND DATE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/person/{personId}/date/{date}")
     public ResponseEntity<ApiResponse<?>> getByPersonAndDate(
             @PathVariable Long personId,
@@ -137,6 +143,7 @@ public class TimesheetController {
     }
 
     // ================= DELETE =================
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @Auditable(
             action      = AuditAction.DELETE_TIMESHEET,

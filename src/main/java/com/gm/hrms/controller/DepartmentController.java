@@ -66,7 +66,7 @@ public class DepartmentController {
     }
 
     // GET ALL → Admin + HR + Employee
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDTO<DepartmentResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,

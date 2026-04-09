@@ -67,8 +67,8 @@ public class DocumentTypeController {
         );
     }
 
-    // ✅ GET ALL → ADMIN + HR + EMPLOYEE (Pagination)
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    // ✅ GET ALL
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDTO<DocumentTypeResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,
@@ -83,8 +83,8 @@ public class DocumentTypeController {
         );
     }
 
-    // ✅ GET BY ID → ADMIN + HR + EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    // ✅ GET BY ID
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<DocumentTypeResponseDTO>> getById(
             @PathVariable Long id) {
@@ -98,8 +98,8 @@ public class DocumentTypeController {
         );
     }
 
-    // ✅ FILTER BY TYPE → ADMIN + HR + EMPLOYEE
-    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE')")
+    // ✅ FILTER BY TYPE
+    @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/type/{type}")
     public ResponseEntity<ApiResponse<PageResponseDTO<DocumentTypeResponseDTO>>> getByApplicableType(
             @PathVariable ApplicableType type,

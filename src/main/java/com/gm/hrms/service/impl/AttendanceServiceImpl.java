@@ -35,7 +35,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final PersonalInformationRepository personalInformationRepository;
     private final WorkProfileRepository workProfileRepository;
 
-    // ✅ Common validation
+    // Common validation
     private void validateAttendanceRequest(AttendanceRequestDTO dto) {
         if (dto == null || dto.getPersonalInformationId() == null) {
             throw new InvalidRequestException("PersonalInformationId is required");
