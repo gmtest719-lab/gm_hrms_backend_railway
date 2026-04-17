@@ -1,5 +1,6 @@
 package com.gm.hrms.dto.response;
 
+import com.gm.hrms.enums.AssigneeType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,12 +9,15 @@ import lombok.Data;
 public class ProjectAssignmentResponseDTO {
 
     private Long id;
+    private String roleInProject;
+    private AssigneeType assigneeType;
+
+    // Project info
     private Long projectId;
     private String projectName;
+    private String projectCode;
 
-    private Long employeeId;
-    private String employeeName;
-
-    private String roleInProject;
+    private Long assigneeId;
+    private String assigneeName;
+    private String assigneeCode;
 }
-

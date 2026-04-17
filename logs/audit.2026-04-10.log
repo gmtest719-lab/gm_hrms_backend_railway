@@ -1,0 +1,5 @@
+2026-04-10 18:07:16.583 [AUDIT] ACTION=LOGIN | RESOURCE=Auth | USER=anonymous | IP=0:0:0:0:0:0:0:1 | STATUS=SUCCESS | DURATION=814ms | DESC=User login attempt | ERROR=-
+2026-04-10 18:07:51.115 [AUDIT] ACTION=VIEW_REPORT | RESOURCE=EmployeeReport | USER=admin@gm.com | IP=0:0:0:0:0:0:0:1 | STATUS=SUCCESS | DURATION=419ms | DESC=Employee master report | ERROR=-
+2026-04-10 18:11:33.690 [AUDIT] ACTION=VIEW_REPORT | RESOURCE=EmployeeReport | USER=admin@gm.com | IP=0:0:0:0:0:0:0:1 | STATUS=SUCCESS | DURATION=78ms | DESC=Employee master report | ERROR=-
+2026-04-10 18:12:06.450 [AUDIT] ACTION=VIEW_REPORT | RESOURCE=EmployeeReport | USER=admin@gm.com | IP=0:0:0:0:0:0:0:1 | STATUS=SUCCESS | DURATION=33ms | DESC=Employee master report | ERROR=-
+2026-04-10 18:12:12.994 [AUDIT] ACTION=VIEW_REPORT | RESOURCE=EmployeeReport | USER=admin@gm.com | IP=0:0:0:0:0:0:0:1 | STATUS=SUCCESS | DURATION=161ms | DESC=Employee master report | ERROR=-

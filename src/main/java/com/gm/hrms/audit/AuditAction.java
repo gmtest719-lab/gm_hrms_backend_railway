@@ -79,33 +79,33 @@ public enum AuditAction {
     REJECT_TIMESHEET,
     DELETE_TIMESHEET,
 
-    // ── Timesheet Reports ─────────────────────────────────
+    // ── Timesheet Reports
     EXPORT_REPORT,
 
-    // ── Shift ─────────────────────────────────────────────
+    // ── Shift
     CREATE_SHIFT,
     DELETE_SHIFT,
 
-    // ── Project ───────────────────────────────────────────
+    // ── Project
     CREATE_PROJECT,
     UPDATE_PROJECT,
     DELETE_PROJECT,
 
-    // ── Project Assignment ────────────────────────────────
+    // ── Project Assignment
     ASSIGN_PROJECT,
     REMOVE_ASSIGNMENT,
 
-    // ── Address ───────────────────────────────────────────
+    // ── Address
     CREATE_ADDRESS,
     UPDATE_ADDRESS,
     DELETE_ADDRESS,
 
-    // ── Comp-Off Request ──────────────────────────────────
+    // ── Comp-Off Request
     APPLY_COMP_OFF,
     APPROVE_COMP_OFF,
     REJECT_COMP_OFF,
 
-    // ── Comp-Off Rule ─────────────────────────────────────
+    // ── Comp-Off Rule
     CREATE_COMP_OFF_RULE,
     UPDATE_COMP_OFF_RULE,
     DELETE_COMP_OFF_RULE,
@@ -118,52 +118,54 @@ public enum AuditAction {
     UPDATE_BRANCH,
     DELETE_BRANCH,
 
-    // ── Break Policy ──────────────────────────────────────
+    // ── Break Policy
     CREATE_BREAK_POLICY,
     UPDATE_BREAK_POLICY,
     DELETE_BREAK_POLICY,
 
-    // ── Carry Forward Rule ────────────────────────────────
+    // ── Carry Forward Rule
     CREATE_CARRY_FORWARD_RULE,
     UPDATE_CARRY_FORWARD_RULE,
     DELETE_CARRY_FORWARD_RULE,
 
-    // ── Holiday ───────────────────────────────────────────
+    // ── Holiday
     CREATE_HOLIDAY,
     UPDATE_HOLIDAY,
     DELETE_HOLIDAY,
 
-    // ── Intern ────────────────────────────────────────────
+    // ── Intern
     UPDATE_INTERN,
     DELETE_INTERN,
 
-    // ── Internship Domain ─────────────────────────────────
+    // ── Internship Domain
     CREATE_INTERNSHIP_DOMAIN,
     UPDATE_INTERNSHIP_DOMAIN,
     DELETE_INTERNSHIP_DOMAIN,
 
-    // ── User (unified create) ─────────────────────────────
+    // ── User (unified create)
     CREATE_USER,
 
-    // ── Trainee ───────────────────────────────────────────
+    // ── Trainee
     UPDATE_TRAINEE,
     DELETE_TRAINEE,
 
-    // ── Payroll Component ─────────────────────────────────────────────────
+    // ── Payroll Component
     CREATE_PAYROLL_COMPONENT,
     UPDATE_PAYROLL_COMPONENT,
     DELETE_PAYROLL_COMPONENT,
 
-    // ── Salary Structure ──────────────────────────────────────────────────
+    // ── Salary Structure
     CREATE_SALARY_STRUCTURE,
     UPDATE_SALARY_STRUCTURE,
 
-    // ── Salary Generation ─────────────────────────────────────────────────
+    // ── Salary Generation
     GENERATE_SALARY,
     FINALIZE_SALARY,
 
     // ── Salary Slip
     DOWNLOAD_SALARY_SLIP,
+    REQUEST_SALARY_SLIP_DOWNLOAD,
+    RESOLVE_SALARY_SLIP_DOWNLOAD_REQUEST,
 
     VIEW_REPORT,
 
@@ -175,4 +177,5 @@ public enum AuditAction {
     VIEW_LEAVE_ENCASHMENT_REPORT,
     VIEW_LEAVE_APPROVAL_REPORT,
     EXPORT_LEAVE_REPORT
+
 }

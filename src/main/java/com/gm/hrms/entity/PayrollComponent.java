@@ -6,7 +6,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "payroll_components")
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PayrollComponent extends BaseEntity {
 
     @Id

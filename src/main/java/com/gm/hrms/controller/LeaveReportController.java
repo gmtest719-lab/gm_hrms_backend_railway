@@ -24,10 +24,6 @@ public class LeaveReportController {
     private final LeaveReportExportService exportService;
 
     // ── 1. LEAVE BALANCE REPORT ──────────────────────────────────────
-    /**
-     * All roles: ADMIN/HR see all, EMPLOYEE/TRAINEE/INTERN see self only.
-     * personalId in filter is auto-enforced by security layer.
-     */
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/balance")
     @Auditable(action = AuditAction.VIEW_REPORT, resource = "LeaveReport",
@@ -76,10 +72,6 @@ public class LeaveReportController {
     }
 
     // ── 4. LEAVE TYPE USAGE REPORT ──────────────────────────────────
-    /**
-     * ADMIN/HR see org-wide stats.
-     * EMPLOYEE/TRAINEE/INTERN see their own usage only (security layer enforces).
-     */
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/type-usage")
     @Auditable(action = AuditAction.VIEW_REPORT, resource = "LeaveReport",
@@ -94,10 +86,6 @@ public class LeaveReportController {
     }
 
     // ── 5. LEAVE TRENDS REPORT ──────────────────────────────────────
-    /**
-     * ADMIN/HR: org-wide trends.
-     * EMPLOYEE/TRAINEE/INTERN: own personal trends.
-     */
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/trends")
     @Auditable(action = AuditAction.VIEW_REPORT, resource = "LeaveReport",
@@ -128,11 +116,6 @@ public class LeaveReportController {
     }
 
     // ── 7. LEAVE APPROVAL REPORT ────────────────────────────────────
-    /**
-     * ADMIN/HR: see all approval/rejection records, filter by approverId.
-     * EMPLOYEE/TRAINEE/INTERN: see only their own leave approval records.
-     * approverId filter silently stripped for restricted roles.
-     */
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/approvals")
     @Auditable(action = AuditAction.VIEW_REPORT, resource = "LeaveReport",
@@ -149,10 +132,6 @@ public class LeaveReportController {
     }
 
     // ── EXPORT: PDF ─────────────────────────────────────────────────
-    /**
-     * reportType values: balance | history | requests | type-usage |
-     *                    trends  | encashment | approvals
-     */
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @PostMapping("/export/pdf/{reportType}")
     public void exportPdf(

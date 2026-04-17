@@ -4,7 +4,6 @@ import com.gm.hrms.dto.request.LeaveReportFilterDTO;
 import com.gm.hrms.dto.response.*;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.LeaveStatus;
-import com.gm.hrms.exception.ResourceNotFoundException;
 import com.gm.hrms.repository.*;
 import com.gm.hrms.security.LeaveReportSecurityService;
 import com.gm.hrms.service.LeaveReportService;
@@ -131,7 +130,6 @@ public class LeaveReportServiceImpl implements LeaveReportService {
         List<LeaveRequest> all = leaveRequestRepository.findAll(
                 LeaveRequestReportSpecification.filter(filter, personalId));
 
-        // Group by leave type in-memory (portable, avoids DB-specific functions)
         Map<Long, List<LeaveRequest>> grouped = all.stream()
                 .filter(r -> r.getLeaveType() != null)
                 .collect(Collectors.groupingBy(r -> r.getLeaveType().getId()));

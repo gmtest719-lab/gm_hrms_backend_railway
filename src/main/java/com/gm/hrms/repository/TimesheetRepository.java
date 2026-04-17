@@ -4,6 +4,7 @@ import com.gm.hrms.entity.Timesheet;
 import com.gm.hrms.enums.TimesheetStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -44,4 +45,23 @@ public interface TimesheetRepository extends JpaRepository<Timesheet, Long> {
             """)
     List<Timesheet> findMonthly(int month, int year);
 
+    @Query("""
+    SELECT COALESCE(SUM(te.workedMinutes), 0)
+    FROM TimesheetEntry te
+    WHERE te.timesheet.person.id = :personalId
+      AND te.project.id = :projectId
+""")
+    Long sumMinutesByPersonAndProject(
+            @Param("personalId") Long personalId,
+            @Param("projectId") Long projectId
+    );
+
+    @Query("""
+    SELECT COALESCE(SUM(te.workedMinutes), 0)
+    FROM TimesheetEntry te
+    WHERE te.project.id = :projectId
+""")
+    Long sumMinutesByProject(
+            @Param("projectId") Long projectId
+    );
 }

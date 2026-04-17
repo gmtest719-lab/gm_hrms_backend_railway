@@ -23,8 +23,6 @@ public interface TimesheetReportService {
             LocalDate end
     );
 
-
-
     List<TimesheetReportDTO> todayAll();
 
     List<TimesheetReportDTO> todayByEmployee(Long empId);

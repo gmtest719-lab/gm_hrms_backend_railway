@@ -63,4 +63,13 @@ public class WorkProfile extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    @Column(name = "exit_date")
+    private LocalDate exitDate;
+
+    @Column(name = "exit_reason", length = 100)
+    private String exitReason;
+
+    @Column(name = "exit_remarks", length = 500)
+    private String exitRemarks;
 }

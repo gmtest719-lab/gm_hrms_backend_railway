@@ -106,6 +106,18 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED, null);
     }
 
+    @ExceptionHandler(com.gm.hrms.exception.EmployeeReportException.class)
+    public void handleEmployeeReport(
+            com.gm.hrms.exception.EmployeeReportException ex,
+            HttpServletResponse response) throws IOException {
+
+        log.error("Employee report generation failed: {}", ex.getMessage(), ex);
+        writeJson(response,
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ErrorCode.INTERNAL_SERVER_ERROR,
+                "Failed to generate employee report. Please try again or contact support.");
+    }
+
     @ExceptionHandler(org.springframework.security.authentication.AuthenticationCredentialsNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleUnauthorized(Exception ex) {
         return buildResponse(ErrorCode.UNAUTHORIZED, "Authentication required",

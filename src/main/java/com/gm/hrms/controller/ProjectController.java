@@ -39,9 +39,9 @@ public class ProjectController {
         );
     }
 
-    // ================= ADMIN + HR =================
+    // ================= ADMIN =================
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<PageResponseDTO<ProjectResponseDTO>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -55,9 +55,9 @@ public class ProjectController {
         );
     }
 
-    // ================= ADMIN + HR =================
+    // ================= ADMIN =================
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<?>> getById(@PathVariable Long id){
 
         return ResponseEntity.ok(

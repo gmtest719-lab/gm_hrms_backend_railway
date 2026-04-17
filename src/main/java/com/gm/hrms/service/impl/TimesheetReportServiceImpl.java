@@ -47,7 +47,6 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
             LocalDate start,
             LocalDate end
     ) {
-
         return entryRepository
                 .findByProject_IdAndTimesheet_WorkDateBetween(
                         projectId,

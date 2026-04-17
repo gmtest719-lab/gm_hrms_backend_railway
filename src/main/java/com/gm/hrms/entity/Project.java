@@ -32,6 +32,12 @@ public class Project {
     @Column(name = "end_date")
     private LocalDate endDate;
 
+    @Column(name = "budget_amount")
+    private Double budgetAmount;
+
+    @Column(name = "actual_cost")
+    private Double actualCost;
+
     @Enumerated(EnumType.STRING)
     private ProjectStatus status; // NOT_STARTED / IN_PROGRESS / COMPLETED /ON_HOLD
 }

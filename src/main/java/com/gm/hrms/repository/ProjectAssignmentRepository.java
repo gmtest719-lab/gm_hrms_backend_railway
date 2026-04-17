@@ -5,16 +5,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
 public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssignment, Long> {
 
+    // ── by project (for listing all assignees of a project) ──────────────────
     Page<ProjectAssignment> findByProjectId(Long projectId, Pageable pageable);
 
+    // ── EMPLOYEE ─────────────────────────────────────────────────────────────
+    boolean existsByProjectIdAndEmployeeId(Long projectId, Long employeeId);
+    void    deleteByProjectIdAndEmployeeId(Long projectId, Long employeeId);
     Page<ProjectAssignment> findByEmployeeId(Long employeeId, Pageable pageable);
 
-    boolean existsByProjectIdAndEmployeeId(Long projectId, Long employeeId);
+    // ── TRAINEE ──────────────────────────────────────────────────────────────
+    boolean existsByProjectIdAndTraineeId(Long projectId, Long traineeId);
+    void    deleteByProjectIdAndTraineeId(Long projectId, Long traineeId);
+    Page<ProjectAssignment> findByTraineeId(Long traineeId, Pageable pageable);
 
-    void deleteByProjectIdAndEmployeeId(Long projectId, Long employeeId);
+    // ── INTERN ───────────────────────────────────────────────────────────────
+    boolean existsByProjectIdAndInternId(Long projectId, Long internId);
+    void    deleteByProjectIdAndInternId(Long projectId, Long internId);
+    Page<ProjectAssignment> findByInternId(Long internId, Pageable pageable);
 }
-

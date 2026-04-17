@@ -15,7 +15,11 @@ import java.util.List;
                 columnNames = {"personal_information_id", "month", "year"}
         )
 )
-@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SalarySlip extends BaseEntity {
 
     @Id

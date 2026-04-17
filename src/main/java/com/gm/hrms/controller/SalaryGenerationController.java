@@ -38,6 +38,7 @@ public class SalaryGenerationController {
             resource = "SalaryGeneration", description = "Finalize monthly salary")
     public ResponseEntity<ApiResponse<SalaryGenerationResponseDTO>> finalize(
             @PathVariable Long id) {
+
         return ResponseEntity.ok(ApiResponse.<SalaryGenerationResponseDTO>builder()
                 .success(true).message("Salary finalized successfully")
                 .data(service.finalizeSalary(id)).build());

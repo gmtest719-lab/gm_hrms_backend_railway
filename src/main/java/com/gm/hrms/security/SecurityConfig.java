@@ -2,6 +2,7 @@ package com.gm.hrms.security;
 
 import com.gm.hrms.config.CustomUserDetailsService;
 import com.gm.hrms.config.JwtAuthenticationFilter;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -78,4 +79,17 @@ public class SecurityConfig {
 
         return config.getAuthenticationManager();
     }
+
+
+    /*    @PostConstruct
+    public void PasswordHash() {
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+        String rawPassword = "GMT@123";
+        String hashed = encoder.encode(rawPassword);
+        System.out.println("===============================================");
+        System.out.println("BCrypt hash for password '" + rawPassword + "':");
+        System.out.println(hashed);
+        System.out.println("===============================================");
+    }*/
 }
+
