@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public interface LeaveRequestRepository
         extends JpaRepository<LeaveRequest, Long>,
@@ -57,4 +58,17 @@ public interface LeaveRequestRepository
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate,
             Pageable pageable);
+
+    @Query("""
+    SELECT lr FROM LeaveRequest lr
+    WHERE lr.personalId = :personId
+      AND lr.status = 'APPROVED'
+      AND lr.startDate <= :date
+      AND lr.endDate   >= :date
+      AND lr.isCancelled = false
+""")
+    List<LeaveRequest> findApprovedLeavesOnDate(
+            @Param("personId") Long personId,
+            @Param("date") LocalDate date
+    );
 }

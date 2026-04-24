@@ -17,5 +17,7 @@ public interface DepartmentService {
 
     PageResponseDTO<DepartmentResponseDTO> getAllDepartments(Pageable pageable);
 
+    List<DepartmentResponseDTO> getSubDepartments(Long parentId);
+
     void deleteDepartment(Long id);
 }

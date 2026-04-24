@@ -111,6 +111,7 @@ public class TimesheetController {
         );
     }
 
+
     // ================= GET BY PERSON AND DATE =================
     @PreAuthorize("hasAnyRole('ADMIN','HR','EMPLOYEE','TRAINEE','INTERN')")
     @GetMapping("/person/{personId}/date/{date}")

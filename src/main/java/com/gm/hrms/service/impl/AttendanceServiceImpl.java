@@ -33,6 +33,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceBreakLogRepository breakLogRepository;
     private final AttendanceCalculationRepository calculationRepository;
     private final PersonalInformationRepository personalInformationRepository;
+    private final EmployeeRepository employeeRepository;
+    private final TraineeRepository  traineeRepository;
+    private final InternRepository   internRepository;
     private final WorkProfileRepository workProfileRepository;
 
     // Common validation
@@ -80,7 +83,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 AttendanceMapper.createCheckInLog(person)
         );
 
-        return AttendanceMapper.toResponse(attendance, null);
+        return buildResponse(attendance, null);
     }
 
     @Override
@@ -120,7 +123,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         AttendanceCalculation calc = calculateAttendance(attendance);
 
-        return AttendanceMapper.toResponse(attendance, calc);
+        return buildResponse(attendance, calc);
     }
 
     @Override
@@ -157,7 +160,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 AttendanceMapper.createBreakStart(attendance)
         );
 
-        return AttendanceMapper.toResponse(attendance, null);
+        return buildResponse(attendance, null);
     }
 
     @Override
@@ -212,7 +215,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         breakLogRepository.save(breakLog);
 
-        return AttendanceMapper.toResponse(attendance, null);
+        return buildResponse(attendance, null);
     }
 
     @Override
@@ -235,40 +238,61 @@ public class AttendanceServiceImpl implements AttendanceService {
                         .findByAttendanceId(attendance.getId())
                         .orElse(null);
 
-        return AttendanceMapper.toResponse(attendance, calc);
+        return buildResponse(attendance, calc);
     }
 
     @Override
     public PageResponseDTO<AttendanceResponseDTO> getAllAttendance(Pageable pageable) {
 
-        if (pageable == null) {
-            throw new InvalidRequestException("Pageable cannot be null");
-        }
-
         Page<Attendance> page = attendanceRepository.findAll(pageable);
 
-        List<Long> ids = page.getContent()
-                .stream()
-                .map(Attendance::getId)
-                .toList();
+        List<Long> ids = page.getContent().stream()
+                .map(Attendance::getId).toList();
 
-        List<Attendance> attendanceWithCalc =
-                attendanceRepository.findAllWithCalculationByIds(ids);
+        List<Long> personIds = page.getContent().stream()
+                .map(a -> a.getPersonalInformation().getId()).toList();
+
+        // bulk-load all three code maps
+        Map<Long, String> employeeCodes = employeeRepository
+                .findByPersonalInformationIdIn(personIds).stream()
+                .collect(Collectors.toMap(
+                        e -> e.getPersonalInformation().getId(),
+                        Employee::getEmployeeCode));
+
+        Map<Long, String> traineeCodes = traineeRepository
+                .findByPersonalInformationIdIn(personIds).stream()
+                .collect(Collectors.toMap(
+                        t -> t.getPersonalInformation().getId(),
+                        Trainee::getTraineeCode));
+
+        Map<Long, String> internCodes = internRepository
+                .findByPersonalInformationIdIn(personIds).stream()
+                .collect(Collectors.toMap(
+                        i -> i.getPersonalInformation().getId(),
+                        Intern::getInternCode));
+
+        Map<Long, AttendanceBreakLog> latestBreaks = breakLogRepository
+                .findLatestPerAttendanceIds(ids).stream()
+                .collect(Collectors.toMap(
+                        b -> b.getAttendance().getId(), b -> b));
 
         Map<Long, Attendance> attendanceMap =
-                attendanceWithCalc.stream()
+                attendanceRepository.findAllWithCalculationByIds(ids).stream()
                         .collect(Collectors.toMap(Attendance::getId, a -> a));
 
-        List<AttendanceResponseDTO> content =
-                page.getContent().stream()
-                        .map(a -> {
-                            Attendance fullData = attendanceMap.get(a.getId());
-                            return AttendanceMapper.toResponse(
-                                    fullData,
-                                    fullData.getCalculation()
-                            );
-                        })
-                        .toList();
+        List<AttendanceResponseDTO> content = page.getContent().stream()
+                .map(a -> {
+                    Attendance full = attendanceMap.get(a.getId());
+                    Long pid = full.getPersonalInformation().getId();
+                    return AttendanceMapper.toResponse(
+                            full,
+                            full.getCalculation(),
+                            employeeCodes.get(pid),
+                            traineeCodes.get(pid),
+                            internCodes.get(pid),
+                            latestBreaks.get(full.getId())
+                    );
+                }).toList();
 
         return PageResponseDTO.<AttendanceResponseDTO>builder()
                 .content(content)
@@ -291,7 +315,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         int breakMinutes =
                 breakLogRepository
-                        .findByAttendanceId(attendance.getId())
+                        .findByAttendance_Id(attendance.getId())
                         .stream()
                         .mapToInt(AttendanceBreakLog::getDurationMinutes)
                         .sum();
@@ -433,6 +457,39 @@ public class AttendanceServiceImpl implements AttendanceService {
         AttendanceCalculation calc =
                 calculateAttendance(attendance);
 
-        return AttendanceMapper.toResponse(attendance, calc);
+        return buildResponse(attendance, calc);
+    }
+
+    private AttendanceResponseDTO buildResponse(
+            Attendance            attendance,
+            AttendanceCalculation calc
+    ) {
+        Long pid = attendance.getPersonalInformation().getId();
+
+        String employeeCode = employeeRepository
+                .findByPersonalInformationId(pid)
+                .map(Employee::getEmployeeCode)
+                .orElse(null);
+
+        String traineeCode = traineeRepository
+                .findByPersonalInformationId(pid)
+                .map(Trainee::getTraineeCode)
+                .orElse(null);
+
+        String internCode = internRepository
+                .findByPersonalInformationId(pid)
+                .map(Intern::getInternCode)
+                .orElse(null);
+
+        AttendanceBreakLog latestBreak =
+                breakLogRepository
+                        .findTopByAttendanceIdOrderByBreakStartDesc(
+                                attendance.getId());
+
+        return AttendanceMapper.toResponse(
+                attendance, calc,
+                employeeCode, traineeCode, internCode,
+                latestBreak
+        );
     }
 }

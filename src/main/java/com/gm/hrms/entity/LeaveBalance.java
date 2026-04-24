@@ -34,7 +34,7 @@ public class LeaveBalance extends BaseEntity {
     @Column(name = "total_leaves")
     private Double totalLeaves;
 
-    @Column(name = "user_leaves")
+    @Column(name = "used_leaves")
     private Double usedLeaves;
 
     @Column(name = "remaining_leaves")

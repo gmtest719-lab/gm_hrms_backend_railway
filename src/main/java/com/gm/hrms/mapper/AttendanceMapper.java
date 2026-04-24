@@ -1,11 +1,15 @@
 package com.gm.hrms.mapper;
 
+import com.gm.hrms.dto.request.AttendanceProgressStepDTO;
 import com.gm.hrms.dto.response.AttendanceResponseDTO;
 import com.gm.hrms.entity.*;
 import com.gm.hrms.enums.AttendanceLogType;
 import com.gm.hrms.enums.AttendanceStatus;
+import com.gm.hrms.enums.AttendanceStepStatus;
+import com.gm.hrms.enums.AttendanceStepType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public final class AttendanceMapper {
 
@@ -73,26 +77,82 @@ public final class AttendanceMapper {
     }
 
     public static AttendanceResponseDTO toResponse(
-            Attendance attendance,
-            AttendanceCalculation calc
-    ){
-
-        Long personalId = null;
-
-        if(attendance.getPersonalInformation() != null){
-            personalId = attendance.getPersonalInformation().getId();
-        }
-
+            Attendance           attendance,
+            AttendanceCalculation calc,
+            String               employeeCode,   // null if not applicable
+            String               traineeCode,
+            String               internCode,
+            AttendanceBreakLog   latestBreakLog  // null if none today
+    ) {
         return AttendanceResponseDTO.builder()
                 .id(attendance.getId())
-                .personalInformationId(personalId)
+                .personalInformationId(attendance.getPersonalInformation().getId())
+                .employeeCode(employeeCode)
+                .traineeCode(traineeCode)
+                .internCode(internCode)
                 .checkIn(attendance.getCheckIn())
                 .checkOut(attendance.getCheckOut())
-                .workMinutes(calc != null ? calc.getWorkMinutes() : 0)
-                .breakMinutes(calc != null ? calc.getBreakMinutes() : 0)
-                .lateMinutes(calc != null ? calc.getLateMinutes() : 0)
-                .overtimeMinutes(calc != null ? calc.getOvertimeMinutes() : 0)
+                .workMinutes(calc != null ? calc.getWorkMinutes() : null)
+                .breakMinutes(calc != null ? calc.getBreakMinutes() : null)
+                .lateMinutes(calc != null ? calc.getLateMinutes() : null)
+                .overtimeMinutes(calc != null ? calc.getOvertimeMinutes() : null)
                 .status(attendance.getStatus())
+                .progressSteps(buildProgressSteps(attendance, latestBreakLog))
                 .build();
     }
+
+    private static List<AttendanceProgressStepDTO> buildProgressSteps(
+            Attendance        attendance,
+            AttendanceBreakLog latestBreak
+    ) {
+        boolean checkedIn   = attendance.getCheckIn()  != null;
+        boolean checkedOut  = attendance.getCheckOut() != null;
+        boolean breakOpen   = latestBreak != null && latestBreak.getBreakEnd() == null;
+        boolean breakClosed = latestBreak != null && latestBreak.getBreakEnd() != null;
+
+        return List.of(
+                AttendanceProgressStepDTO.builder()
+                        .orderIndex(1)
+                        .step(AttendanceStepType.CHECK_IN)
+                        .status(checkedIn
+                                ? AttendanceStepStatus.COMPLETED
+                                : AttendanceStepStatus.IN_PROGRESS)
+                        .timestamp(attendance.getCheckIn())
+                        .build(),
+
+                AttendanceProgressStepDTO.builder()
+                        .orderIndex(2)
+                        .step(AttendanceStepType.BREAK_START)
+                        .status(!checkedIn || checkedOut
+                                ? AttendanceStepStatus.PENDING
+                                : (breakOpen || breakClosed)
+                                ? AttendanceStepStatus.COMPLETED
+                                : AttendanceStepStatus.IN_PROGRESS)
+                        .timestamp(latestBreak != null ? latestBreak.getBreakStart() : null)
+                        .build(),
+
+                AttendanceProgressStepDTO.builder()
+                        .orderIndex(3)
+                        .step(AttendanceStepType.BREAK_END)
+                        .status(!checkedIn || checkedOut || (!breakOpen && !breakClosed)
+                                ? AttendanceStepStatus.PENDING
+                                : breakClosed
+                                ? AttendanceStepStatus.COMPLETED
+                                : AttendanceStepStatus.IN_PROGRESS)
+                        .timestamp(latestBreak != null ? latestBreak.getBreakEnd() : null)
+                        .build(),
+
+                AttendanceProgressStepDTO.builder()
+                        .orderIndex(4)
+                        .step(AttendanceStepType.CHECK_OUT)
+                        .status(checkedOut
+                                ? AttendanceStepStatus.COMPLETED
+                                : checkedIn
+                                ? AttendanceStepStatus.IN_PROGRESS
+                                : AttendanceStepStatus.PENDING)
+                        .timestamp(attendance.getCheckOut())
+                        .build()
+        );
+    }
+
 }

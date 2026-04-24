@@ -133,8 +133,6 @@ public class WorkProfileServiceImpl implements WorkProfileService {
 
         boolean isDraft = entity.getPersonalInformation().getRecordStatus() == RecordStatus.DRAFT;
 
-        // ================= MERGE VALIDATION =================
-
         if (!isDraft) {
 
             Long deptId = dto.getDepartmentId() != null
@@ -223,7 +221,6 @@ public class WorkProfileServiceImpl implements WorkProfileService {
         }
 
         // ================= PATCH =================
-
         WorkProfileMapper.patchEntity(
                 entity,
                 dto,
@@ -238,10 +235,8 @@ public class WorkProfileServiceImpl implements WorkProfileService {
 
         return WorkProfileMapper.toResponse(entity);
     }
-    // =====================================================
-    // ================= GET BY ID =========================
-    // =====================================================
 
+    // ================= GET BY ID =========================
     @Override
     public WorkProfileResponseDTO getById(Long id) {
 
@@ -251,10 +246,7 @@ public class WorkProfileServiceImpl implements WorkProfileService {
         return WorkProfileMapper.toResponse(entity);
     }
 
-    // =====================================================
     // ================= GET ALL ===========================
-    // =====================================================
-
     @Override
     public List<WorkProfileResponseDTO> getAll() {
 
@@ -264,10 +256,7 @@ public class WorkProfileServiceImpl implements WorkProfileService {
                 .toList();
     }
 
-    // =====================================================
     // ================= DELETE ============================
-    // =====================================================
-
     @Override
     public void delete(Long id) {
 

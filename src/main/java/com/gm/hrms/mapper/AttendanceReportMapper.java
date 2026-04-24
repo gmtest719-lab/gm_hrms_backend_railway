@@ -11,75 +11,86 @@ public class AttendanceReportMapper {
 
     private AttendanceReportMapper() {}
 
-    public static DailyAttendanceReportDTO toDailyDTO(
-            Attendance a,
-            String employeeCode,
-            UserCodeResolverService codeResolver) {
 
-        PersonalInformation p  = a.getPersonalInformation();
-        WorkProfile          wp = a.getWorkProfile();
-        AttendanceCalculation c = a.getCalculation();
+    public static DailyAttendanceReportDTO toDailyDTO(
+            Attendance a, UserCodeDTO codes, UserCodeResolverService resolver) {
+
+        WorkProfile wp = a.getWorkProfile();
+        AttendanceCalculation calc = a.getCalculation();
 
         return DailyAttendanceReportDTO.builder()
-                .personalInformationId(p.getId())
-                .employeeCode(employeeCode != null ? employeeCode
-                        : codeResolver.getCode(p.getId()))
-                .employeeName(fullName(p))
-                .department(wp != null && wp.getDepartment() != null
-                        ? wp.getDepartment().getName() : null)
-                .designation(wp != null && wp.getDesignation() != null
-                        ? wp.getDesignation().getName() : null)
-                .shift(wp != null && wp.getShift() != null
-                        ? wp.getShift().getShiftName() : null)
+                .personalInformationId(a.getPersonalInformation().getId())
+                .employeeCode(codes.getEmployeeCode())
+                .traineeCode(codes.getTraineeCode())
+                .internCode(codes.getInternCode())
+                .employeeName(fullName(a.getPersonalInformation()))
+                .department(wp != null && wp.getDepartment()  != null ? wp.getDepartment().getName()  : null)
+                .designation(wp != null && wp.getDesignation() != null ? wp.getDesignation().getName() : null)
+                .shift(wp != null && wp.getShift() != null ? wp.getShift().getShiftName() : null)
                 .attendanceDate(a.getAttendanceDate())
                 .checkIn(a.getCheckIn())
                 .checkOut(a.getCheckOut())
                 .status(a.getStatus())
-                .workMinutes(c != null ? c.getWorkMinutes() : null)
-                .breakMinutes(c != null ? c.getBreakMinutes() : null)
-                .lateMinutes(c != null ? c.getLateMinutes() : null)
-                .overtimeMinutes(c != null ? c.getOvertimeMinutes() : null)
+                .workMinutes(calc != null ? calc.getWorkMinutes() : null)
+                .lateMinutes(calc != null ? calc.getLateMinutes() : null)
+                .overtimeMinutes(calc != null ? calc.getOvertimeMinutes() : null)
                 .build();
     }
 
-    public static LateComingReportDTO toLateDTO(Attendance a, String code) {
-        PersonalInformation p  = a.getPersonalInformation();
-        WorkProfile          wp = a.getWorkProfile();
-        AttendanceCalculation c = a.getCalculation();
-        String shiftStart = null;
-        if (wp != null && wp.getShift() != null && wp.getShift().getTiming() != null) {
-            shiftStart = wp.getShift().getTiming().getStartTime().toString();
-        }
+    public static LateComingReportDTO toLateDTO(Attendance a, UserCodeDTO codes) {
+        WorkProfile wp = a.getWorkProfile();
+        AttendanceCalculation calc = a.getCalculation();
+        String shiftStart = resolveShiftStart(wp, a.getAttendanceDate());
+
         return LateComingReportDTO.builder()
-                .personalInformationId(p.getId())
-                .employeeCode(code)
-                .employeeName(fullName(p))
-                .department(wp != null && wp.getDepartment() != null
-                        ? wp.getDepartment().getName() : null)
-                .designation(wp != null && wp.getDesignation() != null
-                        ? wp.getDesignation().getName() : null)
+                .personalInformationId(a.getPersonalInformation().getId())
+                .employeeCode(codes.getEmployeeCode())
+                .traineeCode(codes.getTraineeCode())
+                .internCode(codes.getInternCode())
+                .employeeName(fullName(a.getPersonalInformation()))
+                .department(wp != null && wp.getDepartment()  != null ? wp.getDepartment().getName()  : null)
+                .designation(wp != null && wp.getDesignation() != null ? wp.getDesignation().getName() : null)
                 .attendanceDate(a.getAttendanceDate())
                 .checkIn(a.getCheckIn())
                 .shiftStartTime(shiftStart)
-                .lateMinutes(c != null ? c.getLateMinutes() : 0)
+                .lateMinutes(calc != null ? calc.getLateMinutes() : null)
                 .build();
     }
 
-    public static OvertimeReportDTO toOvertimeDTO(Attendance a, String code) {
-        PersonalInformation p  = a.getPersonalInformation();
-        WorkProfile          wp = a.getWorkProfile();
-        AttendanceCalculation c = a.getCalculation();
+    public static OvertimeReportDTO toOvertimeDTO(Attendance a, UserCodeDTO codes) {
+        WorkProfile wp = a.getWorkProfile();
+        AttendanceCalculation calc = a.getCalculation();
+
         return OvertimeReportDTO.builder()
-                .personalInformationId(p.getId())
-                .employeeCode(code)
-                .employeeName(fullName(p))
-                .department(wp != null && wp.getDepartment() != null
-                        ? wp.getDepartment().getName() : null)
-                .designation(wp != null && wp.getDesignation() != null
-                        ? wp.getDesignation().getName() : null)
+                .personalInformationId(a.getPersonalInformation().getId())
+                .employeeCode(codes.getEmployeeCode())
+                .traineeCode(codes.getTraineeCode())
+                .internCode(codes.getInternCode())
+                .employeeName(fullName(a.getPersonalInformation()))
+                .department(wp != null && wp.getDepartment()  != null ? wp.getDepartment().getName()  : null)
+                .designation(wp != null && wp.getDesignation() != null ? wp.getDesignation().getName() : null)
                 .attendanceDate(a.getAttendanceDate())
-                .workMinutes(c != null ? c.getWorkMinutes() : 0)
-                .overtimeMinutes(c != null ? c.getOvertimeMinutes() : 0)
+                .workMinutes(calc != null ? calc.getWorkMinutes() : null)
+                .overtimeMinutes(calc != null ? calc.getOvertimeMinutes() : null)
+                .build();
+    }
+
+    public static RegularizationReportDTO toRegularizationDTO(AttendanceRegularization r) {
+        PersonalInformation p = r.getRequestedBy();
+        return RegularizationReportDTO.builder()
+                .id(r.getId())
+                .personalInformationId(p.getId())
+                // codes are set by the caller after resolving
+                .employeeName(fullName(p))
+                .attendanceDate(r.getAttendance().getAttendanceDate())
+                .originalCheckIn(r.getOriginalCheckIn())
+                .originalCheckOut(r.getOriginalCheckOut())
+                .requestedCheckIn(r.getRequestedCheckIn())
+                .requestedCheckOut(r.getRequestedCheckOut())
+                .reason(r.getReason())
+                .status(r.getStatus())
+                .remarks(r.getRemarks())
+                .reviewedAt(r.getReviewedAt())
                 .build();
     }
 
@@ -103,25 +114,6 @@ public class AttendanceReportMapper {
                 .build();
     }
 
-    public static RegularizationReportDTO toRegularizationDTO(AttendanceRegularization r) {
-        PersonalInformation p  = r.getRequestedBy();
-        PersonalInformation rv = r.getReviewedBy();
-        return RegularizationReportDTO.builder()
-                .regularizationId(r.getId())
-                .personalInformationId(p.getId())
-                .employeeName(fullName(p))
-                .attendanceDate(r.getAttendance().getAttendanceDate())
-                .originalCheckIn(r.getOriginalCheckIn())
-                .originalCheckOut(r.getOriginalCheckOut())
-                .requestedCheckIn(r.getRequestedCheckIn())
-                .requestedCheckOut(r.getRequestedCheckOut())
-                .reason(r.getReason())
-                .status(r.getStatus())
-                .reviewerName(rv != null ? fullName(rv) : null)
-                .reviewedAt(r.getReviewedAt())
-                .remarks(r.getRemarks())
-                .build();
-    }
 
     private static String fullName(PersonalInformation p) {
         if (p == null) return "";

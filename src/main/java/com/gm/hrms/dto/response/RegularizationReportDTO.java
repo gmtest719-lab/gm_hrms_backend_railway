@@ -15,6 +15,8 @@ public class RegularizationReportDTO {
     private Long regularizationId;
     private Long personalInformationId;
     private String employeeCode;
+    private String traineeCode;
+    private String internCode;
     private String employeeName;
     private LocalDate attendanceDate;
     private LocalDateTime originalCheckIn;

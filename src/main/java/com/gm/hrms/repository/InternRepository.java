@@ -4,6 +4,7 @@ import com.gm.hrms.entity.Intern;
 import com.gm.hrms.entity.PersonalInformation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface InternRepository extends JpaRepository<Intern, Long> {
@@ -19,5 +20,8 @@ public interface InternRepository extends JpaRepository<Intern, Long> {
     Optional<Intern> findByPersonalInformation(PersonalInformation personalInformation);
 
     Optional<Intern> findByPersonalInformationId(Long personalId);
+
+    List<Intern> findByPersonalInformationIdIn(List<Long> ids);
+
 
 }

@@ -51,4 +51,11 @@ public class Timesheet extends BaseEntity {
             orphanRemoval = true
     )
     private List<TimesheetEntry> entries;
+
+    @Column(name = "submission_email_message_id", length = 255)
+    private String submissionEmailMessageId;
+
+    @Column(name = "is_locked", nullable = false)
+    @Builder.Default
+    private Boolean isLocked = false;
 }

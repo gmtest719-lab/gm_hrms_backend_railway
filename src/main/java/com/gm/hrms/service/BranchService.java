@@ -2,7 +2,9 @@ package com.gm.hrms.service;
 
 import com.gm.hrms.dto.request.BranchRequestDTO;
 import com.gm.hrms.dto.request.BranchUpdateDTO;
+import com.gm.hrms.dto.response.BranchMoveDTO;
 import com.gm.hrms.dto.response.BranchResponseDTO;
+import com.gm.hrms.dto.response.BranchTreeNodeDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import org.springframework.data.domain.Pageable;
 
@@ -19,4 +21,8 @@ public interface BranchService {
     PageResponseDTO<BranchResponseDTO> getAll(Pageable pageable);
 
     void delete(Long id);
+
+    List<BranchTreeNodeDTO> getTree();
+
+    BranchResponseDTO move(Long id, BranchMoveDTO dto);
 }

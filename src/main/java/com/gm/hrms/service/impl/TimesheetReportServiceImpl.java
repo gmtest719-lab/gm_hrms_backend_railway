@@ -136,6 +136,7 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
                 .mapToInt(t -> t.getTotalMinutes() == null ? 0 : t.getTotalMinutes())
                 .sum();
 
+
         return TimesheetMonthlyDTO.builder()
                 .personId(p.getId())
                 .personName(p.getFirstName() + " " + p.getLastName())

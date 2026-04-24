@@ -3,6 +3,7 @@ package com.gm.hrms.repository;
 import com.gm.hrms.entity.Employee;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
@@ -15,5 +16,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmployeeCodeAndIdNot(String employeeCode, Long id);
 
+    List<Employee> findByPersonalInformationIdIn(List<Long> ids);
 
 }

@@ -17,4 +17,6 @@ public class DepartmentRequestDTO {
 
     @NotNull(message = "Status is required")
     private Boolean status;
+
+    private Long parentId;
 }

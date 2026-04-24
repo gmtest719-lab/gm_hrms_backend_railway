@@ -35,9 +35,9 @@ public class LeavePolicy extends BaseEntity {
     private LocalDate effectiveTo;
 
     // ================= RULES =================
-    private Boolean requiresApproval;        // approval required or not
+    private Boolean requiresApproval;
 
-    private Boolean allowHalfDay;            // permission (with LeaveType check)
+    private Boolean allowHalfDay;
 
     private Boolean allowBackdatedLeave;
 

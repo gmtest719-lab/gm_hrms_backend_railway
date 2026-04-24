@@ -15,4 +15,7 @@ public class BranchRequestDTO {
 
     @Valid
     private AddressRequestDTO address;
+
+    private Long parentId;
+
 }

@@ -10,15 +10,13 @@ public class BranchMapper {
 
     private BranchMapper() {}
 
-    public static Branch toEntity(BranchRequestDTO dto, Address address) {
-
+    public static Branch toEntity(BranchRequestDTO dto, Address address, Branch parent) {
         Branch branch = new Branch();
-
         branch.setBranchName(dto.getBranchName());
         branch.setBranchCode(dto.getBranchCode());
         branch.setAddress(address);
         branch.setActive(true);
-
+        branch.setParent(parent);
         return branch;
     }
 
@@ -40,17 +38,14 @@ public class BranchMapper {
     }
 
     public static BranchResponseDTO toResponse(Branch branch) {
-
         return BranchResponseDTO.builder()
                 .id(branch.getId())
                 .branchName(branch.getBranchName())
                 .branchCode(branch.getBranchCode())
                 .active(branch.getActive())
-                .address(
-                        branch.getAddress() != null
-                                ? AddressMapper.toResponse(branch.getAddress())
-                                : null
-                )
+                .parentId(branch.getParent() != null ? branch.getParent().getId() : null)
+                .parentName(branch.getParent() != null ? branch.getParent().getBranchName() : null)
+                .address(branch.getAddress() != null ? AddressMapper.toResponse(branch.getAddress()) : null)
                 .createdAt(branch.getCreatedAt())
                 .updatedAt(branch.getUpdatedAt())
                 .build();

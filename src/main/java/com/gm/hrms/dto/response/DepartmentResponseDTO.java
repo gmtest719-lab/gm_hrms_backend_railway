@@ -7,9 +7,14 @@ import lombok.Data;
 @Builder
 public class DepartmentResponseDTO {
 
-    private Long id;
-    private String name;
-    private String code;
-    private String description;
+    private Long    id;
+    private String  name;
+    private String  code;
+    private String  description;
     private Boolean status;
+
+    private Long   parentId;
+    private String parentName;
+
+    private long subDepartmentCount;
 }

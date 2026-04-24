@@ -4,5 +4,5 @@ public enum DayType
 {
     FULL,
     FIRST_HALF,
-    SECOND_HALF
+    SECOND_HALF,
 }

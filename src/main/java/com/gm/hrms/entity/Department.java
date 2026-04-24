@@ -3,6 +3,9 @@ package com.gm.hrms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "departments")
 @Getter
@@ -25,5 +28,14 @@ public class Department extends BaseEntity {
     private String description;
 
     @Column(nullable = false)
-    private Boolean status; // true = Active, false = Inactive
+    private Boolean status;
+
+    // Self-referential relationship
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Department parent;
+
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    private List<Department> subDepartments = new ArrayList<>();
+
 }

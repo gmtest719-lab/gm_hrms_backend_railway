@@ -25,6 +25,8 @@ public class EmailServiceImpl implements EmailService {
     @Value("${hrms.company.name:G.M. Technosys}")
     private String companyName;
 
+    @Value("${hrms.timesheet.summary.email:hr@company.com}")
+    private String timesheetSummaryEmail;
 
     @Override
     public void sendCredentials(String to, String name, String password) {
@@ -71,6 +73,72 @@ public class EmailServiceImpl implements EmailService {
         String body    = buildRejectionBody(employeeName, monthYear, rejectionReason);
         sendHtml(toEmail, subject, body);
     }
+
+    @Async
+    @Override
+    public String sendTimesheetSummaryEmail(String toEmail, String employeeName,
+                                            String workDate, String entries,
+                                            String totalTime) {
+        String messageId = "<ts-" + System.currentTimeMillis() + "@hrms.gm>";
+        String subject   = companyName + " | Timesheet Submitted – " + workDate + " – " + employeeName;
+        String body      = buildTimesheetEmailBody("Timesheet Submitted", employeeName,
+                workDate, entries, totalTime, false);
+        sendHtmlWithMessageId(toEmail, subject, body, messageId, null);
+        return messageId;
+    }
+
+// ── Timesheet Update Email (continues the thread) ────────────────────────
+
+    @Async
+    @Override
+    public void sendTimesheetUpdateEmail(String toEmail, String employeeName,
+                                         String workDate, String entries,
+                                         String totalTime, String originalMessageId) {
+        String newMessageId = "<ts-upd-" + System.currentTimeMillis() + "@hrms.gm>";
+        String subject      = "Re: " + companyName + " | Timesheet Submitted – " + workDate + " – " + employeeName;
+        String body         = buildTimesheetEmailBody("Timesheet Updated", employeeName,
+                workDate, entries, totalTime, true);
+        sendHtmlWithMessageId(toEmail, subject, body, newMessageId, originalMessageId);
+    }
+
+// ── Access Request Notification ───────────────────────────────────────────
+
+    @Async
+    @Override
+    public void sendAccessRequestNotification(String toEmail, String employeeName,
+                                              String requestedDate, String accessType,
+                                              String reason) {
+        String subject = companyName + " | Timesheet Access Request – " + employeeName;
+        String body = """
+            <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
+            <style>
+              body{font-family:Arial,sans-serif;color:#333;}
+              .wrap{max-width:600px;margin:30px auto;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;}
+              .hdr{background:#f57c00;padding:24px 32px;}
+              .hdr h2{color:#fff;margin:0;font-size:20px;}
+              .body{padding:28px 32px;}
+              .ftr{background:#f9f9f9;padding:16px 32px;font-size:12px;color:#aaa;text-align:center;}
+            </style></head><body>
+            <div class="wrap">
+              <div class="hdr"><h2>Timesheet Access Request</h2></div>
+              <div class="body">
+                <p><strong>%s</strong> has requested access to %s their timesheet.</p>
+                <ul>
+                  <li><strong>Date:</strong> %s</li>
+                  <li><strong>Type:</strong> %s</li>
+                  <li><strong>Reason:</strong> %s</li>
+                </ul>
+                <p>Please log in to HRMS and review this request.</p>
+                <p>Regards,<br/><strong>HRMS System — %s</strong></p>
+              </div>
+              <div class="ftr">This is an automated message. Please do not reply.</div>
+            </div></body></html>
+            """.formatted(employeeName,
+                "EDIT_OLD".equals(accessType) ? "edit an old" : "add extra hours to",
+                requestedDate, accessType, escapeHtml(reason), companyName);
+        sendHtml(toEmail, subject, body);
+    }
+
 
     // ── Core send helper ──────────────────────────────────────────────────
 
@@ -194,5 +262,70 @@ public class EmailServiceImpl implements EmailService {
                 .replace(">",  "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'",  "&#x27;");
+    }
+
+    // ── Core send with custom Message-ID / In-Reply-To ───────────────────────
+
+    private void sendHtmlWithMessageId(String to, String subject, String htmlBody,
+                                       String messageId, String inReplyTo) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromAddress);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+
+            // Threading headers
+            message.setHeader("Message-ID", messageId);
+            if (inReplyTo != null) {
+                message.setHeader("In-Reply-To", inReplyTo);
+                message.setHeader("References",  inReplyTo);
+            }
+
+            mailSender.send(message);
+            log.info("Email sent [{}] | subject: {}", to, subject);
+        } catch (MailException | jakarta.mail.MessagingException ex) {
+            log.error("Failed to send email to [{}]: {}", to, ex.getMessage(), ex);
+        }
+    }
+
+// ── Timesheet HTML body builder ───────────────────────────────────────────
+
+    private String buildTimesheetEmailBody(String title, String name,
+                                           String workDate, String entriesHtml,
+                                           String totalTime, boolean isUpdate) {
+        String headerColor = isUpdate ? "#6a1b9a" : "#1a73e8";
+        return """
+            <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
+            <style>
+              body{font-family:Arial,sans-serif;color:#333;margin:0;padding:0;}
+              .wrap{max-width:640px;margin:30px auto;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;}
+              .hdr{background:%s;padding:24px 32px;}
+              .hdr h2{color:#fff;margin:0;font-size:20px;}
+              .body{padding:28px 32px;}
+              table{width:100%%;border-collapse:collapse;margin:16px 0;}
+              th{background:#f5f5f5;padding:10px 12px;text-align:left;font-size:13px;border-bottom:2px solid #e0e0e0;}
+              td{padding:10px 12px;font-size:13px;border-bottom:1px solid #f0f0f0;}
+              .total{font-weight:bold;font-size:14px;text-align:right;margin-top:8px;}
+              .ftr{background:#f9f9f9;padding:16px 32px;font-size:12px;color:#aaa;text-align:center;}
+            </style></head><body>
+            <div class="wrap">
+              <div class="hdr"><h2>%s</h2></div>
+              <div class="body">
+                <p>Dear HR,</p>
+                <p><strong>%s</strong> has %s their timesheet for <strong>%s</strong>.</p>
+                <table>
+                  <thead><tr><th>Project</th><th>Task</th><th>Time</th><th>Description</th></tr></thead>
+                  <tbody>%s</tbody>
+                </table>
+                <p class="total">Total: %s hrs</p>
+                <p>Regards,<br/><strong>HRMS System</strong></p>
+              </div>
+              <div class="ftr">This is an automated message. Please do not reply.</div>
+            </div></body></html>
+            """.formatted(headerColor, title, name,
+                isUpdate ? "updated" : "submitted",
+                workDate, entriesHtml, totalTime);
     }
 }

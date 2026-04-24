@@ -4,7 +4,9 @@ import com.gm.hrms.audit.Auditable;
 import com.gm.hrms.audit.AuditAction;
 import com.gm.hrms.dto.request.BranchRequestDTO;
 import com.gm.hrms.dto.request.BranchUpdateDTO;
+import com.gm.hrms.dto.response.BranchMoveDTO;
 import com.gm.hrms.dto.response.BranchResponseDTO;
+import com.gm.hrms.dto.response.BranchTreeNodeDTO;
 import com.gm.hrms.dto.response.PageResponseDTO;
 import com.gm.hrms.payload.ApiResponse;
 import com.gm.hrms.service.BranchService;
@@ -112,6 +114,40 @@ public class BranchController {
                 ApiResponse.<Void>builder()
                         .success(true)
                         .message("Branch deactivated successfully")
+                        .build()
+        );
+    }
+
+    // ================= GET TREE =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @GetMapping("/tree")
+    public ResponseEntity<ApiResponse<List<BranchTreeNodeDTO>>> getTree() {
+        return ResponseEntity.ok(
+                ApiResponse.<List<BranchTreeNodeDTO>>builder()
+                        .success(true)
+                        .message("Branch tree fetched successfully")
+                        .data(service.getTree())
+                        .build()
+        );
+    }
+
+    // ================= MOVE (DRAG & DROP) =================
+    @PreAuthorize("hasAnyRole('ADMIN','HR')")
+    @PatchMapping("/{id}/move")
+    @Auditable(
+            action      = AuditAction.UPDATE_BRANCH,
+            resource    = "Branch",
+            description = "Move branch to new parent"
+    )
+    public ResponseEntity<ApiResponse<BranchResponseDTO>> move(
+            @PathVariable Long id,
+            @RequestBody BranchMoveDTO dto) {
+
+        return ResponseEntity.ok(
+                ApiResponse.<BranchResponseDTO>builder()
+                        .success(true)
+                        .message("Branch moved successfully")
+                        .data(service.move(id, dto))
                         .build()
         );
     }
